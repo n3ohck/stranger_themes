@@ -5,6 +5,7 @@ namespace App\Models;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
@@ -32,11 +33,7 @@ class User extends Authenticatable implements JWTSubject
         'user',
         'email',
         'password',
-        'birthday',
-        'phone_ext',
-        'company_position',
-        'departament',
-        'profile_image',
+        'sucursal_id'
     ];
 
     /**
@@ -57,7 +54,12 @@ class User extends Authenticatable implements JWTSubject
         'email_verified_at' => 'datetime',
     ];
 
-    protected $appends  = ['profile_image', 'nombre_completo'];
+    protected $appends  = ['nombre_completo'];
+
+    public function sucursal():BelongsTo
+    {
+        return $this->belongsTo(Sucursal::class,'sucursal_id','id');
+    }
 
     public function scopeAccountIs($query, $account = null)
     {
@@ -106,39 +108,6 @@ class User extends Authenticatable implements JWTSubject
     public function checkPassword(string $password): bool
     {
         return Hash::check($password, $this->password);
-    }
-
-    public function setProfileImageAttribute($value)
-    {
-        $filename = 'avatars/' . md5($value . time());
-        $attribute_name = "profile_image";
-        $disk = 'public';
-        $destination_path = "uploads/avatars";
-
-        // if the image was erased
-        if ($value == null) {
-            Storage::disk($disk)->delete($this->{$attribute_name});
-            $this->attributes[$attribute_name] = null;
-        }
-
-        // if a base64 was sent, store it in the db
-        if (Str::startsWith($value, 'data:image')) {
-            $image = \Intervention\Image\ImageManagerStatic::make($value)->encode('jpg', 90);
-            $filename = $filename . '.jpg';
-            Storage::disk($disk)->put($destination_path . '/' . $filename, $image->stream());
-            Storage::disk($disk)->delete($this->{$attribute_name});
-
-            $public_destination_path = Str::replaceFirst('public/', '', $destination_path);
-            $this->attributes[$attribute_name] = $public_destination_path . '/' . $filename;
-        }
-    }
-
-    public function getProfileImageAttribute()
-    {
-        if (!isset($this->attributes['profile_image'])) {
-            return null;
-        }
-        return Storage::disk('public')->url($this->attributes['profile_image']);
     }
 
     public function getNombreCompletoAttribute()

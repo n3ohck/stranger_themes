@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Sucursal;
 use App\Models\User;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use App\Http\Requests\UserRequest as StoreRequest;
@@ -48,6 +49,15 @@ class UserController extends CrudController
                 'name'  => 'user',
                 'label' => 'Nombre de usuario',
                 'type'  => 'text',
+            ],
+            [
+                // 1-n relationship
+                'label'     => 'Sucursal', // Table column heading
+                'type'      => 'select',
+                'name'      => 'sucursal_id', // the column that contains the ID of that connected entity;
+                'entity'    => 'sucursal', // the method that defines the relationship in your Model
+                'attribute' => 'razon_social', // foreign key attribute that is shown to user
+                'model'     => Sucursal::class, // foreign key model
             ],
             [
                 'name'  => 'email',
@@ -187,45 +197,6 @@ class UserController extends CrudController
                 'type'  => 'email',
             ],
             [
-                'name'  => 'phone',
-                'label' => 'teléfono',
-                'type'  => 'text',
-            ],
-            [
-                'name'  => 'phone_ext',
-                'label' => 'Extensión telefónica',
-                'type'  => 'text',
-            ],
-            [
-                'name'  => 'birthday',
-                'label' => 'Fecha de cumpleaños',
-                'type'  => 'date',
-            ],
-            [
-                'name'  => 'company_position',
-                'label' => 'Puesto',
-                'type'  => 'text',
-            ],
-            [
-                'name'  => 'departament',
-                'label' => 'Departamento',
-                'type'  => 'text',
-            ],
-            [
-                'name'      => 'profile_image',
-                'label'     => 'Imagen de perfil',
-                'type'      => 'image',
-                'upload' => true,
-                'withFiles' => [
-                    'path' => 'avatars',
-                ],
-                'disk' => 'public', // <- this line is new
-                'crop' => false, // set to true to allow cropping, false to disable
-                'aspect_ratio' => 0,
-            ],
-
-
-            [
                 'name'  => 'password',
                 'label' => trans('backpack::permissionmanager.password'),
                 'type'  => 'password',
@@ -239,6 +210,18 @@ class UserController extends CrudController
                 'name'  => 'password_confirmation',
                 'label' => trans('backpack::permissionmanager.password_confirmation'),
                 'type'  => 'password',
+            ],
+            [   // 1-n relationship
+                'label'       => "Sucursal", // Table column heading
+                'type'        => "select2_from_ajax",
+                'name'        => 'sucursal_id', // the column that contains the ID of that connected entity
+                'entity'      => 'sucursal', // the method that defines the relationship in your Model
+                'attribute'   => "razon_social", // foreign key attribute that is shown to user
+                'data_source' => url("webapi/sucursal"), // url to controller search function (with /{id} should return model)
+                'placeholder'             => "Seleccione sucursal", // placeholder for the select
+                'minimum_input_length'    => 0, // minimum characters to type before querying results
+                'model'                   => Sucursal::class, // foreign key model
+                'method'                  => 'GET', // optional - HTTP method to use for the AJAX call (GET, POST)
             ],
             [
                 // two interconnected entities
