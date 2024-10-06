@@ -60,6 +60,11 @@ class UserController extends CrudController
                 'model'     => Sucursal::class, // foreign key model
             ],
             [
+                'name'  => 'es_vendedor',
+                'label' => 'Es vendedor',
+                'type'  => 'text',
+            ],
+            [
                 'name'  => 'email',
                 'label' => trans('backpack::permissionmanager.email'),
                 'type'  => 'email',
@@ -109,6 +114,19 @@ class UserController extends CrudController
                 $this->crud->addClause('whereHas', 'permissions', function ($query) use ($value) {
                     $query->where('permission_id', '=', $value);
                 });
+            }
+        );
+
+        //Es vendedor
+        $this->crud->addFilter(
+            [
+                'name'  => 'es_vendedor',
+                'type'  => 'dropdown',
+                'label' => 'Es vendedor',
+            ],
+            ['si' => 'Si', 'no' => 'No'],
+            function ($value) { // if the filter is active
+                $this->crud->addClause('where', 'es_vendedor', '=', $value);
             }
         );
     }
@@ -210,6 +228,11 @@ class UserController extends CrudController
                 'name'  => 'password_confirmation',
                 'label' => trans('backpack::permissionmanager.password_confirmation'),
                 'type'  => 'password',
+            ],
+            [
+                'name'  => 'es_vendedor',
+                'label' => 'Es vendedor',
+                'type'  => 'enum',
             ],
             [   // 1-n relationship
                 'label'       => "Sucursal", // Table column heading
