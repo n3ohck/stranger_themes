@@ -25,7 +25,11 @@ class ProductoRequest extends FormRequest
     public function rules()
     {
         return [
-            // 'name' => 'required|min:5|max:255'
+            'codigo' => 'required',
+            'descripcion' => 'required',
+            'precio' => 'required|numeric',
+            'existencia' => 'required|integer',
+            'tipo' => 'required',
         ];
     }
 
@@ -49,7 +53,13 @@ class ProductoRequest extends FormRequest
     public function messages()
     {
         return [
-            //
+            'codigo.required' => 'El campo código es obligatorio.',
+            'descripcion.required' => 'El campo descripción es obligatorio.',
+            'precio.required' => 'El campo precio es obligatorio.',
+            'precio.numeric' => 'El campo precio debe ser numérico.',
+            'existencia.required' => 'El campo existencia es obligatorio.',
+            'existencia.integer' => 'El campo existencia debe ser un número entero.',
+            'tipo.required' => 'El campo tipo es obligatorio.',
         ];
     }
 }
