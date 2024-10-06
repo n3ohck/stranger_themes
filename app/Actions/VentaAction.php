@@ -65,4 +65,29 @@ class VentaAction
             ]);
         }
     }
+
+    public function cancelVentas(array $ventas):array
+    {
+        $ventasCanceladas = [];
+        foreach ($ventas as $venta){
+            $ventaActualizar = Venta::find($venta['venta_id']);
+            if(!$ventaActualizar) throw new \Exception('No se ha encontrado la venta a cancelar');
+            if($ventaActualizar->estatus !== 'cancelada'){
+                $ventaActualizar->update([
+                    'estatus' => 'cancelado',
+                    'user_id_cancelacion' => backpack_user()->id,
+                    'fecha_cancelacion' => now(),
+                    'comentario_cancelacion' => $venta['comentario_cancelacion'] ?? 'N/A'
+                ]);
+                $ventaActualizar->save();
+                $ventasCanceladas[] = [
+                    'venta_id' => $ventaActualizar->id,
+                    'folio' => $ventaActualizar->folio,
+                    'estatus' => $ventaActualizar->estatus
+                ];
+            }
+
+        }
+        return $ventasCanceladas;
+    }
 }
