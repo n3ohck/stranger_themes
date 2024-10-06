@@ -22,4 +22,5 @@ Route::post('login', 'App\Http\Controllers\AuthController@authenticate');
 Route::group(['middleware' => ['jwt.verify']], function () {
     Route::post('user', 'App\Http\Controllers\Admin\UserController@getAuthenticatedUser');
     Route::get('productos', [\App\Http\Controllers\Admin\ProductoCrudController::class,'fetch']);
+    Route::get('descuentos', [\App\Http\Controllers\Admin\DescuentoCrudController::class,'fetch']);
 });
