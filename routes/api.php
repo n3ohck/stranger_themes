@@ -22,4 +22,5 @@ Route::post('register', 'App\Http\Controllers\AuthController@register');
 Route::post('login', 'App\Http\Controllers\AuthController@authenticate');
 Route::group(['middleware' => ['jwt.verify']], function () {
     Route::post('user', 'App\Http\Controllers\Admin\UserController@getAuthenticatedUser');
+
 });
