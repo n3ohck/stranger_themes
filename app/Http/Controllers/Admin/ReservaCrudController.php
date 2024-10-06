@@ -6,6 +6,7 @@ use App\Http\Requests\ReservaRequest;
 use App\Models\Reserva;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 /**
@@ -101,13 +102,13 @@ class ReservaCrudController extends CrudController
     public function isAvailable(Request $request)
     {
         try {
-            if(!$request->has('fecha') || !$request->has('producto_id')){
+            if(!$request->has('datetime') || !$request->has('product_id')){
                 return response()->json(['error' => 'Faltan datos fecha o producto_id'], 400);
             }
             $sucursalId = backpack_user()->sucursal_id;
             $reservas = Reserva::query()
-                ->where('fecha', $request->fecha)
-                ->where('producto_id', $request->producto_id)
+                ->where('fecha', Carbon::parse($request->datetime))
+                ->where('producto_id', $request->product_id)
                 ->where('sucursal_id', $sucursalId)
                 ->first();
             if( !is_null($reservas) ){
@@ -117,5 +118,10 @@ class ReservaCrudController extends CrudController
         }catch (\Exception $e){
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    public function createReserva(Request $request)
+    {
+
     }
 }
