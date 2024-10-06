@@ -4,6 +4,7 @@ namespace App\Actions;
 use App\Models\Venta;
 use App\Models\VentaPago;
 use App\Models\VentaProducto;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class VentaAction
@@ -19,6 +20,11 @@ class VentaAction
         $sucursalId = backpack_user()->sucursal_id;
         $nuevasVentas = [];
         foreach ($ventas as $venta){
+            $existe = Venta::query()
+                ->where('created_at', $venta['datetime'])
+                ->where('total', $venta['total'])
+                ->exists();
+            if( $existe ) continue;
             $nuevaVenta = Venta::create([
                 'user_id' => $userId,
                 'descuento_id' => $venta['descuento_id'] ?? null,
@@ -27,7 +33,8 @@ class VentaAction
                 'total' => $venta['total'],
                 'codigo_descuento' => $venta['codigo_descuento'] ?? null,
                 'descuento' => $venta['descuento'],
-                'porcentaje_descuento' => $venta['porcentaje_descuento'] ?? null
+                'porcentaje_descuento' => $venta['porcentaje_descuento'] ?? null,
+                'created_at' => Carbon::parse($venta['datetime'])
             ]);
             $this->makeVentaProductos($nuevaVenta->id, $venta['productos']);
             $this->makeVentaPagos($nuevaVenta->id, $venta['pagos']);
