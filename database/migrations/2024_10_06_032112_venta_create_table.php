@@ -25,6 +25,8 @@ class VentaCreateTable extends Migration
             $table->foreignId('descuento_id')
                 ->constrained('descuentos')
                 ->nullable();
+            $table->foreignId('sucursal_id')
+                ->constrained('sucursales');
             $table->string('folio')->index();
             $table->double('total');
             $table->string('codigo_descuento')->nullable();

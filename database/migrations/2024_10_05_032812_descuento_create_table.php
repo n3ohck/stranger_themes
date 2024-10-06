@@ -17,6 +17,8 @@ class DescuentoCreateTable extends Migration
             $table->id();
             $table->string('codigo')->index();
             $table->double('porcentaje');
+            $table->foreignId('sucursal_id')
+                ->constrained('sucursales');
             $table->timestamps();
             $table->softDeletes();
         });
