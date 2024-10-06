@@ -14,3 +14,5 @@
                     class="nav-icon la la-key"></i> <span>Permisos</span></a></li>
     </ul>
 </li>
+
+<li class='nav-item'><a class='nav-link' href='{{ backpack_url('reserva') }}'><i class='nav-icon la la-question'></i> Reservas</a></li>
