@@ -72,7 +72,7 @@ class VentaAction
         foreach ($ventas as $venta){
             $ventaActualizar = Venta::find($venta['venta_id']);
             if(!$ventaActualizar) throw new \Exception('No se ha encontrado la venta a cancelar');
-            if($ventaActualizar->estatus !== 'cancelada'){
+            if($ventaActualizar->estatus !== 'cancelado'){
                 $ventaActualizar->update([
                     'estatus' => 'cancelado',
                     'user_id_cancelacion' => backpack_user()->id,
