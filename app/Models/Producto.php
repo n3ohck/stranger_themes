@@ -44,6 +44,8 @@ class Producto extends Model
         'existencia' => 'integer'
     ];
 
+    protected $appends = ['category'];
+
     /*
     |--------------------------------------------------------------------------
     | FUNCTIONS
@@ -89,4 +91,8 @@ class Producto extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
+    public function getCategoryAttribute()
+    {
+        return $this->attributes['tipo'];
+    }
 }
