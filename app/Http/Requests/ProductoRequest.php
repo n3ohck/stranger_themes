@@ -30,6 +30,7 @@ class ProductoRequest extends FormRequest
             'precio' => 'required|numeric',
             'existencia' => 'required|integer',
             'tipo' => 'required',
+            'sucursal_id' => 'required|exists:sucursales,id',
         ];
     }
 
@@ -60,6 +61,8 @@ class ProductoRequest extends FormRequest
             'existencia.required' => 'El campo existencia es obligatorio.',
             'existencia.integer' => 'El campo existencia debe ser un número entero.',
             'tipo.required' => 'El campo tipo es obligatorio.',
+            'sucursal_id.required' => 'El campo sucursal es obligatorio.',
+            'sucursal_id.exists' => 'La sucursal seleccionada no existe.',
         ];
     }
 }

@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Venturecraft\Revisionable\RevisionableTrait;
 
@@ -28,6 +30,7 @@ class Producto extends Model
         'precio',
         'existencia',
         'tipo',
+        'sucursal_id'
     ];
     // protected $hidden = [];
     protected $dates = [
@@ -46,19 +49,35 @@ class Producto extends Model
     | FUNCTIONS
     |--------------------------------------------------------------------------
     */
+    protected static function booted()
+    {
+        static::addGlobalScope(new SucursalFilterScope);
+    }
 
     /*
     |--------------------------------------------------------------------------
     | RELATIONS
     |--------------------------------------------------------------------------
     */
-
+    public function sucursal():BelongsTo
+    {
+        return $this->belongsTo(Sucursal::class);
+    }
     /*
     |--------------------------------------------------------------------------
     | SCOPES
     |--------------------------------------------------------------------------
     */
-
+    public function scopeFilterByType($query,$type)
+    {
+        if( !isset( $type ) ){
+            return $type;
+        }
+        if( !in_array($type,['articulo','tour','tour_paquete']) ){
+            throw new \Exception('Tipo de producto no válido');
+        }
+        return $query->where('tipo',$type);
+    }
     /*
     |--------------------------------------------------------------------------
     | ACCESSORS
