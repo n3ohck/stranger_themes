@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Venturecraft\Revisionable\RevisionableTrait;
 
 class Producto extends Model
 {
-    use CrudTrait;
+    use CrudTrait,SoftDeletes,RevisionableTrait;
 
     /*
     |--------------------------------------------------------------------------
@@ -16,12 +18,28 @@ class Producto extends Model
     */
 
     protected $table = 'productos';
-    // protected $primaryKey = 'id';
+    protected $primaryKey = 'id';
     // public $timestamps = false;
     protected $guarded = ['id'];
-    // protected $fillable = [];
+    protected $fillable = [
+        'id',
+        'codigo',
+        'descripcion',
+        'precio',
+        'existencia',
+        'tipo',
+    ];
     // protected $hidden = [];
-    // protected $dates = [];
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'deleted_at'
+    ];
+
+    protected $casts = [
+        'precio' => 'float',
+        'existencia' => 'integer'
+    ];
 
     /*
     |--------------------------------------------------------------------------
