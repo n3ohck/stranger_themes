@@ -122,6 +122,33 @@ class ReservaCrudController extends CrudController
 
     public function createReserva(Request $request)
     {
-
+        try {
+            dd($request->toArray());
+            if(!$request->has('product_id')) throw new \Exception('Falta product_id');
+            if(!$request->has('datetime')) throw new \Exception('Falta fecha de reserva');
+            if(!$request->has('name')) throw new \Exception('Falta name (nombre cliente) de reserva');
+            $sucursalId = backpack_user()->sucursal_id;
+            $reserva = Reserva::create([
+                'producto_id' => $request->product_id,
+                'nombre_cliente' => $request->name,
+                'cantidad_personas' => $request->number,
+                'fecha' => Carbon::parse($request->datetime),
+                'estado' => 'confirmada',
+                'sucursal_id' => $sucursalId
+            ]);
+            return response()->json([
+                'message' => 'Reserva creada',
+                'reserva' => [
+                    'id' => $reserva->id,
+                    'name' => $reserva->nombre_cliente,
+                    'number' => $reserva->cantidad_personas,
+                    'datetime' => $reserva->fecha,
+                    'status' => $reserva->estado,
+                    'product_id' => $reserva->producto_id,
+                ]
+            ], 200);
+        }catch (\Exception $e){
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }
