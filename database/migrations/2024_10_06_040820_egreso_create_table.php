@@ -31,6 +31,9 @@ class EgresoCreateTable extends Migration
             ])->index();
             $table->string('referencia')->nullable();
             $table->text('imagen')->nullable();
+            $table->timestamp('fecha_pago')->nullable();
+            $table->foreignId('sucursal_id')
+                ->constrained('sucursales');
             $table->timestamps();
             $table->softDeletes();
         });

@@ -26,6 +26,8 @@ class ReservaCreateTable extends Migration
                 'confirmada',
                 'cancelada'
             ])->index();
+            $table->foreignId('sucursal_id')
+                ->constrained('sucursales');
             $table->timestamps();
             $table->softDeletes();
         });

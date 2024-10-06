@@ -19,6 +19,8 @@ class ProductoCreateTable extends Migration
             $table->string('descripcion');
             $table->double('precio');
             $table->integer('existencia');
+            $table->foreignId('sucursal_id')
+                ->constrained('sucursales');
             $table->enum('tipo',[
                 'tour',
                 'articulo',
