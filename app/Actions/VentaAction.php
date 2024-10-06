@@ -50,6 +50,7 @@ class VentaAction
                 'cantidad' => $producto['cantidad'],
                 'total' => $producto['total']
             ]);
+            (new ExistenciaAction())::salidarPorVenta($producto['producto_id'], $producto['cantidad']);
         }
     }
 
@@ -80,6 +81,9 @@ class VentaAction
                     'comentario_cancelacion' => $venta['comentario_cancelacion'] ?? 'N/A'
                 ]);
                 $ventaActualizar->save();
+                foreach ($ventaActualizar->productos as $producto){
+                    (new ExistenciaAction())::existenciaCancelacion($producto->producto_id, $producto->cantidad);
+                }
                 $ventasCanceladas[] = [
                     'venta_id' => $ventaActualizar->id,
                     'folio' => $ventaActualizar->folio,
