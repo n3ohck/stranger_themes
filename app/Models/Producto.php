@@ -44,7 +44,7 @@ class Producto extends Model
         'existencia' => 'integer'
     ];
 
-    protected $appends = ['category'];
+    protected $appends = ['category','name','price','stock'];
 
     /*
     |--------------------------------------------------------------------------
@@ -94,5 +94,20 @@ class Producto extends Model
     public function getCategoryAttribute()
     {
         return $this->attributes['tipo'];
+    }
+
+    public function getNameAttribute()
+    {
+        return $this->attributes['descripcion'];
+    }
+
+    public function getPriceAttribute()
+    {
+        return $this->attributes['precio'];
+    }
+
+    public function getStockAttribute()
+    {
+        return $this->attributes['existencia'];
     }
 }
