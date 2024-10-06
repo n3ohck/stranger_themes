@@ -7,6 +7,8 @@ use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Http\Request;
 use App\Actions\VentaAction;
+use Illuminate\Support\Facades\DB;
+
 /**
  * Class VentaCrudController
  * @package App\Http\Controllers\Admin
@@ -114,13 +116,16 @@ class VentaCrudController extends CrudController
         try {
             if( !$request->has('ventas') ) throw new \Exception('No se han enviado ventas');
             $ventas = $request->input('ventas');
+            DB::beginTransaction();
             foreach ($ventas as $venta){
                 if( !isset($venta['productos']) ) throw new \Exception('No se han enviado productos');
                 if( !isset($venta['pagos']) ) throw new \Exception('No se han enviado pagos');
             }
             $ventas = (new VentaAction())->do($request->ventas);
-            return response()->json(['ventas' => $ventas, $ventas->count()], 200);
+            DB::commit();
+            return response()->json(['ventas' => $ventas, 'qty' => count($ventas)], 200);
         }catch (\Exception $e){
+            DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 400);
         }
     }
