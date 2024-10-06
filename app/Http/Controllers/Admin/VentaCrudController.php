@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\VentaRequest;
+use App\Models\Venta;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Http\Request;
@@ -122,6 +123,21 @@ class VentaCrudController extends CrudController
                 if( !isset($venta['pagos']) ) throw new \Exception('No se han enviado pagos');
             }
             $ventas = (new VentaAction())->do($request->ventas);
+            DB::commit();
+            return response()->json(['ventas' => $ventas, 'qty' => count($ventas)], 200);
+        }catch (\Exception $e){
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
+    }
+
+    public function cancel(Request $request)
+    {
+        try {
+            if( !$request->has('ventas') ) throw new \Exception('No se ha enviado las ventas a cancelar');
+            $ventasCancelar = $request->input('ventas');
+            DB::beginTransaction();
+            $ventas = (new VentaAction())->cancelVentas($ventasCancelar);
             DB::commit();
             return response()->json(['ventas' => $ventas, 'qty' => count($ventas)], 200);
         }catch (\Exception $e){
