@@ -6,7 +6,7 @@ use App\Http\Requests\VentaRequest;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Http\Request;
-
+use App\Actions\VentaAction;
 /**
  * Class VentaCrudController
  * @package App\Http\Controllers\Admin
@@ -112,7 +112,14 @@ class VentaCrudController extends CrudController
     public function make(Request $request)
     {
         try {
-            dd($request);
+            if( !$request->has('ventas') ) throw new \Exception('No se han enviado ventas');
+            $ventas = $request->input('ventas');
+            foreach ($ventas as $venta){
+                if( !isset($venta['productos']) ) throw new \Exception('No se han enviado productos');
+                if( !isset($venta['pagos']) ) throw new \Exception('No se han enviado pagos');
+            }
+            $ventas = (new VentaAction())->do($request->ventas);
+            return response()->json(['ventas' => $ventas, $ventas->count()], 200);
         }catch (\Exception $e){
             return response()->json(['error' => $e->getMessage()], 400);
         }
