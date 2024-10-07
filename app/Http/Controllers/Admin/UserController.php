@@ -129,6 +129,19 @@ class UserController extends CrudController
                 $this->crud->addClause('where', 'es_vendedor', '=', $value);
             }
         );
+
+        $this->crud->addFilter([ // dropdown filter
+            'name' => 'sucursal_id',
+            'type' => 'dropdown',
+            'label' => 'Sucursal'
+        ],Sucursal::query()
+            ->select('id','razon_social')
+            ->get()
+            ->pluck('razon_social','id')
+            ->filter()
+            ->toArray(), function ($value) { // if the filter is active
+            $this->crud->addClause('where', 'sucursal_id', $value);
+        });
     }
 
     public function setupCreateOperation()
