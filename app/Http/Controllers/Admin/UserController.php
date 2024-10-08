@@ -318,4 +318,17 @@ class UserController extends CrudController
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function fetch(Request $request)
+    {
+        $search_term = $request->input('q');
+        return User::query()
+            ->select(['id', 'first_name', 'last_name', 'email', 'user'])
+            ->when($search_term, function ($query, $search_term) {
+                return $query->where('first_name', 'like', "%$search_term%")
+                    ->orWhere('last_name', 'like', "%$search_term%")
+                    ->orWhere('email', 'like', "%$search_term%")
+                    ->orWhere('user', 'like', "%$search_term%");
+            })->paginate(10);
+    }
 }

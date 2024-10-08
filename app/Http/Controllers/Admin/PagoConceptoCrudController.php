@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\PagoConceptoRequest;
+use App\Models\PagoConcepto;
 use App\Models\Sucursal;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Illuminate\Http\Request;
 
 /**
  * Class PagoConceptoCrudController
@@ -107,5 +109,13 @@ class PagoConceptoCrudController extends CrudController
     protected function setupUpdateOperation()
     {
         $this->setupCreateOperation();
+    }
+
+    public function fetch(Request $request)
+    {
+        $search_term = $request->input('q');
+        return PagoConcepto::query()->when($search_term, function ($query, $search_term) {
+            return $query->where('descripcion', 'like', "%$search_term%");
+        })->paginate(10);
     }
 }
