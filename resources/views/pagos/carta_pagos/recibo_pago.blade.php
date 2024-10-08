@@ -9,11 +9,19 @@
             font-family: Arial, sans-serif;
             margin: 40px;
         }
-        .header, .footer {
-            text-align: center;
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
         }
-        .header img {
-            max-width: 150px;
+        .header .company-info {
+            float: right;
+            text-align: left;
+        }
+        .header .logo img {
+            float: left;
+            max-width: 100px; /* Puedes ajustar el tamaño del logo aquí */
         }
         .content {
             margin-top: 20px;
@@ -42,25 +50,28 @@
 </head>
 <body>
 <div class="header">
-    <h2>{{ $pagoCarta->sucursal->razon_social }}</h2>
-    <p>Dirección: [Dirección de la empresa]</p>
-    <p>Teléfono: [Teléfono de la empresa]</p>
-    <p>Email: [Correo electrónico de la empresa]</p>
-    <hr>
+    <div class="company-info">
+        <h2 style="padding-top: 25px;">{{ $pagoCarta->sucursal->razon_social }}</h2>
+    </div>
+    <div class="logo">
+        <img src="{{asset($sucursal->logotipo)}}" alt="Logo de la Empresa">
+    </div>
+    <br>
+    <br>
+    <br>
+    <br>
 </div>
+
+<hr>
 
 <div class="content">
-    {{ $contenido }}
+    {!! $contenido !!}
 </div>
-
-<div class="signature">
-    <div>Firma del Empleado</div>
-    <div>Firma del Representante</div>
-</div>
-
-<div class="footer">
+@if($contenido_adicional)
     <hr>
-    <p>{{ config('app.name') }} &copy; {{ date('Y') }}. Todos los derechos reservados.</p>
-</div>
+    <div class="content">
+        {!! $contenido_adicional !!}
+    </div>
+@endif
 </body>
 </html>

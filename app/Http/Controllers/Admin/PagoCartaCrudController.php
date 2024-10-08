@@ -325,7 +325,9 @@ class PagoCartaCrudController extends CrudController
                 'titulo' => $nombre_archivo,
                 'pagoCarta' => $pagoCarta,
                 'sucursal' => $pagoCarta->sucursal,
-            ]);
+            ])->setOption('enable-local-file-access', true)
+            ->setOption('footer-right', 'Pagina [page] de [toPage]')
+            ->setOption('margin-left', 0);
 
             return $pdf->inline($nombre_archivo . '.pdf');
         } catch (\Exception $e) {
