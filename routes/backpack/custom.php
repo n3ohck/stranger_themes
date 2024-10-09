@@ -26,4 +26,5 @@ Route::group([
     Route::crud('pago-concepto', 'PagoConceptoCrudController');
     Route::crud('pago-carta', 'PagoCartaCrudController');
     Route::get('pago-carta/{pagoCarta}/pdf', 'PagoCartaCrudController@pdf')->name('pago-carta.pdf');
+    Route::crud('egreso', 'EgresoCrudController');
 }); // this should be the absolute last line of this file

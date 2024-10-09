@@ -3,6 +3,7 @@
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('venta') }}'><i class='nav-icon la la-list'></i> Ventas</a></li>
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('reserva') }}'><i class='nav-icon la la-calendar'></i> Reservas</a></li>
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('pago-carta') }}'><i class='nav-icon la la-envelope'></i> Cartas de pago</a></li>
+<li class='nav-item'><a class='nav-link' href='{{ backpack_url('egreso') }}'><i class='nav-icon la la-exchange'></i> Egresos</a></li>
 <li class="nav-item nav-dropdown">
     <a class="nav-link nav-dropdown-toggle" href="#"><i class="nav-icon la la-gear"></i> Configuracion</a>
     <ul class="nav-dropdown-items">
@@ -23,3 +24,4 @@
         </li>
     </ul>
 </li>
+
