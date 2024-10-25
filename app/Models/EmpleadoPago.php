@@ -57,7 +57,10 @@ class EmpleadoPago extends Model
             Storage::disk('pagos')->delete($obj->imagen);
         });
     }
-
+    public function fileButton()
+    {
+        return '<a href="' . asset('storage/pagos/' . $this->attributes['imagen']) . '" target="_blank" class="btn btn-sm btn-link"><i class="la la-file"></i> Comprobante</a>';
+    }
 
     /*
     |--------------------------------------------------------------------------
@@ -103,15 +106,13 @@ class EmpleadoPago extends Model
     | ACCESSORS
     |--------------------------------------------------------------------------
     */
-    public function setArchivoAttribute($value)
+    public function setImagenAttribute($value)
     {
         $attribute_name = "imagen";
         $disk = "pagos";
-        $destination_path = "pago_cartas";
+        $destination_path = "egresos";
 
         $this->uploadFileToDisk($value, $attribute_name, $disk, $destination_path);
-
-        // return $this->attributes[{$attribute_name}]; // uncomment if this is a translatable field
     }
     /*
     |--------------------------------------------------------------------------

@@ -18,6 +18,7 @@ class Empleado extends Model
     |--------------------------------------------------------------------------
     */
 
+    public $search;
     protected $table = 'empleados';
     protected $primaryKey = 'id';
     // public $timestamps = false;
@@ -57,16 +58,33 @@ class Empleado extends Model
     | RELATIONS
     |--------------------------------------------------------------------------
     */
-    public function sucursal():BelongsTo
+    public function sucursal(): BelongsTo
     {
         return $this->belongsTo(Sucursal::class);
     }
+
     /*
     |--------------------------------------------------------------------------
     | SCOPES
     |--------------------------------------------------------------------------
     */
-
+    public function scopeSearch($query, $search)
+    {
+        $this->search = $search;
+        return $query
+            ->when($this->search->nombres, function ($query, $nombres) {
+                return $query->where('nombres', 'like', "%$nombres%");
+            })
+            ->when($this->search->apellidos, function ($query, $apellidos) {
+                return $query->where('apellidos', 'like', "%$apellidos%");
+            })
+            ->when($this->search->sucursal_id, function ($query, $sucursal_id) {
+                return $query->where('sucursal_id', $sucursal_id);
+            })
+            ->when($this->search->estatus, function ($query, $estatus) {
+                return $query->where('estatus', $estatus);
+            });
+    }
     /*
     |--------------------------------------------------------------------------
     | ACCESSORS
@@ -78,7 +96,7 @@ class Empleado extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
-    public function getNombreCompletoAttribute():string
+    public function getNombreCompletoAttribute(): string
     {
         return "{$this->nombres} {$this->apellidos}";
     }

@@ -23,7 +23,6 @@ class EmpleadoPagoCrudController extends CrudController
     use \Backpack\CRUD\app\Http\Controllers\Operations\CreateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
-    use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
     use DateTrait;
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
@@ -62,12 +61,8 @@ class EmpleadoPagoCrudController extends CrudController
             [
                 'name' => 'monto',
                 'type' => 'number',
-                'label' => 'Monto'
-            ],
-            [
-                'name' => 'imagen',
-                'type' => 'image',
-                'label' => 'Imagen'
+                'label' => 'Monto',
+                'decimals' => 2
             ]
         ]);
 
@@ -98,6 +93,8 @@ class EmpleadoPagoCrudController extends CrudController
             ->toArray(), function ($value) { // if the filter is active
             $this->crud->addClause('BySucursal', $value);
         });
+        $this->crud->addButtonFromModelFunction('line', 'fileButton', 'fileButton', 'beginning');
+
     }
 
     /**
@@ -110,20 +107,34 @@ class EmpleadoPagoCrudController extends CrudController
     {
         CRUD::setValidation(EmpleadoPagoRequest::class);
 
-        CRUD::field('created_at');
-        CRUD::field('deleted_at');
-        CRUD::field('empleado_id');
-        CRUD::field('fecha_pago');
-        CRUD::field('id');
-        CRUD::field('imagen');
-        CRUD::field('monto');
-        CRUD::field('updated_at');
-
-        /**
-         * Fields can be defined using the fluent syntax or array syntax:
-         * - CRUD::field('price')->type('number');
-         * - CRUD::addField(['name' => 'price', 'type' => 'number']));
-         */
+        $this->crud->addFields([
+            [
+                'name' => 'empleado_id',
+                'type' => 'select2',
+                'label' => 'Empleado',
+                'entity' => 'empleado',
+                'attribute' => 'nombre_completo',
+                'model' => Empleado::class
+            ],
+            [
+                'name' => 'fecha_pago',
+                'type' => 'date',
+                'label' => 'Fecha de pago'
+            ],
+            [   // Upload
+                'name'      => 'imagen',
+                'label'     => 'Comprobante',
+                'type'      => 'upload',
+                'upload'    => true,
+                'disk'      => 'pagos', // if you store files in the /public folder, please omit this; if you store them in /storage or S3, please specify it;
+            ],
+            [
+                'name' => 'monto',
+                'type' => 'number',
+                'label' => 'Monto',
+                'decimals' => 2
+            ]
+        ]);
     }
 
     /**
@@ -140,17 +151,11 @@ class EmpleadoPagoCrudController extends CrudController
     public function make(Request $request)
     {
         try{
-            $request->validate([
-                'empleado_id' => 'required|exists:empleados,id',
-                'fecha_pago' => 'required',
-                'imagen' => 'required|file',
-                'monto' => 'required|numeric'
-            ]);
             DB::beginTransaction();
             $pago = EmpleadoPago::create([
                 'empleado_id' => $request->empleado_id,
                 'fecha_pago' => $this->makeDate($request->fecha_pago),
-                'imagen' => $request->file('imagen')->store('pagos'),
+                'imagen' => $request->file('imagen')->store('egresos', 'pagos'),
                 'monto' => $request->monto
             ]);
             DB::commit();
@@ -173,7 +178,7 @@ class EmpleadoPagoCrudController extends CrudController
                 'estatus' => $request->get('estatus')
             ];
             $pagos = EmpleadoPago::query()
-                ->Serch($search)
+                ->Search($search)
                 ->orderBy('fecha_pago', 'desc')
                 ->get();
             return response()->json([

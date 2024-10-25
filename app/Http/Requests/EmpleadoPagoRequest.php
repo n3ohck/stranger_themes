@@ -27,7 +27,6 @@ class EmpleadoPagoRequest extends FormRequest
         return [
             'empleado_id' => 'required|exists:empleados,id',
             'fecha_pago' => 'required',
-            'imagen' => 'required|file',
             'monto' => 'required|numeric'
         ];
     }
@@ -55,8 +54,6 @@ class EmpleadoPagoRequest extends FormRequest
             'empleado_id.required' => 'El campo empleado es obligatorio.',
             'empleado_id.exists' => 'El empleado seleccionado no existe.',
             'fecha_pago.required' => 'El campo fecha de pago es obligatorio.',
-            'imagen.required' => 'El campo imagen es obligatorio.',
-            'imagen.file' => 'El campo imagen debe ser un archivo.',
             'monto.required' => 'El campo monto es obligatorio.',
             'monto.numeric' => 'El campo monto debe ser un número.'
         ];

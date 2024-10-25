@@ -51,4 +51,9 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::post('egreso', [\App\Http\Controllers\Admin\EgresoCrudController::class,'make']);
     Route::get('egreso', [\App\Http\Controllers\Admin\EgresoCrudController::class,'fetch']);
 
+    //Empleados
+    Route::get('empleados', [\App\Http\Controllers\Admin\EmpleadoCrudController::class,'fetch']);
+    Route::post('empleados/pago', [\App\Http\Controllers\Admin\EmpleadoPagoCrudController::class,'make']);
+    Route::get('empleados/pago', [\App\Http\Controllers\Admin\EmpleadoPagoCrudController::class,'fetch']);
+
 });

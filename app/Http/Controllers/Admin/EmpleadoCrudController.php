@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\EmpleadoRequest;
+use App\Models\Empleado;
 use App\Models\Sucursal;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Illuminate\Http\Request;
 
 /**
  * Class EmpleadoCrudController
@@ -134,10 +136,10 @@ class EmpleadoCrudController extends CrudController
                 ]
             ],
             [   // select2_from_array
-                'name'        => 'sucursal_id',
-                'label'       => "Sucursal",
-                'type'        => 'select2_from_array',
-                'options'     => Sucursal::query()->select(['id', 'razon_social'])->pluck('razon_social', 'id')->toArray(),
+                'name' => 'sucursal_id',
+                'label' => "Sucursal",
+                'type' => 'select2_from_array',
+                'options' => Sucursal::query()->select(['id', 'razon_social'])->pluck('razon_social', 'id')->toArray(),
                 'allows_null' => false,
             ],
             [
@@ -157,5 +159,30 @@ class EmpleadoCrudController extends CrudController
     protected function setupUpdateOperation()
     {
         $this->setupCreateOperation();
+    }
+
+    public function fetch(Request $request)
+    {
+        try {
+            $search = (object)[
+                'nombres' => $request->get('nombres'),
+                'apellidos' => $request->get('apellidos'),
+                'sucursal_id' => $request->get('sucursal_id'),
+                'estatus' => $request->get('estatus')
+            ];
+            $empleados = Empleado::query()
+                ->Search($search)
+                ->orderBy('nombres')
+                ->get();
+            return response()->json([
+                'message' => 'Empleados encontrados',
+                'empleados' => $empleados
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
     }
 }
