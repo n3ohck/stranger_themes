@@ -20,6 +20,7 @@ class VentaAction
         $sucursalId = backpack_user()->sucursal_id;
         $nuevasVentas = [];
         foreach ($ventas as $venta){
+            $venta['datetime'] = Carbon::parse(str_replace('T',' ',$venta['datetime']));
             $existe = Venta::query()
                 ->where('created_at', $venta['datetime'])
                 ->where('total', $venta['total'])
@@ -40,6 +41,7 @@ class VentaAction
             $this->makeVentaPagos($nuevaVenta->id, $venta['pagos']);
             $nuevasVentas[] = [
                 'venta_id' => $nuevaVenta->id,
+                'estatus' => $nuevaVenta->estatus,
                 'folio' => $nuevaVenta->folio,
                 'total' => $nuevaVenta->total
             ];
