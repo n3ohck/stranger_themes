@@ -99,13 +99,33 @@ class ReservaCrudController extends CrudController
         $this->setupCreateOperation();
     }
 
-    public function fetch()
+    private function makeDate($date)
+    {
+        return (isset($date)) ? Carbon::parse(str_replace('T', ' ', $date)) : null;
+    }
+
+    public function fetch(Request $request)
     {
         try {
+            $search = (object)[
+                'query' => $request->get('query'),
+                'start_date' => $this->makeDate($request->get('start_date') ?? null),
+                'end_date' => $this->makeDate($request->get('end_date') ?? null),
+                'status' => $request->get('status'),
+                'venta_id' => $request->get('venta_id')
+            ];
+
             $reservas = Reserva::query()
-                ->where('sucursal_id', backpack_user()->sucursal_id)
+                ->Search($search)
+                ->orderBy('fecha', 'desc')
                 ->get();
-        }catch (\Exception $e){
+
+            return response()->json([
+                'message' => 'Consulta realizada con exito',
+                'reservas' => $reservas,
+                'qty' => $reservas->count()
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -113,7 +133,7 @@ class ReservaCrudController extends CrudController
     public function isAvailable(Request $request)
     {
         try {
-            if(!$request->has('datetime') || !$request->has('product_id')){
+            if (!$request->has('datetime') || !$request->has('product_id')) {
                 return response()->json(['error' => 'Faltan datos fecha o producto_id'], 400);
             }
             $sucursalId = backpack_user()->sucursal_id;
@@ -122,11 +142,11 @@ class ReservaCrudController extends CrudController
                 ->where('producto_id', $request->product_id)
                 ->where('sucursal_id', $sucursalId)
                 ->first();
-            if( !is_null($reservas) ){
-                return response()->json(['message' => 'No disponible','available' => false], 200);
+            if (!is_null($reservas)) {
+                return response()->json(['message' => 'No disponible', 'available' => false], 200);
             }
-            return response()->json(['message' => 'Disponible','available' => true], 200);
-        }catch (\Exception $e){
+            return response()->json(['message' => 'Disponible', 'available' => true], 200);
+        } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
@@ -135,9 +155,9 @@ class ReservaCrudController extends CrudController
     {
         try {
             dd($request->toArray());
-            if(!$request->has('product_id')) throw new \Exception('Falta product_id');
-            if(!$request->has('datetime')) throw new \Exception('Falta fecha de reserva');
-            if(!$request->has('name')) throw new \Exception('Falta name (nombre cliente) de reserva');
+            if (!$request->has('product_id')) throw new \Exception('Falta product_id');
+            if (!$request->has('datetime')) throw new \Exception('Falta fecha de reserva');
+            if (!$request->has('name')) throw new \Exception('Falta name (nombre cliente) de reserva');
             $sucursalId = backpack_user()->sucursal_id;
             $reserva = Reserva::create([
                 'producto_id' => $request->product_id,
@@ -158,7 +178,7 @@ class ReservaCrudController extends CrudController
                     'product_id' => $reserva->producto_id,
                 ]
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
