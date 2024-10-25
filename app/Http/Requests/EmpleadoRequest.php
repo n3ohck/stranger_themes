@@ -26,11 +26,13 @@ class EmpleadoRequest extends FormRequest
     {
         return [
             'sucursal_id' => 'required|exists:sucursales,id',
-            'nombres' => 'required|min:3|max:255',
-            'apellidos' => 'required|min:3|max:255',
-            'email' => 'required|email',
-            'telefono' => 'nullable|min:10|max:10',
-            'salario' => 'required|numeric|min:1'
+            'nombres' => 'required|string|max:255',
+            'apellidos' => 'required|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'telefono' => 'nullable|string|max:255',
+            'estatus' => 'required|in:activo,inactivo',
+            'salario' => 'required|numeric',
+            'puesto' => 'required|string|max:255'
         ];
     }
 
@@ -57,16 +59,23 @@ class EmpleadoRequest extends FormRequest
             'sucursal_id.required' => 'El campo sucursal es obligatorio.',
             'sucursal_id.exists' => 'La sucursal seleccionada no es válida.',
             'nombres.required' => 'El campo nombres es obligatorio.',
-            'nombres.min' => 'El campo nombres debe tener al menos 3 caracteres.',
-            'nombres.max' => 'El campo nombres debe tener máximo 255 caracteres.',
+            'nombres.string' => 'El campo nombres debe ser una cadena de texto.',
+            'nombres.max' => 'El campo nombres no debe ser mayor a 255 caracteres.',
             'apellidos.required' => 'El campo apellidos es obligatorio.',
-            'apellidos.min' => 'El campo apellidos debe tener al menos 3 caracteres.',
-            'apellidos.max' => 'El campo apellidos debe tener máximo 255 caracteres.',
-            'email.required' => 'El campo email es obligatorio.',
-            'email.email' => 'El campo email debe ser un correo electrónico válido.',
-            'telefono.min' => 'El campo teléfono debe tener al menos 10 caracteres.',
-            'telefono.max' => 'El campo teléfono debe tener máximo 10 caracteres.',
+            'apellidos.string' => 'El campo apellidos debe ser una cadena de texto.',
+            'apellidos.max' => 'El campo apellidos no debe ser mayor a 255 caracteres.',
+            'email.email' => 'El campo email debe ser una dirección de correo electrónico válida.',
+            'email.max' => 'El campo email no debe ser mayor a 255 caracteres.',
+            'telefono.string' => 'El campo teléfono debe ser una cadena de texto.',
+            'telefono.max' => 'El campo teléfono no debe ser mayor a 255 caracteres.',
+            'estatus.required' => 'El campo estatus es obligatorio.',
+            'estatus.in' => 'El campo estatus no es válido.',
             'salario.required' => 'El campo salario es obligatorio.',
+            'salario.numeric' => 'El campo salario debe ser un número.',
+            'puesto.required' => 'El campo puesto es obligatorio.',
+            'puesto.string' => 'El campo puesto debe ser una cadena de texto.',
+            'puesto.max' => 'El campo puesto no debe ser mayor a 255 caracteres.'
+
         ];
     }
 }

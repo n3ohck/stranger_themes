@@ -30,7 +30,8 @@ class Empleado extends Model
         'email',
         'telefono',
         'estatus',
-        'salario'
+        'salario',
+        'puesto'
     ];
     // protected $hidden = [];
     protected $dates = [
