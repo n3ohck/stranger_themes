@@ -132,10 +132,14 @@ class VentaCrudController extends CrudController
                 ->search($search)
                 ->with([
                     'productos' => function($query){
-                        $query->select([
-                            'id',
-                            'codigo',
-                            'descripcion'
+                        $query->with([
+                            'producto' => function($query){
+                                $query->select([
+                                    'id',
+                                    'codigo',
+                                    'descripcion'
+                                ]);
+                            }
                         ]);
                     },
                     'pagos',
