@@ -2,8 +2,7 @@
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('descuento') }}'><i class='nav-icon la la-list'></i> Descuentos</a></li>
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('venta') }}'><i class='nav-icon la la-list'></i> Ventas</a></li>
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('egreso') }}'><i class='nav-icon la la-exchange'></i> Egresos</a></li>
-<li class='nav-item'><a class='nav-link' href='{{ backpack_url('apertura') }}'><i class='nav-icon la la-question'></i> Aperturas</a></li>
-<li class='nav-item'><a class='nav-link' href='{{ backpack_url('corte') }}'><i class='nav-icon la la-question'></i> Cortes</a></li>
+<li class='nav-item'><a class='nav-link' href='{{ backpack_url('corte') }}'><i class='nav-icon la la-list'></i> Cortes</a></li>
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('empleado') }}'><i class='nav-icon la la-users'></i> Empleados</a></li>
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('empleado-pago') }}'><i class='nav-icon la la-list'></i> Empleados Pagos</a></li>
 <li class="nav-item nav-dropdown">
