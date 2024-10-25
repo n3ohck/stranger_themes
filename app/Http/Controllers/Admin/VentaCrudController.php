@@ -130,7 +130,27 @@ class VentaCrudController extends CrudController
             ];
             $ventas = Venta::query()
                 ->search($search)
-                ->with(['productos','pagos'])
+                ->with([
+                    'productos' => function($query){
+                        $query->select([
+                            'id',
+                            'codigo',
+                            'descripcion'
+                        ]);
+                    },
+                    'pagos',
+                    'reservaciones' => function($query){
+                        $query->with([
+                            'producto' => function($query){
+                                $query->select([
+                                    'id',
+                                    'codigo',
+                                    'descripcion'
+                                ]);
+                            }
+                        ]);
+                    }
+                ])
                 ->orderBy('created_at','desc')
                 ->get();
             return response()->json([
