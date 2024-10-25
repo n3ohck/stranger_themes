@@ -71,6 +71,11 @@ class EmpleadoCrudController extends CrudController
                 'label' => 'Salario'
             ],
             [
+                'name' => 'puesto',
+                'type' => 'text',
+                'label' => 'Puesto'
+            ],
+            [
                 'name' => 'sucursal_id',
                 'type' => 'relationship',
                 'label' => 'Sucursal',
@@ -124,6 +129,11 @@ class EmpleadoCrudController extends CrudController
                 'name' => 'telefono',
                 'type' => 'text',
                 'label' => 'Teléfono'
+            ],
+            [
+                'name' => 'puesto',
+                'type' => 'text',
+                'label' => 'Puesto'
             ],
             [
                 'name' => 'salario',
