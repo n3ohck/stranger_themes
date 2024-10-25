@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\AperturaRequest;
+use App\Models\Apertura;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Http\Request;
@@ -106,6 +107,10 @@ class AperturaCrudController extends CrudController
                 'estado' => $request->get('apertura_estado'),
                 'fecha_apertura' => $request->get('fecha_apertura')
             ];
+            $aperturas = Apertura::query()
+                ->Search($search)
+                ->orderBy('created_at', 'desc')
+                ->get();
         }catch (\Exception $e){
             return response()->json([
                 'error' => $e->getMessage(),
