@@ -91,6 +91,9 @@ class Apertura extends Model
             })
             ->when($search->estado, function ($query) {
                 $query->where('estado', $this->search->estado);
+            })
+            ->when($search->fecha_apertura, function ($query) {
+                $query->whereBetween('created_at', [$this->search->fecha_apertura->startOfDay(), $this->search->fecha_apertura->endOfDay()]);
             });
     }
     /*

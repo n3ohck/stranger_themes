@@ -6,6 +6,7 @@ use App\Http\Requests\AperturaRequest;
 use App\Models\Apertura;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 /**
@@ -98,6 +99,11 @@ class AperturaCrudController extends CrudController
         $this->setupCreateOperation();
     }
 
+    private function makeDate($date)
+    {
+        return (isset($date)) ? Carbon::parse(str_replace('T', ' ', $date)) : null;
+    }
+
     public function fetch(Request $request)
     {
         try {
@@ -105,12 +111,16 @@ class AperturaCrudController extends CrudController
                 'user_id' => $request->get('apertura_user_id'),
                 'user_id_cerro' => $request->get('apertura_user_id_cerro'),
                 'estado' => $request->get('apertura_estado'),
-                'fecha_apertura' => $request->get('fecha_apertura')
+                'fecha_apertura' => $this->makeDate($request->get('apertura_fecha_apertura'))
             ];
             $aperturas = Apertura::query()
                 ->Search($search)
                 ->orderBy('created_at', 'desc')
                 ->get();
+            return response()->json([
+                'message' => 'Consulta exitosa',
+                'aperturas' => $aperturas
+            ], 200);
         }catch (\Exception $e){
             return response()->json([
                 'error' => $e->getMessage(),
@@ -118,4 +128,28 @@ class AperturaCrudController extends CrudController
             ], 500);
         }
     }
+
+    public function make(Request $request)
+    {
+        try {
+            $monto = $request->get('monto_apertura');
+            if( !$monto || $monto < 0 ) throw new \Exception('El monto de apertura es requerido y debe ser mayor a 0');
+            $apertura = new Apertura();
+            $apertura->user_id = backpack_user()->id;
+            $apertura->sucursal_id = backpack_user()->sucursal_id;
+            $apertura->monto_apertura = $monto;
+            $apertura->estado = 'abierto';
+            $apertura->save();
+            return response()->json([
+                'message' => 'Apertura exitosa',
+                'apertura' => $apertura
+            ], 200);
+        }catch (\Exception $e){
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTrace()
+            ], 500);
+        }
+    }
+
 }
