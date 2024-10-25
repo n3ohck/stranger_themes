@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\CorteRequest;
+use App\Models\Apertura;
 use App\Models\Corte;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
@@ -153,6 +154,15 @@ class CorteCrudController extends CrudController
             throw new \Exception('El total debe ser mayor a 0');
         }
 
+        if($apertura->user_id_cerro) {
+            throw new \Exception('La apertura ya fue cerrada');
+        }
+
+        $cortes = Corte::query()->where('apertura_id', $aperturaId)->exists();
+        if ($cortes) {
+            throw new \Exception('Ya se realizo un corte para esta apertura');
+        }
+
         return $apertura;
     }
 
@@ -174,6 +184,7 @@ class CorteCrudController extends CrudController
                 'apertura_id' => $apertura->id
             ]);
             $apertura->estado = 'cerrado';
+            $apertura->user_id_cerro = backpack_user()->id;
             $apertura->save();
             DB::commit();
             return response()->json([
