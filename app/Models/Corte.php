@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -50,6 +51,8 @@ class Corte extends Model
         'transferencia' => 'float',
         'total_caja' => 'float'
     ];
+
+    protected $appends = ['total_egresos_efectivo', 'efectivo_egreso', 'total_egresos'];
 
     /*
     |--------------------------------------------------------------------------
@@ -114,4 +117,33 @@ class Corte extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
+    public function getTotalEgresosEfectivoAttribute()
+    {
+        $fechaInicio = Carbon::parse($this->attributes['fecha_inicio'])->startOfDay();
+        $fechaFinal = Carbon::parse($this->attributes['fecha_final'])->endOfDay();
+        return Egreso::query()
+            ->select(['monto','fecha_pago','estatus','sucursal_id'])
+            ->whereBetween('fecha_pago', [$fechaInicio, $fechaFinal])
+            ->where('estatus','activo')
+            ->where('sucursal_id', $this->attributes['sucursal_id'])
+            ->where('tipo_pago','efectivo')
+            ->sum('monto');
+    }
+
+    public function getTotalEgresosAttribute()
+    {
+        $fechaInicio = Carbon::parse($this->attributes['fecha_inicio'])->startOfDay();
+        $fechaFinal = Carbon::parse($this->attributes['fecha_final'])->endOfDay();
+        return Egreso::query()
+            ->select(['monto','fecha_pago','estatus','sucursal_id'])
+            ->whereBetween('fecha_pago', [$fechaInicio, $fechaFinal])
+            ->where('estatus','activo')
+            ->where('sucursal_id', $this->attributes['sucursal_id'])
+            ->sum('monto');
+    }
+
+    public function getEfectivoEgresoAttribute()
+    {
+        return number_format(($this->attributes['efectivo'] - $this->total_egresos), 2, '.', '');
+    }
 }
