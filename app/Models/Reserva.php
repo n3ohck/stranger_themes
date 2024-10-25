@@ -28,7 +28,8 @@ class Reserva extends Model
         'cantidad_personas',
         'fecha',
         'estado',
-        'sucursal_id'
+        'sucursal_id',
+        'venta_id'
     ];
     // protected $hidden = [];
     protected $dates = [

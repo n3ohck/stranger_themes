@@ -1,6 +1,8 @@
 <?php
 namespace App\Actions;
 
+use App\Models\Reserva;
+use App\Models\User;
 use App\Models\Venta;
 use App\Models\VentaPago;
 use App\Models\VentaProducto;
@@ -10,16 +12,20 @@ use Illuminate\Support\Facades\DB;
 class VentaAction
 {
     public function makeFolio():string{
-        $lastVenta = Venta::query()->select(['id','created_at'])->latest()->first();
+        $lastVenta = Venta::query()
+            ->select(['id','created_at'])
+            ->latest()
+            ->first();
         if(!$lastVenta) return 'VTA-1';
         return 'VTA-'.($lastVenta->id + 1);
     }
     public function do(array $ventas):array
     {
-        $userId = backpack_user()->id;
-        $sucursalId = backpack_user()->sucursal_id;
         $nuevasVentas = [];
         foreach ($ventas as $venta){
+            $user = User::query()
+                ->where('id',$venta['user_id'])
+                ->first();
             $venta['datetime'] = Carbon::parse(str_replace('T',' ',$venta['datetime']));
             $existe = Venta::query()
                 ->where('created_at', $venta['datetime'])
@@ -27,26 +33,48 @@ class VentaAction
                 ->exists();
             if( $existe ) continue;
             $nuevaVenta = Venta::create([
-                'user_id' => $userId,
+                'user_id' => $user->id,
                 'descuento_id' => $venta['descuento_id'] ?? null,
-                'sucursal_id' => $sucursalId,
+                'sucursal_id' => $user->sucursal_id,
                 'folio' => $this->makeFolio(),
                 'total' => $venta['total'],
                 'codigo_descuento' => $venta['codigo_descuento'] ?? null,
                 'descuento' => $venta['descuento'],
                 'porcentaje_descuento' => $venta['porcentaje_descuento'] ?? null,
-                'created_at' => Carbon::parse($venta['datetime'])
+                'created_at' => $venta['datetime']
             ]);
             $this->makeVentaProductos($nuevaVenta->id, $venta['productos']);
             $this->makeVentaPagos($nuevaVenta->id, $venta['pagos']);
+            if( isset($venta['reservas']) ){
+                $reservaciones = $this->makeVentaReservacion($nuevaVenta->id, $venta['reservas']);
+            }
             $nuevasVentas[] = [
                 'venta_id' => $nuevaVenta->id,
                 'estatus' => $nuevaVenta->estatus,
                 'folio' => $nuevaVenta->folio,
-                'total' => $nuevaVenta->total
+                'total' => $nuevaVenta->total,
+                'reservaciones' => $reservaciones ?? []
             ];
         }
         return $nuevasVentas;
+    }
+
+    public function makeVentaReservacion(int $ventaId, array $reservas, $sucursalId):array
+    {
+        $reservasNuevas = [];
+        foreach ($reservas as $reserva){
+            $reserva['datetime'] =  Carbon::parse(str_replace('T',' ',$reserva['datetime']));
+            $reservasNuevas[] = Reserva::create([
+                'producto_id' => $reserva['product_id'],
+                'nombre_cliente' => $reserva['name'],
+                'cantidad_personas' => $reserva['number'],
+                'fecha' => $reserva['datetime'],
+                'estado' => 'confirmada',
+                'sucursal_id' => $sucursalId,
+                'venta_id' => $ventaId
+            ]);
+        }
+        return $reservasNuevas;
     }
 
     public function makeVentaProductos(int $ventaId, array $productos):void
