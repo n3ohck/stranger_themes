@@ -62,6 +62,7 @@ class EgresoCrudController extends CrudController
                 'type' => 'number',
                 'label' => 'Importe',
                 'prefix' => "$",
+                'decimals' => 2,
             ],
             [
                 'name' => 'tipo_pago',
