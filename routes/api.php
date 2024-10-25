@@ -41,4 +41,8 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     //Aperturas
     Route::post('apertura', [\App\Http\Controllers\Admin\AperturaCrudController::class,'make']);
     Route::get('apertura', [\App\Http\Controllers\Admin\AperturaCrudController::class,'fetch']);
+
+    //Cortes
+    Route::post('corte', [\App\Http\Controllers\Admin\CorteCrudController::class,'make']);
+    Route::get('corte', [\App\Http\Controllers\Admin\CorteCrudController::class,'fetch']);
 });
