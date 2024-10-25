@@ -6,11 +6,13 @@ use App\Models\User;
 use App\Models\Venta;
 use App\Models\VentaPago;
 use App\Models\VentaProducto;
+use App\Traits\DateTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class VentaAction
 {
+    use DateTrait;
     public $user;
     public function __construct()
     {
@@ -28,7 +30,7 @@ class VentaAction
     {
         $nuevasVentas = [];
         foreach ($ventas as $venta){
-            $venta['datetime'] = Carbon::parse(str_replace('T',' ',$venta['datetime']));
+            $venta['datetime'] = $this->makeDate($venta['datetime']);
             $existe = Venta::query()
                 ->where('created_at', $venta['datetime'])
                 ->where('total', $venta['total'])
