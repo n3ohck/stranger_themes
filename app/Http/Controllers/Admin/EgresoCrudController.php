@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\EgresoRequest;
+use App\Models\Egreso;
 use App\Models\Sucursal;
 use App\Models\User;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -20,7 +22,6 @@ class EgresoCrudController extends CrudController
     use \Backpack\CRUD\app\Http\Controllers\Operations\CreateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
-
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
      *
@@ -227,4 +228,62 @@ class EgresoCrudController extends CrudController
     {
         $this->setupCreateOperation();
     }
+
+    public function make(Request $request)
+    {
+        try {
+            $request->validate([
+                'monto' => 'required|numeric',
+                'descripcion' => 'required|string',
+                'tipo_pago' => 'required|string',
+                'referencia' => 'required|string',
+                'fecha_pago' => 'required',
+                'imagen' => 'required|image',
+            ]);
+            DB::beginTransaction();
+            $egreso = Egreso::create([
+                'user_id' => backpack_user()->id,
+                'monto' => $request->monto,
+                'descripcion' => $request->descripcion,
+                'tipo_pago' => $request->tipo_pago,
+                'estatus' => 'activo',
+                'referencia' => $request->referencia,
+                'imagen' => $request->file('imagen')->store('egresos', 'pagos'),
+                'fecha_pago' => $request->fecha_pago,
+                'sucursal_id' => backpack_user()->sucursal_id
+            ]);
+            DB::commit();
+            return response()->json([
+                'message' => 'Egreso creado con exito',
+                'egreso' => $egreso
+            ], 200);
+        }catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function fetch(Request $request)
+    {
+        try{
+            $search = (object)[
+                'user_id' => $request->get('user_id'),
+                'sucursal_id' => $request->get('sucursal_id'),
+                'fecha_pago' => $request->get('fecha_pago'),
+                'estatus' => $request->get('estatus')
+            ];
+            $egresos = Egreso::query()
+                ->Search($search)
+                ->orderBy('fecha_pago', 'desc')
+                ->get();
+            return response()->json([
+                'message' => 'Egresos encontrados',
+                'egresos' => $egresos,
+                'qty' => $egresos->count()
+            ], 200);
+        }catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
 }
