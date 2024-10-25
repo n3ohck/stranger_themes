@@ -42,6 +42,10 @@ class Empleado extends Model
         'salario' => 'double'
     ];
 
+    protected $appends = [
+        'nombre_completo'
+    ];
+
     /*
     |--------------------------------------------------------------------------
     | FUNCTIONS
@@ -74,4 +78,8 @@ class Empleado extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
+    public function getNombreCompletoAttribute():string
+    {
+        return "{$this->nombres} {$this->apellidos}";
+    }
 }

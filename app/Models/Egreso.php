@@ -99,7 +99,7 @@ class Egreso extends Model
     public function scopeSearch($query, $search)
     {
         $this->search = $search;
-        $query
+        return $query
             ->when($this->search->user_id, function ($query) {
                 $query->where('user_id', $this->search->user_id);
             })

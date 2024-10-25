@@ -25,7 +25,12 @@ class EmpleadoRequest extends FormRequest
     public function rules()
     {
         return [
-            // 'name' => 'required|min:5|max:255'
+            'sucursal_id' => 'required|exists:sucursales,id',
+            'nombres' => 'required|min:3|max:255',
+            'apellidos' => 'required|min:3|max:255',
+            'email' => 'required|email',
+            'telefono' => 'nullable|min:10|max:10',
+            'salario' => 'required|numeric|min:1'
         ];
     }
 
@@ -49,7 +54,19 @@ class EmpleadoRequest extends FormRequest
     public function messages()
     {
         return [
-            //
+            'sucursal_id.required' => 'El campo sucursal es obligatorio.',
+            'sucursal_id.exists' => 'La sucursal seleccionada no es válida.',
+            'nombres.required' => 'El campo nombres es obligatorio.',
+            'nombres.min' => 'El campo nombres debe tener al menos 3 caracteres.',
+            'nombres.max' => 'El campo nombres debe tener máximo 255 caracteres.',
+            'apellidos.required' => 'El campo apellidos es obligatorio.',
+            'apellidos.min' => 'El campo apellidos debe tener al menos 3 caracteres.',
+            'apellidos.max' => 'El campo apellidos debe tener máximo 255 caracteres.',
+            'email.required' => 'El campo email es obligatorio.',
+            'email.email' => 'El campo email debe ser un correo electrónico válido.',
+            'telefono.min' => 'El campo teléfono debe tener al menos 10 caracteres.',
+            'telefono.max' => 'El campo teléfono debe tener máximo 10 caracteres.',
+            'salario.required' => 'El campo salario es obligatorio.',
         ];
     }
 }

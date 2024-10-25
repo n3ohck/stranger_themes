@@ -5,6 +5,7 @@
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('apertura') }}'><i class='nav-icon la la-question'></i> Aperturas</a></li>
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('corte') }}'><i class='nav-icon la la-question'></i> Cortes</a></li>
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('empleado') }}'><i class='nav-icon la la-users'></i> Empleados</a></li>
+<li class='nav-item'><a class='nav-link' href='{{ backpack_url('empleado-pago') }}'><i class='nav-icon la la-list'></i> Empleados Pagos</a></li>
 <li class="nav-item nav-dropdown">
     <a class="nav-link nav-dropdown-toggle" href="#"><i class="nav-icon la la-gear"></i> Configuracion</a>
     <ul class="nav-dropdown-items">

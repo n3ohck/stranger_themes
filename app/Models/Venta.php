@@ -111,7 +111,7 @@ class Venta extends Model
     public function scopeSearch($query, $search)
     {
         $this->search = $search;
-        $query
+        return $query
             ->when($this->search->folio, function ($query) {
                 return $query->where('folio', $this->search->folio);
             })

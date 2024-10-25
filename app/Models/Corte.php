@@ -89,7 +89,7 @@ class Corte extends Model
     public function scopeSearch($query, $search)
     {
         $this->search = $search;
-        $query
+        return $query
             ->when($search->fecha_inicio, function ($q, $fecha_inicio) {
                 $q->where('fecha_inicio', '>=', $fecha_inicio);
             })

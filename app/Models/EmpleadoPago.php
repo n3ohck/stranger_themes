@@ -7,9 +7,10 @@ use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Venturecraft\Revisionable\RevisionableTrait;
 
-class Apertura extends Model
+class EmpleadoPago extends Model
 {
     use CrudTrait, RevisionableTrait, SoftDeletes;
 
@@ -18,32 +19,29 @@ class Apertura extends Model
     | GLOBAL VARIABLES
     |--------------------------------------------------------------------------
     */
+
     public $search;
-    protected $table = 'aperturas';
+    protected $table = 'empleado_pagos';
     protected $primaryKey = 'id';
     // public $timestamps = false;
     protected $guarded = ['id'];
     protected $fillable = [
-        'id',
-        'user_id',
-        'user_id_cerro',
-        'monto_apertura',
-        'monto_cierre',
-        'estado',
-        'billetes',
-        'sucursal_id'
+        'empleado_id',
+        'fecha_pago',
+        'imagen',
+        'monto',
+        'estatus'
     ];
     // protected $hidden = [];
     protected $dates = [
         'created_at',
         'updated_at',
-        'deleted_at'
+        'deleted_at',
+        'fecha_pago'
     ];
 
     protected $casts = [
-        'billetes' => 'array',
-        'monto_apertura' => 'double',
-        'monto_cierre' => 'double'
+        'monto' => 'double'
     ];
 
     /*
@@ -53,55 +51,68 @@ class Apertura extends Model
     */
     protected static function booted()
     {
+        parent::boot();
         static::addGlobalScope(new SucursalFilterScope);
+        static::deleting(function ($obj) {
+            Storage::disk('pagos')->delete($obj->imagen);
+        });
     }
+
+
     /*
     |--------------------------------------------------------------------------
     | RELATIONS
     |--------------------------------------------------------------------------
     */
-    public function user():BelongsTo
+    public function empleado(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Empleado::class);
     }
 
-    public function userCierre():BelongsTo
-    {
-        return $this->belongsTo(User::class, 'user_id_cerro');
-    }
-
-    public function sucursal():BelongsTo
-    {
-        return $this->belongsTo(Sucursal::class);
-    }
     /*
     |--------------------------------------------------------------------------
     | SCOPES
     |--------------------------------------------------------------------------
     */
-    public function scopeSearch($query,$search)
+    public function scopeBySucursal($query, $sucursalId)
     {
-        $this->search = $search;
-        return $query
-            ->when($search->user_id, function ($query) {
-                $query->where('user_id', $this->search->user_id);
-            })
-            ->when($search->user_id_cerro, function ($query) {
-                $query->where('user_id_cerro', $this->search->user_id_cerro);
-            })
-            ->when($search->estado, function ($query) {
-                $query->where('estado', $this->search->estado);
-            })
-            ->when($search->fecha_apertura, function ($query) {
-                $query->whereBetween('created_at', [$this->search->fecha_apertura->startOfDay(), $this->search->fecha_apertura->endOfDay()]);
+        $query
+            ->whereHas('empleado', function ($query) use ($sucursalId) {
+                $query
+                    ->where('sucursal_id', $sucursalId);
             });
     }
+
+    public function scopeSearch($query, $search)
+    {
+        $this->search = $search;
+        return  $query
+            ->when($this->search->empleado_id, function ($query) {
+                $query->where('empleado_id', $this->search->empleado_id);
+            })
+            ->when($this->search->fecha_pago, function ($query) {
+                $query->where('fecha_pago', $this->search->fecha_pago);
+            })
+            ->when($this->search->estatus, function ($query) {
+                $query->where('estatus', $this->search->estatus);
+            });
+    }
+
     /*
     |--------------------------------------------------------------------------
     | ACCESSORS
     |--------------------------------------------------------------------------
     */
+    public function setArchivoAttribute($value)
+    {
+        $attribute_name = "imagen";
+        $disk = "pagos";
+        $destination_path = "pago_cartas";
 
+        $this->uploadFileToDisk($value, $attribute_name, $disk, $destination_path);
+
+        // return $this->attributes[{$attribute_name}]; // uncomment if this is a translatable field
+    }
     /*
     |--------------------------------------------------------------------------
     | MUTATORS

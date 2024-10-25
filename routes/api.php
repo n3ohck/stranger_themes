@@ -50,4 +50,5 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     //Egresos
     Route::post('egreso', [\App\Http\Controllers\Admin\EgresoCrudController::class,'make']);
     Route::get('egreso', [\App\Http\Controllers\Admin\EgresoCrudController::class,'fetch']);
+
 });
