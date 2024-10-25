@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\SucursalRequest;
 use App\Models\Sucursal;
+use App\Models\User;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Http\Request;
@@ -57,6 +58,16 @@ class SucursalCrudController extends CrudController
                 'type'  => 'text'
             ],
             [
+                'name' => 'hora_apertura',
+                'label' => 'Hora Apertura',
+                'type' => 'time'
+            ],
+            [
+                'name' => 'hora_cierre',
+                'label' => 'Hora Cierre',
+                'type' => 'time'
+            ],
+            [
                 'name'  => 'created_at',
                 'label' => 'Fecha Registro',
                 'type'  => 'text'
@@ -84,80 +95,49 @@ class SucursalCrudController extends CrudController
                 'label' => "Razon social",
                 'type'  => 'text',
                 'hint'       => 'Nombre de la sucursal.', // helpful text, show up after input
-                //'attributes' => [
                 'placeholder' => 'Nombre de la sucursal',
-                //'class' => 'form-control some-class',
-                //'readonly'  => 'readonly',
-                //'disabled'  => 'disabled',
-                //], // extra HTML attributes and values your input might need
-                //'wrapper'   => [
-                //'class' => 'form-group col-md-12'
-                //], // extra HTML attributes for the field wrapper - mostly for resizing fields
-
             ],
             [   // Text
                 'name'  => 'rfc',
                 'label' => "RFC",
                 'type'  => 'text',
                 'hint'       => 'Registro federal de causantes.', // helpful text, show up after input
-                //'attributes' => [
                 'placeholder' => 'RFC de la sucursal',
-                //'class' => 'form-control some-class',
-                //'readonly'  => 'readonly',
-                //'disabled'  => 'disabled',
-                //], // extra HTML attributes and values your input might need
-                //'wrapper'   => [
-                //'class' => 'form-group col-md-12'
-                //], // extra HTML attributes for the field wrapper - mostly for resizing fields
-
             ],
             [   // Text
                 'name'  => 'email',
                 'label' => "Email",
                 'type'  => 'text',
                 'hint'       => 'Correo electronico.', // helpful text, show up after input
-                //'attributes' => [
-                'placeholder' => 'Correo electronico',
-                //'class' => 'form-control some-class',
-                //'readonly'  => 'readonly',
-                //'disabled'  => 'disabled',
-                //], // extra HTML attributes and values your input might need
-                //'wrapper'   => [
-                //'class' => 'form-group col-md-12'
-                //], // extra HTML attributes for the field wrapper - mostly for resizing fields
-
+                'placeholder' => 'Correo electronico'
             ],
             [   // Text
                 'name'  => 'telefono',
                 'label' => "Telefono",
                 'type'  => 'text',
                 'hint'       => 'Telefono.', // helpful text, show up after input
-                //'attributes' => [
-                'placeholder' => 'Telefono',
-                //'class' => 'form-control some-class',
-                //'readonly'  => 'readonly',
-                //'disabled'  => 'disabled',
-                //], // extra HTML attributes and values your input might need
-                //'wrapper'   => [
-                //'class' => 'form-group col-md-12'
-                //], // extra HTML attributes for the field wrapper - mostly for resizing fields
-
+                'placeholder' => 'Telefono'
             ],
             [   // Text
                 'name'  => 'direccion',
                 'label' => "Direccion",
                 'type'  => 'textarea',
                 'hint'       => 'Direccion completa.', // helpful text, show up after input
-                //'attributes' => [
                 'placeholder' => 'Direccion completa.',
-                //'class' => 'form-control some-class',
-                //'readonly'  => 'readonly',
-                //'disabled'  => 'disabled',
-                //], // extra HTML attributes and values your input might need
-                //'wrapper'   => [
-                //'class' => 'form-group col-md-12'
-                //], // extra HTML attributes for the field wrapper - mostly for resizing fields
-
+            ],
+            [   // Time
+                'name'  => 'hora_apertura',
+                'label' => "Hora Apertura",
+                'type'  => 'time',
+                'hint'       => 'Hora de apertura.', // helpful text, show up after input
+                'placeholder' => 'Hora de apertura',
+            ],
+            [   // Time
+                'name'  => 'hora_cierre',
+                'label' => "Hora Cierre",
+                'type'  => 'time',
+                'hint'       => 'Hora de cierre.', // helpful text, show up after input
+                'placeholder' => 'Hora de cierre',
             ],
             [
                 'label' => "Logotipo",
@@ -195,5 +175,23 @@ class SucursalCrudController extends CrudController
             })
             ->orderBy('razon_social', 'DESC')
             ->paginate(10);
+    }
+
+    public function get(Request $request)
+    {
+        try {
+            $user = $request->get('user_id');
+            if( !$user ) throw new \Exception('No se ha proporcionado un usuario.');
+            $user = User::find($user);
+            if( !$user ) throw new \Exception('No se ha encontrado el usuario.');
+            $sucursal = Sucursal::query()->where('id', $user->sucursal_id)->first();
+            if( !$sucursal ) throw new \Exception('No se ha encontrado la sucursal.');
+            return response()->json([
+                'message' => 'Consuta exitosa.',
+                'sucursal' => $sucursal
+            ],200);
+        }catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

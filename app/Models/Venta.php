@@ -1,0 +1,142 @@
+<?php
+
+namespace App\Models;
+
+use App\Scopes\SucursalFilterScope;
+use Backpack\CRUD\app\Models\Traits\CrudTrait;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Venturecraft\Revisionable\RevisionableTrait;
+
+class Venta extends Model
+{
+    use CrudTrait, SoftDeletes, RevisionableTrait;
+
+    /*
+    |--------------------------------------------------------------------------
+    | GLOBAL VARIABLES
+    |--------------------------------------------------------------------------
+    */
+
+    public $search;
+    protected $table = 'ventas';
+    protected $primaryKey = 'id';
+    // public $timestamps = false;
+    protected $guarded = ['id'];
+    protected $fillable = [
+        'user_id',
+        'user_id_cancelacion',
+        'descuento_id',
+        'sucursal_id',
+        'folio',
+        'total',
+        'codigo_descuento',
+        'descuento',
+        'porcentaje_descuento',
+        'estatus',
+        'fecha_cancelacion',
+        'comentario_cancelacion'
+    ];
+    // protected $hidden = [];
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        'fecha_cancelacion',
+    ];
+
+    protected $casts = [
+        'total' => 'float',
+        'descuento' => 'float',
+        'porcentaje_descuento' => 'float',
+    ];
+
+    /*
+    |--------------------------------------------------------------------------
+    | FUNCTIONS
+    |--------------------------------------------------------------------------
+    */
+    protected static function booted()
+    {
+        static::addGlobalScope(new SucursalFilterScope);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATIONS
+    |--------------------------------------------------------------------------
+    */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function userCancelacion(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id_cancelacion');
+    }
+
+    public function descuento(): BelongsTo
+    {
+        return $this->belongsTo(Descuento::class);
+    }
+
+    public function sucursal(): BelongsTo
+    {
+        return $this->belongsTo(Sucursal::class);
+    }
+
+    public function productos(): HasMany
+    {
+        return $this->hasMany(VentaProducto::class);
+    }
+
+    public function pagos(): HasMany
+    {
+        return $this->hasMany(VentaPago::class);
+    }
+
+    public function reservaciones(): HasMany
+    {
+        return $this->hasMany(Reserva::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCOPES
+    |--------------------------------------------------------------------------
+    */
+    public function scopeSearch($query, $search)
+    {
+        $this->search = $search;
+        $query
+            ->when($this->search->folio, function ($query) {
+                return $query->where('folio', $this->search->folio);
+            })
+            ->when($this->search->start_date, function ($query) {
+                return $query->where('created_at', '>=', $this->search->start_date);
+            })
+            ->when($this->search->end_date, function ($query) {
+                return $query->where('created_at', '<=', $this->search->end_date);
+            })
+            ->when($this->search->status, function ($query) {
+                return $query->where('estatus', $this->search->status);
+            })
+            ->when($this->search->venta_id, function ($query) {
+                return $query->where('id', $this->search->venta_id);
+            });
+    }
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSORS
+    |--------------------------------------------------------------------------
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | MUTATORS
+    |--------------------------------------------------------------------------
+    */
+}

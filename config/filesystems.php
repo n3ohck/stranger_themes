@@ -47,7 +47,12 @@ return [
             'driver' => 'local',
             'root' => storage_path('app'),
         ],
-
+        'pagos' => [
+            'driver' => 'local',
+            'root' => storage_path('app/public/pagos'),
+            'url' => env('APP_URL').'/storage',
+            'visibility' => 'public',
+        ],
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

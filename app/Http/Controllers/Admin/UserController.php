@@ -60,6 +60,11 @@ class UserController extends CrudController
                 'model'     => Sucursal::class, // foreign key model
             ],
             [
+                'name'  => 'es_vendedor',
+                'label' => 'Es vendedor',
+                'type'  => 'text',
+            ],
+            [
                 'name'  => 'email',
                 'label' => trans('backpack::permissionmanager.email'),
                 'type'  => 'email',
@@ -111,6 +116,32 @@ class UserController extends CrudController
                 });
             }
         );
+
+        //Es vendedor
+        $this->crud->addFilter(
+            [
+                'name'  => 'es_vendedor',
+                'type'  => 'dropdown',
+                'label' => 'Es vendedor',
+            ],
+            ['si' => 'Si', 'no' => 'No'],
+            function ($value) { // if the filter is active
+                $this->crud->addClause('where', 'es_vendedor', '=', $value);
+            }
+        );
+
+        $this->crud->addFilter([ // dropdown filter
+            'name' => 'sucursal_id',
+            'type' => 'dropdown',
+            'label' => 'Sucursal'
+        ],Sucursal::query()
+            ->select('id','razon_social')
+            ->get()
+            ->pluck('razon_social','id')
+            ->filter()
+            ->toArray(), function ($value) { // if the filter is active
+            $this->crud->addClause('where', 'sucursal_id', $value);
+        });
     }
 
     public function setupCreateOperation()
@@ -211,6 +242,11 @@ class UserController extends CrudController
                 'label' => trans('backpack::permissionmanager.password_confirmation'),
                 'type'  => 'password',
             ],
+            [
+                'name'  => 'es_vendedor',
+                'label' => 'Es vendedor',
+                'type'  => 'enum',
+            ],
             [   // 1-n relationship
                 'label'       => "Sucursal", // Table column heading
                 'type'        => "select2_from_ajax",
@@ -281,5 +317,18 @@ class UserController extends CrudController
         }catch (Exception $e){
             return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
+
+    public function fetch(Request $request)
+    {
+        $search_term = $request->input('q');
+        return User::query()
+            ->select(['id', 'first_name', 'last_name', 'email', 'user'])
+            ->when($search_term, function ($query, $search_term) {
+                return $query->where('first_name', 'like', "%$search_term%")
+                    ->orWhere('last_name', 'like', "%$search_term%")
+                    ->orWhere('email', 'like', "%$search_term%")
+                    ->orWhere('user', 'like', "%$search_term%");
+            })->paginate(10);
     }
 }

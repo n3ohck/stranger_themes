@@ -32,7 +32,9 @@ class Sucursal extends Model
         'email',
         'telefono',
         'direccion',
-        'logotipo'
+        'logotipo',
+        'hora_apertura',
+        'hora_cierre',
     ];
     // protected $hidden = [];
     protected $dates = [
@@ -40,6 +42,7 @@ class Sucursal extends Model
         'updated_at',
         'deleted_at'
     ];
+
 
     /*
     |--------------------------------------------------------------------------

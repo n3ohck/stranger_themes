@@ -24,11 +24,11 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Este usuario no tiene permisos para acceder al sistema'], 400);
             }
         } catch (JWTException $e) {
-            throw $e;
             return response()->json(['message' => 'could_not_create_token'], 500);
         }
 
-        return response()->json(compact('token'));
+        $user->load('roles','sucursal');
+        return response()->json(compact('token','user'));
     }
 
     public function register(Request $request)

@@ -20,7 +20,7 @@ class PagoCartaCreateTable extends Migration
             $table->timestamp('fecha_documento')->nullable();
             $table->timestamp('fecha_pago')->nullable();
             $table->text('archivo')->nullable();
-            $table->string('hash');
+            $table->string('hash')->nullable();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('pago_concepto_id')->constrained();
             $table->unsignedBigInteger('sucursal_id')->index();
