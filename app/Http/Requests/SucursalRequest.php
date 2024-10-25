@@ -30,7 +30,9 @@ class SucursalRequest extends FormRequest
             'email'=> 'required|email:rfc,dns',
             'telefono' => 'nullable|max:10',
             'direccion' => 'nullable',
-            'logotipo' => 'nullable'
+            'logotipo' => 'nullable',
+            'hora_apertura' => 'required',
+            'hora_cierre' => 'required',
         ];
     }
 
@@ -62,6 +64,8 @@ class SucursalRequest extends FormRequest
             'email.required'=> 'El campo de correo electronico es obligatorio.',
             'email.email'=> 'El campo de correo electronico es invalido.',
             'telefono.max' => 'El campo de telefono debe contener maximo 10 caracteres.',
+            'hora_apertura.required' => 'La hora de apertura es obligatoria.',
+            'hora_cierre.required' => 'La hora de cierre es obligatoria.',
         ];
     }
 }
