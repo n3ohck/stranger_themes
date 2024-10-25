@@ -23,6 +23,7 @@ class VentaCrudController extends CrudController
     use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
+    use \App\Traits\DateTrait;
 
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
@@ -111,11 +112,6 @@ class VentaCrudController extends CrudController
     protected function setupUpdateOperation()
     {
         $this->setupCreateOperation();
-    }
-
-    private function makeDate($date)
-    {
-        return (isset($date)) ? Carbon::parse(str_replace('T', ' ', $date)) : null;
     }
 
     public function fetch(Request $request)
