@@ -116,6 +116,7 @@ class ReservaCrudController extends CrudController
             ];
 
             $reservas = Reserva::query()
+                ->with(['producto'])
                 ->Search($search)
                 ->orderBy('fecha', 'desc')
                 ->get();
