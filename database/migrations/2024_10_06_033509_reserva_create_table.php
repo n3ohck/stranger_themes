@@ -20,7 +20,7 @@ class ReservaCreateTable extends Migration
                 ->onDelete('cascade');
             $table->string('nombre_cliente');
             $table->integer('cantidad_personas');
-            $table->date('fecha');
+            $table->timestamp('fecha');
             $table->enum('estado',[
                 'pendiente',
                 'confirmada',
