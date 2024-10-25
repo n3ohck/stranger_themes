@@ -6,6 +6,7 @@ use App\Http\Requests\VentaRequest;
 use App\Models\Venta;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Actions\VentaAction;
 use Illuminate\Support\Facades\DB;
@@ -112,10 +113,30 @@ class VentaCrudController extends CrudController
         $this->setupCreateOperation();
     }
 
+    private function makeDate($date)
+    {
+        return (isset($date)) ? Carbon::parse(str_replace('T', ' ', $date)) : null;
+    }
+
     public function fetch(Request $request)
     {
         try{
-
+            $search = (object)[
+                'folio' => $request->get('folio'),
+                'start_date' => $this->makeDate($request->get('start_date')),
+                'end_date' => $this->makeDate($request->get('end_date')),
+                'status' => $request->get('status'),
+            ];
+            $ventas = Venta::query()
+                ->search($search)
+                ->with(['productos','pagos'])
+                ->orderBy('created_at','desc')
+                ->get();
+            return response()->json([
+                'message' => 'Consulta realizada con exito',
+                'ventas' => $ventas,
+                'qty' => count($ventas)
+            ], 200);
         }catch (\Exception $e){
             return response()
                 ->json([
