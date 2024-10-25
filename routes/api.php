@@ -20,12 +20,25 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::post('register', 'App\Http\Controllers\AuthController@register');
 Route::post('login', 'App\Http\Controllers\AuthController@authenticate');
 Route::group(['middleware' => ['jwt.verify']], function () {
+    //Login
     Route::post('user', 'App\Http\Controllers\Admin\UserController@getAuthenticatedUser');
+
+    //Productos
     Route::get('productos', [\App\Http\Controllers\Admin\ProductoCrudController::class,'fetch']);
-    Route::get('descuentos', [\App\Http\Controllers\Admin\DescuentoCrudController::class,'fetch']);
+
+    //Ventas
     Route::post('ventas/make', [\App\Http\Controllers\Admin\VentaCrudController::class,'make']);
-    Route::get('ventas', [\App\Http\Controllers\Admin\VentaCrudController::class,'fetch']);
     Route::post('ventas/cancel', [\App\Http\Controllers\Admin\VentaCrudController::class,'cancel']);
+    Route::get('ventas', [\App\Http\Controllers\Admin\VentaCrudController::class,'fetch']);
+
+    //Descuentos
+    Route::get('descuentos', [\App\Http\Controllers\Admin\DescuentoCrudController::class,'fetch']);
+
+    //Reservas
     Route::get('reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'fetch']);
     Route::post('reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'createReserva']);
+
+    //Aperturas
+    Route::post('apertura', [\App\Http\Controllers\Admin\AperturaCrudController::class,'make']);
+    Route::get('apertura', [\App\Http\Controllers\Admin\AperturaCrudController::class,'fetch']);
 });
