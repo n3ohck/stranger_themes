@@ -126,6 +126,7 @@ class VentaCrudController extends CrudController
                 'start_date' => $this->makeDate($request->get('start_date')),
                 'end_date' => $this->makeDate($request->get('end_date')),
                 'status' => $request->get('status'),
+                'venta_id' => $request->get('venta_id')
             ];
             $ventas = Venta::query()
                 ->search($search)
@@ -135,7 +136,7 @@ class VentaCrudController extends CrudController
             return response()->json([
                 'message' => 'Consulta realizada con exito',
                 'ventas' => $ventas,
-                'qty' => count($ventas)
+                'qty' => $ventas->count()
             ], 200);
         }catch (\Exception $e){
             return response()

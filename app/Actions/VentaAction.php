@@ -119,6 +119,7 @@ class VentaAction
                     'fecha_cancelacion' => now(),
                     'comentario_cancelacion' => $venta['comentario_cancelacion'] ?? 'N/A'
                 ]);
+                $ventaActualizar->reservaciones()->update(['estado' => 'cancelada']);
                 $ventaActualizar->save();
                 foreach ($ventaActualizar->productos as $producto){
                     (new ExistenciaAction())::existenciaCancelacion($producto->producto_id, $producto->cantidad);
@@ -126,7 +127,8 @@ class VentaAction
                 $ventasCanceladas[] = [
                     'venta_id' => $ventaActualizar->id,
                     'folio' => $ventaActualizar->folio,
-                    'estatus' => $ventaActualizar->estatus
+                    'estatus' => $ventaActualizar->estatus,
+                    'reservaciones' => $ventaActualizar->reservaciones->toArray()
                 ];
             }
 

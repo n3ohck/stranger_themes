@@ -20,6 +20,7 @@ class Venta extends Model
     |--------------------------------------------------------------------------
     */
 
+    public $search;
     protected $table = 'ventas';
     protected $primaryKey = 'id';
     // public $timestamps = false;
@@ -61,48 +62,71 @@ class Venta extends Model
     {
         static::addGlobalScope(new SucursalFilterScope);
     }
+
     /*
     |--------------------------------------------------------------------------
     | RELATIONS
     |--------------------------------------------------------------------------
     */
-    public function user():BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function userCancelacion():BelongsTo
+    public function userCancelacion(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id_cancelacion');
     }
 
-    public function descuento():BelongsTo
+    public function descuento(): BelongsTo
     {
         return $this->belongsTo(Descuento::class);
     }
 
-    public function sucursal():BelongsTo
+    public function sucursal(): BelongsTo
     {
         return $this->belongsTo(Sucursal::class);
     }
 
-    public function productos():HasMany
+    public function productos(): HasMany
     {
         return $this->hasMany(VentaProducto::class);
     }
 
-    public function pagos():HasMany
+    public function pagos(): HasMany
     {
         return $this->hasMany(VentaPago::class);
     }
+
+    public function reservaciones(): HasMany
+    {
+        return $this->hasMany(Reserva::class);
+    }
+
     /*
     |--------------------------------------------------------------------------
     | SCOPES
     |--------------------------------------------------------------------------
     */
-    public function scopeSearch($query,$search)
+    public function scopeSearch($query, $search)
     {
-
+        $this->search = $search;
+        $query
+            ->when($this->search->folio, function ($query) {
+                return $query->where('folio', $this->search->folio);
+            })
+            ->when($this->search->start_date, function ($query) {
+                return $query->where('created_at', '>=', $this->search->start_date);
+            })
+            ->when($this->search->end_date, function ($query) {
+                return $query->where('created_at', '<=', $this->search->end_date);
+            })
+            ->when($this->search->status, function ($query) {
+                return $query->where('estatus', $this->search->status);
+            })
+            ->when($this->search->venta_id, function ($query) {
+                return $query->where('id', $this->search->venta_id);
+            });
     }
     /*
     |--------------------------------------------------------------------------
