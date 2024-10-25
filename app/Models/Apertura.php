@@ -89,8 +89,8 @@ class Apertura extends Model
             ->when($search->user_id_cerro, function ($query) {
                 $query->where('user_id_cerro', $this->search->user_id_cerro);
             })
-            ->when($search->monto_apertura, function ($query) {
-                $query->where('monto_apertura', $this->search->monto_apertura);
+            ->when($search->estado, function ($query) {
+                $query->where('estado', $this->search->estado);
             });
     }
     /*
