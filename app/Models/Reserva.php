@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -92,6 +93,10 @@ class Reserva extends Model
     |--------------------------------------------------------------------------
     */
 
+    public function setFechaAttribute()
+    {
+        return Carbon::parse($this->attributes['fecha'])->format('Y-m-d H:i:s');
+    }
     /*
     |--------------------------------------------------------------------------
     | MUTATORS
