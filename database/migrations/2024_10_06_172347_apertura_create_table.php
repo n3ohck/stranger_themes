@@ -17,12 +17,15 @@ class AperturaCreateTable extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('user_id_cerro')->constrained();
+            $table->unsignedBigInteger('sucursal_id');
             $table->double('monto_apertura');
             $table->double('monto_cierre')->nullable();
             $table->enum('estado', ['abierto', 'cerrado'])->default('abierto');
             $table->json('billetes')->nullable();
             $table->timestamps();
             $table->softDeletes();
+
+            $table->foreign('sucursal_id')->references('id')->on('sucursales');
         });
     }
 
