@@ -16,7 +16,7 @@ class AperturaCreateTable extends Migration
         Schema::create('aperturas', function (Blueprint $table){
             $table->id();
             $table->foreignId('user_id')->constrained();
-            $table->foreignId('user_id_cerro')->constrained();
+            $table->foreignId('user_id_cerro')->nullable()->constrained();
             $table->unsignedBigInteger('sucursal_id');
             $table->double('monto_apertura');
             $table->double('monto_cierre')->nullable();
