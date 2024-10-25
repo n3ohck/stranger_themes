@@ -6,6 +6,7 @@ use App\Http\Requests\EgresoRequest;
 use App\Models\Egreso;
 use App\Models\Sucursal;
 use App\Models\User;
+use App\Traits\DateTrait;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Http\Request;
@@ -22,6 +23,7 @@ class EgresoCrudController extends CrudController
     use \Backpack\CRUD\app\Http\Controllers\Operations\CreateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
+    use DateTrait;
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
      *
@@ -249,7 +251,7 @@ class EgresoCrudController extends CrudController
                 'estatus' => 'activo',
                 'referencia' => $request->referencia,
                 'imagen' => $request->file('imagen')->store('egresos', 'pagos'),
-                'fecha_pago' => $request->fecha_pago,
+                'fecha_pago' => $this->makeDate($request->fecha_pago),
                 'sucursal_id' => backpack_user()->sucursal_id
             ]);
             DB::commit();
@@ -270,7 +272,8 @@ class EgresoCrudController extends CrudController
                 'user_id' => $request->get('user_id'),
                 'sucursal_id' => $request->get('sucursal_id'),
                 'fecha_pago' => $request->get('fecha_pago'),
-                'estatus' => $request->get('estatus')
+                'estatus' => $request->get('estatus'),
+                'tipo_pago' => $request->get('tipo_pago')
             ];
             $egresos = Egreso::query()
                 ->Search($search)
@@ -282,7 +285,7 @@ class EgresoCrudController extends CrudController
                 'qty' => $egresos->count()
             ], 200);
         }catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 500);
         }
     }
 

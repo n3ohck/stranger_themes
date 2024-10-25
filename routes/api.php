@@ -46,4 +46,8 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     //Cortes
     Route::post('corte', [\App\Http\Controllers\Admin\CorteCrudController::class,'make']);
     Route::get('corte', [\App\Http\Controllers\Admin\CorteCrudController::class,'fetch']);
+
+    //Egresos
+    Route::post('egreso', [\App\Http\Controllers\Admin\EgresoCrudController::class,'make']);
+    Route::get('egreso', [\App\Http\Controllers\Admin\EgresoCrudController::class,'fetch']);
 });
