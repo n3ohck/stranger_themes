@@ -93,7 +93,7 @@ class Reserva extends Model
     |--------------------------------------------------------------------------
     */
 
-    public function setFechaAttribute()
+    public function getFechaAttribute()
     {
         return Carbon::parse($this->attributes['fecha'])->format('Y-m-d H:i:s');
     }

@@ -67,7 +67,7 @@ class VentaAction
     {
         $reservasNuevas = [];
         foreach ($reservas as $reserva){
-            $reserva['datetime'] =  Carbon::parse(str_replace('T',' ',$reserva['datetime']));
+            $reserva['datetime'] = $this->makeDate($reserva['datetime']);
             $reservasNuevas[] = Reserva::create([
                 'producto_id' => $reserva['producto_id'],
                 'nombre_cliente' => $reserva['name'],
