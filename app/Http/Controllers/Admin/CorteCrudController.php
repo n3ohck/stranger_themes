@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Requests\CorteRequest;
 use App\Models\Apertura;
 use App\Models\Corte;
+use App\Models\Sucursal;
+use App\Models\User;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
@@ -20,9 +22,6 @@ class CorteCrudController extends CrudController
 {
     use \Backpack\CRUD\app\Http\Controllers\Operations\ListOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\CreateOperation;
-    use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
-    use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
-    use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
     use \App\Traits\DateTrait;
 
     /**
@@ -45,26 +44,133 @@ class CorteCrudController extends CrudController
      */
     protected function setupListOperation()
     {
-        CRUD::column('apertura_id');
-        CRUD::column('created_at');
-        CRUD::column('deleted_at');
-        CRUD::column('efectivo');
-        CRUD::column('fecha_final');
-        CRUD::column('fecha_inicio');
-        CRUD::column('id');
-        CRUD::column('sucursal_id');
-        CRUD::column('tarjeta');
-        CRUD::column('total');
-        CRUD::column('total_caja');
-        CRUD::column('transferencia');
-        CRUD::column('updated_at');
-        CRUD::column('user_id');
+        $this->crud->addColumns([
+            [
+                'name' => 'apertura_id',
+                'label' => 'Apertura',
+                'type' => 'select',
+                'entity' => 'apertura',
+                'attribute' => 'monto_apertura',
+                'model' => Apertura::class
+            ],
+            [
+                'name' => 'efectivo',
+                'label' => 'Efectivo',
+                'type' => 'number',
+                'decimals' => 2
+            ],
+            [
+                'name' => 'tarjeta',
+                'label' => 'Tarjeta',
+                'type' => 'number',
+                'decimals' => 2
+            ],
+            [
+                'name' => 'total',
+                'label' => 'Total Corte',
+                'type' => 'number',
+                'decimals' => 2
+            ],
+            [
+                'name' => 'total_caja',
+                'label' => 'Total Caja',
+                'type' => 'number',
+                'decimals' => 2
+            ],
+            [
+                'name' => 'total_egresos_efectivo',
+                'label' => 'Egresos Efectivo',
+                'type' => 'number',
+                'decimals' => 2
+            ],
+            [
+                'name' => 'efectivo_egreso',
+                'label' => 'Efectivo - Egreso',
+                'type' => 'number',
+                'decimals' => 2
+            ],
+            [
+                'name' => 'total_egresos',
+                'label' => 'Total Egresos',
+                'type' => 'number',
+                'decimals' => 2
+            ],
+            [
+                'name' => 'fecha_inicio',
+                'label' => 'Fecha Inicio',
+                'type' => 'datetime'
+            ],
+            [
+                'name' => 'fecha_final',
+                'label' => 'Fecha Final',
+                'type' => 'datetime'
+            ],
+            [
+                'name' => 'user_id',
+                'label' => 'Usuario',
+                'type' => 'select',
+                'entity' => 'user',
+                'attribute' => 'nombre_completo',
+                'model' => User::class
+            ]
+        ]);
 
-        /**
-         * Columns can be defined using the fluent syntax or array syntax:
-         * - CRUD::column('price')->type('number');
-         * - CRUD::addColumn(['name' => 'price', 'type' => 'number']);
-         */
+        $this->crud->addFilter([ // dropdown filter
+            'name' => 'sucursal_id',
+            'type' => 'dropdown',
+            'label' => 'Sucursal'
+        ], Sucursal::query()
+            ->select('id', 'razon_social')
+            ->get()
+            ->pluck('razon_social', 'id')
+            ->filter()
+            ->toArray(), function ($value) { // if the filter is active
+            $this->crud->addClause('where', 'sucursal_id', $value);
+        });
+
+        $this->crud->addFilter([ // dropdown filter
+            'name' => 'user_id',
+            'type' => 'dropdown',
+            'label' => 'Usuario'
+        ], User::query()
+            ->select('id', DB::raw('CONCAT(first_name, " ", last_name) as full_name'))
+            ->get()
+            ->pluck('full_name', 'id')
+            ->filter()
+            ->toArray(), function ($value) { // if the filter is active
+            $this->crud->addClause('where', 'user_id', $value);
+        });
+
+        $this->crud->addFilter([ // daterange filter
+            'type' => 'date_range',
+            'name' => 'fecha_inicio',
+            'label' => 'Fecha de inicio'
+        ],
+            false,
+            function ($value) { // if the filter is active, apply these constraints
+                $dates = json_decode($value);
+                $datesFrom = \Carbon\Carbon::parse($dates->from)->startOfDay();
+                $datesTo = \Carbon\Carbon::parse($dates->to)->endOfDay();
+                $this->crud->addClause('where', 'fecha_inicio', '>=', $datesFrom);
+                $this->crud->addClause('where', 'fecha_inicio', '<=', $datesTo);
+            });
+
+        $this->crud->addFilter([ // daterange filter
+            'type' => 'date_range',
+            'name' => 'fecha_final',
+            'label' => 'Fecha de final'
+        ],
+            false,
+            function ($value) { // if the filter is active, apply these constraints
+                $dates = json_decode($value);
+                $datesFrom = \Carbon\Carbon::parse($dates->from)->startOfDay();
+                $datesTo = \Carbon\Carbon::parse($dates->to)->endOfDay();
+                $this->crud->addClause('where', 'fecha_final', '>=', $datesFrom);
+                $this->crud->addClause('where', 'fecha_final', '<=', $datesTo);
+            });
+
+        $this->crud->enableExportButtons();
+        $this->crud->removeButton('create');
     }
 
     /**
@@ -185,6 +291,7 @@ class CorteCrudController extends CrudController
             ]);
             $apertura->estado = 'cerrado';
             $apertura->user_id_cerro = backpack_user()->id;
+            $apertura->monto_cierre = $corte->total_caja;
             $apertura->save();
             DB::commit();
             return response()->json([
