@@ -99,6 +99,17 @@ class ReservaCrudController extends CrudController
         $this->setupCreateOperation();
     }
 
+    public function fetch()
+    {
+        try {
+            $reservas = Reserva::query()
+                ->where('sucursal_id', backpack_user()->sucursal_id)
+                ->get();
+        }catch (\Exception $e){
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     public function isAvailable(Request $request)
     {
         try {

@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\DB;
 
 class VentaAction
 {
+    public $user;
+    public function __construct()
+    {
+        $this->user = backpack_user();
+    }
     public function makeFolio():string{
         $lastVenta = Venta::query()
             ->select(['id','created_at'])
@@ -23,9 +28,6 @@ class VentaAction
     {
         $nuevasVentas = [];
         foreach ($ventas as $venta){
-            $user = User::query()
-                ->where('id',$venta['user_id'])
-                ->first();
             $venta['datetime'] = Carbon::parse(str_replace('T',' ',$venta['datetime']));
             $existe = Venta::query()
                 ->where('created_at', $venta['datetime'])
@@ -33,9 +35,9 @@ class VentaAction
                 ->exists();
             if( $existe ) continue;
             $nuevaVenta = Venta::create([
-                'user_id' => $user->id,
+                'user_id' => $this->user->id,
                 'descuento_id' => $venta['descuento_id'] ?? null,
-                'sucursal_id' => $user->sucursal_id,
+                'sucursal_id' => $this->user->sucursal_id,
                 'folio' => $this->makeFolio(),
                 'total' => $venta['total'],
                 'codigo_descuento' => $venta['codigo_descuento'] ?? null,

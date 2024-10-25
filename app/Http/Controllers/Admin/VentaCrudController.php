@@ -127,8 +127,7 @@ class VentaCrudController extends CrudController
             return response()->json(['ventas' => $ventas, 'qty' => count($ventas)], 200);
         }catch (\Exception $e){
             DB::rollBack();
-            throw $e;
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json(['error' => $e->getMessage(),'trace' => $e->getTrace()], 400);
         }
     }
 
