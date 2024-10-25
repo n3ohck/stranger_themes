@@ -132,27 +132,11 @@ class VentaCrudController extends CrudController
                 ->search($search)
                 ->with([
                     'productos' => function($query){
-                        $query->with([
-                            'producto' => function($query){
-                                $query->select([
-                                    'id',
-                                    'codigo',
-                                    'descripcion'
-                                ]);
-                            }
-                        ]);
+                        $query->with(['producto']);
                     },
                     'pagos',
                     'reservaciones' => function($query){
-                        $query->with([
-                            'producto' => function($query){
-                                $query->select([
-                                    'id',
-                                    'codigo',
-                                    'descripcion'
-                                ]);
-                            }
-                        ]);
+                        $query->with(['producto']);
                     }
                 ])
                 ->orderBy('created_at','desc')
