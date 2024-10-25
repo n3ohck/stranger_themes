@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Requests\AperturaRequest;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Illuminate\Http\Request;
 
 /**
  * Class AperturaCrudController
@@ -96,8 +97,20 @@ class AperturaCrudController extends CrudController
         $this->setupCreateOperation();
     }
 
-    public function fetch()
+    public function fetch(Request $request)
     {
-
+        try {
+            $search = (object)[
+                'user_id' => $request->get('apertura_user_id'),
+                'user_id_cerro' => $request->get('apertura_user_id_cerro'),
+                'estado' => $request->get('apertura_estado'),
+                'fecha_apertura' => $request->get('fecha_apertura')
+            ];
+        }catch (\Exception $e){
+            return response()->json([
+                'error' => $e->getMessage(),
+                'trace' => $e->getTrace()
+            ], 500);
+        }
     }
 }

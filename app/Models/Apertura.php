@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -17,7 +18,7 @@ class Apertura extends Model
     | GLOBAL VARIABLES
     |--------------------------------------------------------------------------
     */
-
+    public $search;
     protected $table = 'aperturas';
     protected $primaryKey = 'id';
     // public $timestamps = false;
@@ -29,7 +30,8 @@ class Apertura extends Model
         'monto_apertura',
         'monto_cierre',
         'estado',
-        'billetes'
+        'billetes',
+        'sucursal_id'
     ];
     // protected $hidden = [];
     protected $dates = [
@@ -49,7 +51,10 @@ class Apertura extends Model
     | FUNCTIONS
     |--------------------------------------------------------------------------
     */
-
+    protected static function booted()
+    {
+        static::addGlobalScope(new SucursalFilterScope);
+    }
     /*
     |--------------------------------------------------------------------------
     | RELATIONS
@@ -64,12 +69,30 @@ class Apertura extends Model
     {
         return $this->belongsTo(User::class, 'user_id_cerro');
     }
+
+    public function sucursal():BelongsTo
+    {
+        return $this->belongsTo(Sucursal::class);
+    }
     /*
     |--------------------------------------------------------------------------
     | SCOPES
     |--------------------------------------------------------------------------
     */
-
+    public function scopeSearch($query,$search)
+    {
+        $this->search = $search;
+        $query
+            ->when($search->user_id, function ($query) {
+                $query->where('user_id', $this->search->user_id);
+            })
+            ->when($search->user_id_cerro, function ($query) {
+                $query->where('user_id_cerro', $this->search->user_id_cerro);
+            })
+            ->when($search->monto_apertura, function ($query) {
+                $query->where('monto_apertura', $this->search->monto_apertura);
+            });
+    }
     /*
     |--------------------------------------------------------------------------
     | ACCESSORS
