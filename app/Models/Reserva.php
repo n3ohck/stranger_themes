@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -44,12 +45,9 @@ class Reserva extends Model
     | FUNCTIONS
     |--------------------------------------------------------------------------
     */
-    public static function boot()
+    protected static function booted()
     {
-        parent::boot();
-        self::addGlobalScope('sucursalFilter', function ($builder) {
-            $builder->where('sucursal_id', backpack_user()->sucursal_id);
-        });
+        static::addGlobalScope(new SucursalFilterScope);
     }
 
     /*

@@ -112,6 +112,19 @@ class VentaCrudController extends CrudController
         $this->setupCreateOperation();
     }
 
+    public function fetch(Request $request)
+    {
+        try{
+
+        }catch (\Exception $e){
+            return response()
+                ->json([
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTrace()
+                ], 400);
+        }
+    }
+
     public function make(Request $request)
     {
         try {

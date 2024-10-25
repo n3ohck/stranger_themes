@@ -47,8 +47,8 @@ class VentaAction
             ]);
             $this->makeVentaProductos($nuevaVenta->id, $venta['productos']);
             $this->makeVentaPagos($nuevaVenta->id, $venta['pagos']);
-            if( isset($venta['reservas']) ){
-                $reservaciones = $this->makeVentaReservacion($nuevaVenta->id, $venta['reservas']);
+            if( isset($venta['reservaciones']) ){
+                $reservaciones = $this->makeVentaReservacion($nuevaVenta->id, $venta['reservaciones']);
             }
             $nuevasVentas[] = [
                 'venta_id' => $nuevaVenta->id,
@@ -61,18 +61,18 @@ class VentaAction
         return $nuevasVentas;
     }
 
-    public function makeVentaReservacion(int $ventaId, array $reservas, $sucursalId):array
+    public function makeVentaReservacion(int $ventaId, array $reservas):array
     {
         $reservasNuevas = [];
         foreach ($reservas as $reserva){
             $reserva['datetime'] =  Carbon::parse(str_replace('T',' ',$reserva['datetime']));
             $reservasNuevas[] = Reserva::create([
-                'producto_id' => $reserva['product_id'],
+                'producto_id' => $reserva['producto_id'],
                 'nombre_cliente' => $reserva['name'],
                 'cantidad_personas' => $reserva['number'],
                 'fecha' => $reserva['datetime'],
                 'estado' => 'confirmada',
-                'sucursal_id' => $sucursalId,
+                'sucursal_id' => $this->user->sucursal_id,
                 'venta_id' => $ventaId
             ]);
         }
