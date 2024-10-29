@@ -122,7 +122,8 @@ class VentaCrudController extends CrudController
                 'start_date' => $this->makeDate($request->get('start_date')),
                 'end_date' => $this->makeDate($request->get('end_date')),
                 'status' => $request->get('status'),
-                'venta_id' => $request->get('venta_id')
+                'venta_id' => $request->get('venta_id'),
+                'user_id' => $request->get('user_id')
             ];
             $ventas = Venta::query()
                 ->search($search)

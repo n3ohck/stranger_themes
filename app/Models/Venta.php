@@ -126,6 +126,9 @@ class Venta extends Model
             })
             ->when($this->search->venta_id, function ($query) {
                 return $query->where('id', $this->search->venta_id);
+            })
+            ->when($this->search->user_id, function ($query) {
+                return $query->where('user_id', $this->search->user_id);
             });
     }
     /*
