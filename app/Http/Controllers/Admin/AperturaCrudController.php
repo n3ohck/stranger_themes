@@ -108,9 +108,9 @@ class AperturaCrudController extends CrudController
     {
         try {
             $search = (object)[
-                'user_id' => $request->get('apertura_user_id'),
+                'user_id' => $request->get('user_id'),
                 'user_id_cerro' => $request->get('apertura_user_id_cerro'),
-                'estado' => $request->get('apertura_estado'),
+                'estado' => $request->get('estado'),
                 'fecha_apertura' => $this->makeDate($request->get('apertura_fecha_apertura'))
             ];
             $aperturas = Apertura::query()

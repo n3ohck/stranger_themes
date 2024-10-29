@@ -241,7 +241,7 @@ class EgresoCrudController extends CrudController
                 'tipo_pago' => 'required|string',
                 'referencia' => 'required|string',
                 'fecha_pago' => 'required',
-                'imagen' => 'required|image',
+                'imagen' => 'required|file',
             ]);
             DB::beginTransaction();
             $egreso = Egreso::create([
@@ -262,7 +262,7 @@ class EgresoCrudController extends CrudController
             ], 200);
         }catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 500);
         }
     }
 
