@@ -51,6 +51,10 @@ class DescuentoCrudController extends CrudController
                'label' => 'Porcentaje'
            ],
            [
+               'name' => 'producto_tipo',
+                'label' => 'Tipo de Producto'
+           ],
+           [
                'name' => 'sucursal_id',
                'label' => 'Sucursal',
                'type' => 'relationship',
@@ -76,6 +80,14 @@ class DescuentoCrudController extends CrudController
             ->toArray(), function ($value) { // if the filter is active
             $this->crud->addClause('where', 'sucursal_id', $value);
         });
+
+        $this->crud->addFilter([ // dropdown filter
+            'name' => 'producto_tipo',
+            'type' => 'dropdown',
+            'label' => 'Producto Tipo'
+        ],['tour' => 'Tour','articulo' => 'Articulo','tour_paquete' => 'Paquete'], function ($value) { // if the filter is active
+            $this->crud->addClause('where', 'producto_tipo', $value);
+        });
     }
 
     /**
@@ -98,6 +110,11 @@ class DescuentoCrudController extends CrudController
                 'name' => 'porcentaje',
                 'label' => 'Porcentaje',
                 'type' => 'number'
+            ],
+            [
+                'name' => 'producto_tipo',
+                'label' => 'Tipo de Producto',
+                'type' => 'enum'
             ],
             [
                 'name' => 'sucursal_id',

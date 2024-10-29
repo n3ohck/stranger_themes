@@ -28,7 +28,8 @@ class DescuentoRequest extends FormRequest
             'codigo' => 'required|unique:descuentos,codigo,'.$this->route('id'),
             'porcentaje' => 'required|numeric',
             'sucursal_id' => 'required|exists:sucursales,id',
-            'estatus' => 'required|in:activo,inactivo'
+            'estatus' => 'required|in:activo,inactivo',
+            'producto_tipo' => 'required'
         ];
     }
 
@@ -59,7 +60,8 @@ class DescuentoRequest extends FormRequest
             'sucursal_id.required' => 'La sucursal es requerida',
             'sucursal_id.exists' => 'La sucursal no existe',
             'estatus.required' => 'El estatus es requerido',
-            'estatus.in' => 'El estatus debe ser activo o inactivo'
+            'estatus.in' => 'El estatus debe ser activo o inactivo',
+            'producto_tipo.required' => 'El tipo de producto es requerido'
         ];
     }
 }

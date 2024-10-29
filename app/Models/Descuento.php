@@ -28,7 +28,7 @@ class Descuento extends Model
         'codigo',
         'porcentaje',
         'sucursal_id',
-        'tipo_producto',
+        'producto_tipo',
         'estatus'
     ];
     // protected $hidden = [];
