@@ -58,14 +58,14 @@ class SucursalCrudController extends CrudController
                 'type'  => 'text'
             ],
             [
-                'name' => 'hora_apertura',
-                'label' => 'Hora Apertura',
-                'type' => 'time'
-            ],
-            [
-                'name' => 'hora_cierre',
-                'label' => 'Hora Cierre',
-                'type' => 'time'
+                'name'  => 'horarios',
+                'label' => 'Horarios',
+                'type'  => 'table',
+                'columns' => [
+                    'dia'    => 'Dia',
+                    'hora_entrada'  => 'Hora Apertura',
+                    'hora_salida'    => 'Hora Cierre'
+                ]
             ],
             [
                 'name'  => 'created_at',
@@ -125,19 +125,44 @@ class SucursalCrudController extends CrudController
                 'hint'       => 'Direccion completa.', // helpful text, show up after input
                 'placeholder' => 'Direccion completa.',
             ],
-            [   // Time
-                'name'  => 'hora_apertura',
-                'label' => "Hora Apertura",
-                'type'  => 'time',
-                'hint'       => 'Hora de apertura.', // helpful text, show up after input
-                'placeholder' => 'Hora de apertura',
-            ],
-            [   // Time
-                'name'  => 'hora_cierre',
-                'label' => "Hora Cierre",
-                'type'  => 'time',
-                'hint'       => 'Hora de cierre.', // helpful text, show up after input
-                'placeholder' => 'Hora de cierre',
+            [   // repeatable
+                'name'  => 'horarios',
+                'label' => 'Horarios',
+                'type'  => 'repeatable',
+                'fields' => [
+                    [
+                        'name'        => 'dia',
+                        'label'       => "Dia",
+                        'type'        => 'select2_from_array',
+                        'options'     => [
+                            'lunes' => 'Lunes',
+                            'martes' => 'Martes',
+                            'miercoles' => 'Miercoles',
+                            'jueves' => 'Jueves',
+                            'viernes' => 'Viernes',
+                            'sabado' => 'Sabado',
+                            'domingo' => 'Domingo'
+                        ],
+                        'allows_null' => false,
+                        'wrapper' => ['class' => 'form-group col-md-4'],
+                    ],
+                    [
+                        'name'    => 'hora_entrada',
+                        'type'    => 'time',
+                        'label'   => 'Hora Apertura',
+                        'wrapper' => ['class' => 'form-group col-md-4'],
+                    ],
+                    [
+                        'name'    => 'hora_salida',
+                        'type'    => 'time',
+                        'label'   => 'Hora Cierre',
+                        'wrapper' => ['class' => 'form-group col-md-4'],
+                    ]
+                ],
+                'new_item_label'  => 'Añadir', // customize the text of the button
+                'init_rows' => 7, // number of empty rows to be initialized, by default 1
+                'min_rows' => 1, // minimum rows allowed, when reached the "delete" buttons will be hidden
+                'max_rows' => 7, // maximum rows allowed, when reached the "new item" button will be hidden
             ],
             [
                 'label' => "Logotipo",

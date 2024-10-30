@@ -33,14 +33,17 @@ class Sucursal extends Model
         'telefono',
         'direccion',
         'logotipo',
-        'hora_apertura',
-        'hora_cierre',
+        'horarios',
     ];
     // protected $hidden = [];
     protected $dates = [
         'created_at',
         'updated_at',
         'deleted_at'
+    ];
+
+    protected $casts = [
+        'horarios' => 'array'
     ];
 
 
