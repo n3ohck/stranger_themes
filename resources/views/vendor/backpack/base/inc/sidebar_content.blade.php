@@ -1,6 +1,5 @@
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('producto') }}'><i class='nav-icon la la-list'></i> Productos</a></li>
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('descuento') }}'><i class='nav-icon la la-list'></i> Descuentos</a></li>
-<li class='nav-item'><a class='nav-link' href='{{ backpack_url('venta') }}'><i class='nav-icon la la-list'></i> Ventas</a></li>
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('egreso') }}'><i class='nav-icon la la-exchange'></i> Egresos</a></li>
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('corte') }}'><i class='nav-icon la la-list'></i> Cortes</a></li>
 <li class='nav-item'><a class='nav-link' href='{{ backpack_url('empleado') }}'><i class='nav-icon la la-users'></i> Empleados</a></li>
