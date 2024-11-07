@@ -176,6 +176,29 @@ class ProductoCrudController extends CrudController
                     'class'      => 'form-group col-md-6'
                 ], // change the HTML attributes for the field wrapper - mostly for resizing fields
             ],
+            [   // repeatable
+                'name'  => 'tours',
+                'label' => 'Agregar Tours al producto (Paqute de tours)',
+                'type'  => 'repeatable',
+                'fields' => [
+                    [
+                        'name'        => 'producto_id',
+                        'label'       => "Tour",
+                        'type'        => 'select2_from_array',
+                        'options'     => Producto::query()
+                            ->where('tipo','tour')
+                            ->get()
+                            ->pluck('descripcion','id')
+                            ->toArray(),
+                        'allows_null' => false,
+                        'wrapper' => ['class' => 'form-group col-md-12'],
+                    ]
+                ],
+                'new_item_label'  => 'Añadir',
+                'init_rows' => 0,
+                'min_rows' => 1,
+                'max_rows' => 7,
+            ],
             [
                 'name' => 'sucursal_id',
                 'type' => 'select2',

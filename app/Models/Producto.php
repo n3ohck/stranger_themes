@@ -30,7 +30,8 @@ class Producto extends Model
         'precio',
         'existencia',
         'tipo',
-        'sucursal_id'
+        'sucursal_id',
+        'tours'
     ];
     // protected $hidden = [];
     protected $dates = [
@@ -41,7 +42,8 @@ class Producto extends Model
 
     protected $casts = [
         'precio' => 'float',
-        'existencia' => 'integer'
+        'existencia' => 'integer',
+        'tours' => 'array'
     ];
 
     protected $appends = ['category','name','price','stock'];
