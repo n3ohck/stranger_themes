@@ -43,7 +43,7 @@ class VentaAction
                 'folio' => $this->makeFolio(),
                 'total' => $venta['total'],
                 'codigo_descuento' => $venta['codigo_descuento'] ?? null,
-                'descuento' => $venta['descuento'],
+                'descuento' => $venta['descuento'] ?? null,
                 'porcentaje_descuento' => $venta['porcentaje_descuento'] ?? null,
                 'created_at' => $venta['datetime']
             ]);
