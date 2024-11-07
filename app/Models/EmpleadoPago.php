@@ -52,7 +52,6 @@ class EmpleadoPago extends Model
     protected static function booted()
     {
         parent::boot();
-        static::addGlobalScope(new SucursalFilterScope);
         static::deleting(function ($obj) {
             Storage::disk('pagos')->delete($obj->imagen);
         });
