@@ -31,4 +31,5 @@ Route::group([
     Route::crud('corte', 'CorteCrudController');
     Route::crud('empleado', 'EmpleadoCrudController');
     Route::crud('empleado-pago', 'EmpleadoPagoCrudController');
+    Route::get('dashboard', 'DashboardController@index');
 }); // this should be the absolute last line of this file

@@ -185,4 +185,9 @@ class VentaCrudController extends CrudController
             return response()->json(['error' => $e->getMessage()], 400);
         }
     }
+
+    public function resumen(Request $request)
+    {
+
+    }
 }
