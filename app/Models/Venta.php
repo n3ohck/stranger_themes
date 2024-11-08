@@ -131,6 +131,21 @@ class Venta extends Model
                 return $query->where('user_id', $this->search->user_id);
             });
     }
+
+    public function scopeFilters($query, $search)
+    {
+        $query->when(isset($search['dates']), function ($query) use ($search) {
+            $query->whereBetween('created_at', $search['dates']);
+        });
+
+        $query->when(isset($search['estatus']), function ($query) use ($search) {
+            $query->where('estatus', $search['estatus']);
+        });
+
+        $query->when(isset($search['sucursal']), function ($query) use ($search) {
+            $query->where('sucursal_id', $search['sucursal']);
+        });
+    }
     /*
     |--------------------------------------------------------------------------
     | ACCESSORS

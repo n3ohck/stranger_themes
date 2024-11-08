@@ -290,4 +290,12 @@ class EgresoCrudController extends CrudController
         }
     }
 
+    public function getTotal($dates)
+    {
+        return Egreso::query()
+            ->whereBetween('fecha_pago', $dates)
+            ->where('estatus', 'activo')
+            ->sum('monto');
+    }
+
 }

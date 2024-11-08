@@ -188,6 +188,57 @@ class VentaCrudController extends CrudController
 
     public function resumen(Request $request)
     {
-
+        try{
+            $params = $request->all();
+            if( !isset( $params['dates'] ) ){
+                $params['dates'] = [
+                    Carbon::now()->startOfMonth()->format('Y-m-d'),
+                    Carbon::now()->endOfMonth()->format('Y-m-d')
+                ];
+            }
+            $totalVentas = 0;
+            $cantidadReservaciones = 0;
+            $totaEgresos = (new EgresoCrudController)->getTotal($params['dates']);
+            $salarios = (new EmpleadoPagoCrudController)->getTotal($params['dates']);
+            $ventas = Venta::query()
+                ->with([
+                    'user',
+                    'sucursal',
+                    'pagos',
+                    'reservaciones' => function($query){
+                        $query->with(['producto']);
+                    }
+                ])
+                ->Filters($params)
+                ->get()
+                ->map(function($venta)use(&$totalVentas,&$cantidadReservaciones){
+                    $totalVentas += $venta->total;
+                    $cantidadReservaciones = $venta->reservaciones->count();
+                    return [
+                        'folio' => $venta->folio,
+                        'created_at' => $venta->created_at->format('Y-m-d H:i:s'),
+                        'tarjeta' => $venta->pagos->where('tipo_pago','tarjeta')->sum('monto'),
+                        'efectivo' => $venta->pagos->where('tipo_pago','efectivo')->sum('monto'),
+                        'descuento' => $venta->descuento,
+                        'total' => $venta->total,
+                        'cambio' => $venta->pagos->sum('cambio'),
+                        'estatus' => $venta->estatus,
+                        'sucursal' => $venta->sucursal->razon_social
+                    ];
+                });
+            $utilidad_operativa = $totalVentas - ($totaEgresos + $salarios);
+            return response()->json([
+                'message' => 'Consulta realizada con exito',
+                'ventas' => $ventas,
+                'cantidad_ventas' => $ventas->count(),
+                'cantidad_reservaciones' => $cantidadReservaciones,
+                'total_ventas' => number_format($totalVentas,2,'.',','),
+                'total_egresos' => number_format($totaEgresos,2,'.',','),
+                'total_salarios' => number_format($salarios,2,'.',','),
+                'utilidad_operativa' => number_format($utilidad_operativa,2,'.',',')
+            ], 200);
+        }catch (\Exception $e){
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }

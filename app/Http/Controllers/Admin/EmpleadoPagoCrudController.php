@@ -189,4 +189,12 @@ class EmpleadoPagoCrudController extends CrudController
             return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 500);
         }
     }
+
+    public function getTotal($dates)
+    {
+        return EmpleadoPago::query()
+            ->whereBetween('fecha_pago', $dates)
+            ->where('estatus','activo')
+            ->sum('monto');
+    }
 }
