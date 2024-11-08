@@ -234,7 +234,6 @@ class ProductoCrudController extends CrudController
             $tipo = $request->get('tipo');
             $productos = Producto::query()
                 ->FilterByType($tipo)
-                ->where('existencia', '>', 0)
                 ->orderBy('descripcion','asc')
                 ->get();
 
