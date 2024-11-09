@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Traits\DateTrait;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -292,6 +293,8 @@ class EgresoCrudController extends CrudController
 
     public function getTotal($dates)
     {
+        $dates[0] = Carbon::parse($dates[0])->startOfDay();
+        $dates[1] = Carbon::parse($dates[1])->endOfDay();
         return Egreso::query()
             ->whereBetween('fecha_pago', $dates)
             ->where('estatus', 'activo')
