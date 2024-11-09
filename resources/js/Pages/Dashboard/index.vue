@@ -218,7 +218,6 @@
                                                 sortable
                                                 label="C. Vendida"
                                                 align="right"
-                                                :formatter="moneyFormat"
                                                 prop="cantidad">
                                             </el-table-column>
                                             <el-table-column
