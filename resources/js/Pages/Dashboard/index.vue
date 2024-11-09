@@ -58,7 +58,7 @@
                 </div>
             </div>
             <div class="col-md-12">
-                <div class="card">
+                <div class="card" style="background: transparent !important; border: none !important; box-shadow: none !important; ">
                     <div class="card-header with-border">
                         <div class="row">
                             <div class="col-sm-2">
@@ -196,16 +196,49 @@
                                                 prop="sucursal">
                                             </el-table-column>
                                         </el-table>
+                                        <div class="col-md-3 p-0 mt-4">
+                                            <button class="btn btn-block btn-outline-primary" @click="handleExportToExcel" type="button">Exportar Excel</button>
+                                        </div>
                                     </el-tab-pane>
-                                    <el-tab-pane label="Resumen Productos" name="second">Resumen productos</el-tab-pane>
+                                    <el-tab-pane label="Resumen Productos" name="second">
+                                        <el-table
+                                            :data="tableDataProductos"
+                                            border
+                                            v-loading="loading"
+                                            height="380"
+                                            :show-summary="true"
+                                            style="width: 100%">
+                                            <el-table-column
+                                                sortable
+                                                label="Producto"
+                                                fixed="left"
+                                                prop="producto">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                label="C. Vendida"
+                                                align="right"
+                                                :formatter="moneyFormat"
+                                                prop="cantidad">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                label="Total"
+                                                align="right"
+                                                :formatter="moneyFormat"
+                                                prop="total">
+                                            </el-table-column>
+                                        </el-table>
+                                        <div class="col-md-3 p-0 mt-4">
+                                            <button class="btn btn-block btn-outline-primary" @click="handleExportToExcelProductos" type="button">Exportar Excel</button>
+                                        </div>
+                                    </el-tab-pane>
                                 </el-tabs>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-md-3 p-0">
-                    <button class="btn btn-block btn-outline-primary" @click="handleExportToExcel" type="button">Exportar Excel</button>
-                </div>
+
             </div>
         </div>
     </div>
@@ -233,6 +266,7 @@ export default {
     data: () => ({
         loading: false,
         tableData:[],
+        tableDataProductos:[],
         query: {
             search: '',
             dates: null,
@@ -268,6 +302,19 @@ export default {
             }).finally(() => {
                 this.loading = false;
             })
+            this.handleGetProductos();
+        },
+        handleGetProductos(){
+            this.loading = true;
+            axios.get('/webapi/ventas/resumen/productos',{
+                params: this.query
+            }).then(response => {
+                this.tableDataProductos = Object.values(response.data.productos);
+            }).catch(error => {
+                console.log(error);
+            }).finally(() => {
+                this.loading = false;
+            })
         },
         moneyFormat(value, row, column) {
             return new Intl.NumberFormat('es-MX', {
@@ -277,6 +324,9 @@ export default {
         },
         handleExportToExcel() {
             this.exportToExcel();
+        },
+        handleExportToExcelProductos() {
+            this.exportToExcelProductos();
         },
         exportToExcel() {
             const data = this.tableData.map(item => ({
@@ -298,10 +348,25 @@ export default {
 
             // Generar el archivo Excel
             XLSX.writeFile(workbook, 'resumen_ventas.xlsx');
+        },
+        exportToExcelProductos() {
+            const data = this.tableDataProductos.map(item => ({
+                producto: item.producto,
+                cantidad: item.cantidad,
+                total: item.total
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Resumen Ventas Productos');
+
+            // Generar el archivo Excel
+            XLSX.writeFile(workbook, 'resumen_ventas_productos.xlsx');
         }
     },
     created() {
         this.handleGet();
+        this.handleGetProductos();
     }
 };
 </script>

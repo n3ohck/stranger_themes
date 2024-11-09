@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\VentaRequest;
 use App\Models\Venta;
+use App\Models\VentaProducto;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
@@ -237,6 +238,43 @@ class VentaCrudController extends CrudController
                 'total_egresos' => number_format($totaEgresos,2,'.',','),
                 'total_salarios' => number_format($salarios,2,'.',','),
                 'utilidad_operativa' => number_format($utilidad_operativa,2,'.',',')
+            ], 200);
+        }catch (\Exception $e){
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function resumenProductos(Request $request)
+    {
+        try{
+            $params = $request->all();
+            if( !isset( $params['dates'] ) ){
+                $params['dates'] = [
+                    Carbon::now()->startOfDay()->format('Y-m-d'),
+                    Carbon::now()->endOfDay()->format('Y-m-d')
+                ];
+            }
+
+            $productos = VentaProducto::query()
+                ->whereHas('venta',function($query)use($params){
+                    $query->Filters($params);
+                })
+                ->with([
+                    'producto'
+                ])
+                ->get()
+                ->groupBy('producto_id')
+                ->map(function($productosAgrupados){
+                    return [
+                        'producto' => $productosAgrupados->first()->producto->descripcion,
+                        'cantidad' => $productosAgrupados->sum('cantidad'),
+                        'total' => $productosAgrupados->sum('total')
+                    ];
+                });
+            return response()->json([
+                'message' => 'Consulta realizada con exito',
+                'productos' => $productos
+
             ], 200);
         }catch (\Exception $e){
             return response()->json(['error' => $e->getMessage()], 500);
