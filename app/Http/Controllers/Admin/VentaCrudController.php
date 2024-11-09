@@ -213,7 +213,7 @@ class VentaCrudController extends CrudController
                 ->get()
                 ->map(function($venta)use(&$totalVentas,&$cantidadReservaciones){
                     $totalVentas += $venta->total;
-                    $cantidadReservaciones = $venta->reservaciones->count();
+                    $cantidadReservaciones+= $venta->reservaciones->count();
                     return [
                         'folio' => $venta->folio,
                         'created_at' => $venta->created_at->format('Y-m-d H:i:s'),
