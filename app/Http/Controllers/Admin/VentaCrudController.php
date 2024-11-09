@@ -192,8 +192,8 @@ class VentaCrudController extends CrudController
             $params = $request->all();
             if( !isset( $params['dates'] ) ){
                 $params['dates'] = [
-                    Carbon::now()->startOfMonth()->format('Y-m-d'),
-                    Carbon::now()->endOfMonth()->format('Y-m-d')
+                    Carbon::now()->startOfDay()->format('Y-m-d'),
+                    Carbon::now()->endOfDay()->format('Y-m-d')
                 ];
             }
             $totalVentas = 0;
@@ -219,11 +219,12 @@ class VentaCrudController extends CrudController
                         'created_at' => $venta->created_at->format('Y-m-d H:i:s'),
                         'tarjeta' => $venta->pagos->where('tipo_pago','tarjeta')->sum('monto'),
                         'efectivo' => $venta->pagos->where('tipo_pago','efectivo')->sum('monto'),
-                        'descuento' => $venta->descuento,
+                        'descuento' => $venta->descuento ?? 0,
                         'total' => $venta->total,
                         'cambio' => $venta->pagos->sum('cambio'),
                         'estatus' => $venta->estatus,
-                        'sucursal' => $venta->sucursal->razon_social
+                        'sucursal' => $venta->sucursal->razon_social,
+                        'codigo_descuento' => $venta->codigo_descuento ?? 'N/A',
                     ];
                 });
             $utilidad_operativa = $totalVentas - ($totaEgresos + $salarios);

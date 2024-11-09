@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -134,6 +135,8 @@ class Venta extends Model
 
     public function scopeFilters($query, $search)
     {
+        $search['dates'][0] = Carbon::parse($search['dates'][0])->startOfDay();
+        $search['dates'][1] = Carbon::parse($search['dates'][1])->endOfDay();
         $query->when(isset($search['dates']), function ($query) use ($search) {
             $query->whereBetween('created_at', $search['dates']);
         });

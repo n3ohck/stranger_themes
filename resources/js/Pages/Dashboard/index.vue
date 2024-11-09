@@ -106,73 +106,99 @@
                             </div>
                         </div>
                     </div>
-                    <div class="card-body p-0">
+                    <div class="card-body">
                         <div class="row">
-                            <div class="col-md-12">
-                                <el-table
-                                    :data="tableData.filter(data => !query.search || data.folio.toLowerCase().includes(query.search.toLowerCase()))"
-                                    border
-                                    v-loading="loading"
-                                    height="380"
-                                    :show-summary="true"
-                                    style="width: 100%">
-                                    <el-table-column
-                                        label="Folio"
-                                        width="233"
-                                        fixed="left"
-                                        prop="folio">
-                                    </el-table-column>
-                                    <el-table-column
-                                        label="Fecha"
-                                        width="143"
-                                        prop="created_at">
-                                    </el-table-column>
-                                    <el-table-column
-                                        label="T. Tarjeta"
-                                        align="right"
-                                        :formatter="moneyFormat"
-                                        prop="tarjeta">
-                                    </el-table-column>
-                                    <el-table-column
-                                        label="T. Efectivo"
-                                        align="right"
-                                        :formatter="moneyFormat"
-                                        prop="efectivo">
-                                    </el-table-column>
-                                    <el-table-column
-                                        width="105"
-                                        label="T. Descuento"
-                                        align="right"
-                                        :formatter="moneyFormat"
-                                        prop="descuento">
-                                    </el-table-column>
-                                    <el-table-column
-                                        label="T. Venta"
-                                        align="right"
-                                        :formatter="moneyFormat"
-                                        prop="total">
-                                    </el-table-column>
-                                    <el-table-column
-                                        label="Cambio"
-                                        align="right"
-                                        :formatter="moneyFormat"
-                                        prop="cambio">
-                                    </el-table-column>
-                                    <el-table-column
-                                        label="Estatus"
-                                        align="center"
-                                        prop="estatus">
-                                        <template #default="scope">
-                                            <el-tag v-if="scope.row.estatus === 'activo'" type="success">Activo</el-tag>
-                                            <el-tag v-else type="danger">Inactivo</el-tag>
-                                        </template>
-                                    </el-table-column>
-                                    <el-table-column
-                                        width="233"
-                                        label="Sucursal"
-                                        prop="sucursal">
-                                    </el-table-column>
-                                </el-table>
+                            <div class="col-md-12 p-0" style="margin: -17px 0 0 0;">
+                                <el-tabs v-model="activeName">
+                                    <el-tab-pane label="Resumen Ventas" name="first">
+                                        <el-table
+                                            :data="tableData.filter(data => !query.search || data.folio.toLowerCase().includes(query.search.toLowerCase()))"
+                                            border
+                                            v-loading="loading"
+                                            height="380"
+                                            :show-summary="true"
+                                            style="width: 100%">
+                                            <el-table-column
+                                                sortable
+                                                label="Folio"
+                                                fixed="left"
+                                                width="233"
+                                                prop="folio">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                label="Fecha"
+                                                width="143"
+                                                prop="created_at">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                width="130"
+                                                label="C. Descuento"
+                                                align="left"
+                                                prop="codigo_descuento">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                width="130"
+                                                label="T. Tarjeta"
+                                                align="right"
+                                                :formatter="moneyFormat"
+                                                prop="tarjeta">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                width="130"
+                                                label="T. Efectivo"
+                                                align="right"
+                                                :formatter="moneyFormat"
+                                                prop="efectivo">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                width="130"
+                                                label="T. Descuento"
+                                                align="right"
+                                                :formatter="moneyFormat"
+                                                prop="descuento">
+                                            </el-table-column>
+                                            <el-table-column
+                                                width="130"
+                                                sortable
+                                                label="T. Venta"
+                                                align="right"
+                                                :formatter="moneyFormat"
+                                                prop="total">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                width="130"
+                                                label="Cambio"
+                                                align="right"
+                                                :formatter="moneyFormat"
+                                                prop="cambio">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                label="Estatus"
+                                                width="130"
+                                                align="center"
+                                                prop="estatus">
+                                                <template #default="scope">
+                                                    <el-tag v-if="scope.row.estatus === 'activo'" type="success">Activo</el-tag>
+                                                    <el-tag v-else type="danger">Inactivo</el-tag>
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                width="233"
+                                                label="Sucursal"
+                                                prop="sucursal">
+                                            </el-table-column>
+                                        </el-table>
+                                    </el-tab-pane>
+                                    <el-tab-pane label="Resumen Productos" name="second">Resumen productos</el-tab-pane>
+                                </el-tabs>
                             </div>
                         </div>
                     </div>
@@ -200,7 +226,7 @@ export default {
             required: true,
             default: () => [
                 {label: 'Activo', value: 'activo'},
-                {label: 'Inactivo', value: 'inactivo'}
+                {label: 'Inactivo', value: 'cancelado'}
             ]
         }
     },
@@ -218,7 +244,8 @@ export default {
         ventasTotales:0,
         egresos:0,
         salarios:0,
-        utilidad:0
+        utilidad:0,
+        activeName: 'first'
     }),
     computed: {
 
@@ -255,6 +282,7 @@ export default {
             const data = this.tableData.map(item => ({
                 folio: item.folio,
                 created_at: item.created_at,
+                codigo_descuento: item.codigo_descuento,
                 tarjeta: item.tarjeta,
                 efectivo: item.efectivo,
                 descuento: item.descuento,
