@@ -9,8 +9,6 @@
     <ul class="nav-dropdown-items">
         <li class="nav-item"><a class="nav-link" href="{{ backpack_url('sucursal') }}"><i
                     class="nav-icon la la-building"></i> <span>Sucursales</span></a></li>
-        <li class='nav-item'><a class='nav-link' href='{{ backpack_url('configuracion') }}'><i class='nav-icon la la-gears'></i> Configuraciones</a></li>
-        <li class='nav-item'><a class='nav-link' href='{{ backpack_url('pago-concepto') }}'><i class='nav-icon la la-list'></i> Conceptos de pago</a></li>
         <li class="nav-item nav-dropdown">
             <a class="nav-link nav-dropdown-toggle" href="#"><i class="nav-icon la la-gear"></i> Usuarios</a>
             <ul class="nav-dropdown-items">
