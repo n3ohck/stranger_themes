@@ -9,6 +9,7 @@ use App\Models\VentaProducto;
 use App\Traits\DateTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class VentaAction
 {
@@ -28,6 +29,7 @@ class VentaAction
     }
     public function do(array $ventas):array
     {
+        Log::info('Ventas a procesar: '.json_encode($ventas));
         $nuevasVentas = [];
         foreach ($ventas as $venta){
             $venta['datetime'] = $this->makeDate($venta['datetime']);
