@@ -29,7 +29,6 @@ class VentaAction
     }
     public function do(array $ventas):array
     {
-        Log::info('Ventas a procesar: '.json_encode($ventas));
         $nuevasVentas = [];
         foreach ($ventas as $venta){
             $venta['datetime'] = $this->makeDate($venta['datetime']);
@@ -51,6 +50,7 @@ class VentaAction
             ]);
             $this->makeVentaProductos($nuevaVenta->id, $venta['productos']);
             $this->makeVentaPagos($nuevaVenta->id, $venta['pagos']);
+
             if( isset($venta['reservaciones']) ){
                 $reservaciones = $this->makeVentaReservacion($nuevaVenta->id, $venta['reservaciones']);
             }
@@ -85,7 +85,9 @@ class VentaAction
 
     public function makeVentaProductos(int $ventaId, array $productos):void
     {
+        $totalDescuento = 0;
         foreach ($productos as $producto){
+            $totalDescuento+= $producto['precio'] - $producto['total'];
             VentaProducto::create([
                 'venta_id' => $ventaId,
                 'producto_id' => $producto['producto_id'],
@@ -95,6 +97,10 @@ class VentaAction
             ]);
             (new ExistenciaAction())::salidarPorVenta($producto['producto_id'], $producto['cantidad']);
         }
+        $venta = Venta::find($ventaId);
+        $venta->update([
+            'descuento' => $totalDescuento
+        ]);
     }
 
     public function makeVentaPagos(int $ventaId, array $pagos):void
