@@ -15,7 +15,7 @@ class CreateRevisionsTable extends Migration
     {
         Schema::create('revisions', function ($table) {
             $table->bigIncrements('id');
-            $table->string('revisionable_type');
+            $table->string('revisionable_type', 191); // Limitar a 191 caracteres
             $table->unsignedBigInteger('revisionable_id');
             $table->unsignedBigInteger('user_id')->nullable();
             $table->string('key');
@@ -23,8 +23,9 @@ class CreateRevisionsTable extends Migration
             $table->text('new_value')->nullable();
             $table->timestamps();
 
-            $table->index(array('revisionable_id', 'revisionable_type'));
+            $table->index(['revisionable_id', 'revisionable_type'], 'revisionable_id_type_index');
         });
+
     }
 
     /**
