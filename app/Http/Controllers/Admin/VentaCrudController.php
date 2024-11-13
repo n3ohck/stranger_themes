@@ -280,4 +280,44 @@ class VentaCrudController extends CrudController
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function resumenProductosDescuentos(Request $request)
+    {
+        try{
+            $params = $request->all();
+            if( !isset( $params['dates'] ) ){
+                $params['dates'] = [
+                    Carbon::now()->startOfDay()->format('Y-m-d'),
+                    Carbon::now()->endOfDay()->format('Y-m-d')
+                ];
+            }
+
+            $productos = VentaProducto::query()
+                ->whereHas('venta',function($query)use($params){
+                    $query->Filters($params);
+                })
+                ->with([
+                    'producto'
+                ])
+                ->where('descuento','>',0)
+                ->get()
+                ->map(function($producto){
+                    return [
+                        'producto' => $producto->producto->descripcion,
+                        'precio' => $producto->precio,
+                        'descuento' => $producto->descuento,
+                        'porcentaje_descuento' => $producto->porcentaje_descuento,
+                        'codigo_descuento' => $producto->venta->codigo_descuento,
+                        'total' => $producto->total
+                    ];
+                });
+            return response()->json([
+                'message' => 'Consulta realizada con exito',
+                'productos' => $productos
+
+            ], 200);
+        }catch (\Exception $e){
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
 }

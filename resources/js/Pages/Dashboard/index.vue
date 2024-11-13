@@ -232,6 +232,58 @@
                                             <button class="btn btn-block btn-outline-primary" @click="handleExportToExcelProductos" type="button">Exportar Excel</button>
                                         </div>
                                     </el-tab-pane>
+                                    <el-tab-pane label="Descuentos En Productos" name="third">
+                                        <el-table
+                                            :data="tableDataDescuentos"
+                                            border
+                                            v-loading="loading"
+                                            height="380"
+                                            :show-summary="true"
+                                            style="width: 100%">
+                                            <el-table-column
+                                                sortable
+                                                label="Producto"
+                                                fixed="left"
+                                                prop="producto">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                label="Precio Original"
+                                                align="right"
+                                                :formatter="moneyFormat"
+                                                prop="precio">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                label="Precio Con Descuento"
+                                                align="right"
+                                                :formatter="moneyFormat"
+                                                prop="total">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                label="Cantidad Descuento"
+                                                align="right"
+                                                :formatter="moneyFormat"
+                                                prop="descuento">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                label="% Descuento"
+                                                align="right"
+                                                prop="porcentaje_descuento">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                label="Codigo Descuento"
+                                                align="right"
+                                                prop="codigo_descuento">
+                                            </el-table-column>
+                                        </el-table>
+                                        <div class="col-md-3 p-0 mt-4">
+                                            <button class="btn btn-block btn-outline-primary" @click="handleExportToExcelProductosDescuento" type="button">Exportar Excel</button>
+                                        </div>
+                                    </el-tab-pane>
                                 </el-tabs>
                             </div>
                         </div>
@@ -266,6 +318,7 @@ export default {
         loading: false,
         tableData:[],
         tableDataProductos:[],
+        tableDataDescuentos:[],
         query: {
             search: '',
             dates: null,
@@ -302,6 +355,7 @@ export default {
                 this.loading = false;
             })
             this.handleGetProductos();
+            this.handleGetProductosDescuentos();
         },
         handleGetProductos(){
             this.loading = true;
@@ -309,6 +363,18 @@ export default {
                 params: this.query
             }).then(response => {
                 this.tableDataProductos = Object.values(response.data.productos);
+            }).catch(error => {
+                console.log(error);
+            }).finally(() => {
+                this.loading = false;
+            })
+        },
+        handleGetProductosDescuentos(){
+            this.loading = true;
+            axios.get('/webapi/ventas/resumen/productos/descuentos',{
+                params: this.query
+            }).then(response => {
+                this.tableDataDescuentos = Object.values(response.data.productos);
             }).catch(error => {
                 console.log(error);
             }).finally(() => {
@@ -326,6 +392,9 @@ export default {
         },
         handleExportToExcelProductos() {
             this.exportToExcelProductos();
+        },
+        handleExportToExcelProductosDescuento() {
+            this.exportToExcelProductosDescuento();
         },
         exportToExcel() {
             const data = this.tableData.map(item => ({
@@ -361,11 +430,29 @@ export default {
 
             // Generar el archivo Excel
             XLSX.writeFile(workbook, 'resumen_ventas_productos.xlsx');
+        },
+        exportToExcelProductosDescuento() {
+            const data = this.tableDataProductos.map(item => ({
+                producto: item.producto,
+                precio: item.precio,
+                total: item.total,
+                descuento: item.descuento,
+                porcentaje: item.porcentaje_descuento,
+                codigo_descuento: item.codigo_descuento
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'Resumen Ventas Productos');
+
+            // Generar el archivo Excel
+            XLSX.writeFile(workbook, 'resumen_ventas_productos.xlsx');
         }
     },
     created() {
         this.handleGet();
         this.handleGetProductos();
+        this.handleGetProductosDescuentos();
     }
 };
 </script>
