@@ -244,7 +244,7 @@
                                                 sortable
                                                 label="Fecha"
                                                 fixed="left"
-                                                prop="created_at">
+                                                prop="fecha">
                                             </el-table-column>
                                             <el-table-column
                                                 sortable
