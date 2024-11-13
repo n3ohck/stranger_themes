@@ -72,7 +72,7 @@ class VentaProducto extends Model
 
     public function descuento():BelongsTo
     {
-        return $this->belongsTo(Descuento::class,'descuento_id');
+        return $this->belongsTo(Descuento::class,'descuento_id','id');
     }
     /*
     |--------------------------------------------------------------------------
