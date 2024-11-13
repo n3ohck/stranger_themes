@@ -8,6 +8,7 @@ use App\Models\Sucursal;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Http\Request;
+use Prologue\Alerts\Facades\Alert;
 
 /**
  * Class DescuentoCrudController
@@ -31,6 +32,22 @@ class DescuentoCrudController extends CrudController
         CRUD::setModel(\App\Models\Descuento::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/descuento');
         CRUD::setEntityNameStrings('descuento', 'descuentos');
+        if( !backpack_user()->can('descuentos.ver') ){
+            Alert::warning('No tienes permisos para ver los descuentos')->flash();
+            $this->crud->denyAccess('list');
+        }
+
+        if( !backpack_user()->can('descuentos.crear') ){
+            $this->crud->denyAccess('create');
+        }
+
+        if( !backpack_user()->can('descuentos.editar') ){
+            $this->crud->denyAccess('update');
+        }
+
+        if( !backpack_user()->can('descuentos.eliminar') ){
+            $this->crud->denyAccess('delete');
+        }
     }
 
     /**
@@ -88,6 +105,8 @@ class DescuentoCrudController extends CrudController
         ],['tour' => 'Tour','articulo' => 'Articulo','tour_paquete' => 'Paquete'], function ($value) { // if the filter is active
             $this->crud->addClause('where', 'producto_tipo', $value);
         });
+
+        $this->crud->enableExportButtons();
     }
 
     /**

@@ -8,6 +8,7 @@ use App\Models\Sucursal;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Http\Request;
+use Prologue\Alerts\Facades\Alert;
 
 /**
  * Class ProductoCrudController
@@ -24,13 +25,29 @@ class ProductoCrudController extends CrudController
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
      *
-     * @return void
+     * @return \Illuminate\Contracts\Foundation\Application|\Illuminate\Http\RedirectResponse|\Illuminate\Routing\Redirector|void
      */
     public function setup()
     {
         CRUD::setModel(\App\Models\Producto::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/producto');
         CRUD::setEntityNameStrings('producto', 'productos');
+        if( !backpack_user()->can('productos.ver') ){
+            Alert::warning('No tienes permisos para ver los productos')->flash();
+            $this->crud->denyAccess('list');
+        }
+
+        if( !backpack_user()->can('productos.crear') ){
+            $this->crud->denyAccess('create');
+        }
+
+        if( !backpack_user()->can('productos.editar') ){
+            $this->crud->denyAccess('update');
+        }
+
+        if( !backpack_user()->can('productos.eliminar') ){
+            $this->crud->denyAccess('delete');
+        }
     }
 
     /**
@@ -99,6 +116,8 @@ class ProductoCrudController extends CrudController
             ->toArray(), function ($value) { // if the filter is active
             $this->crud->addClause('where', 'sucursal_id', $value);
         });
+
+        $this->crud->enableExportButtons();
     }
 
     /**

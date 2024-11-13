@@ -12,6 +12,7 @@ use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Prologue\Alerts\Facades\Alert;
 
 /**
  * Class EmpleadoPagoCrudController
@@ -35,6 +36,24 @@ class EmpleadoPagoCrudController extends CrudController
         CRUD::setModel(\App\Models\EmpleadoPago::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/empleado-pago');
         CRUD::setEntityNameStrings('empleado pago', 'empleado pagos');
+        if( !backpack_user()->can('empleados_pagos.ver') ){
+            Alert::warning('No tienes permisos para ver los pagos de empleados')->flash();
+            $this->crud->denyAccess('list');
+        }
+
+        if( !backpack_user()->can('empleados_pagos.crear') ){
+            $this->crud->denyAccess('create');
+        }
+
+        if( !backpack_user()->can('empleados_pagos.editar') ){
+            $this->crud->denyAccess('update');
+        }else{
+            $this->crud->addButtonFromModelFunction('line', 'fileButton', 'fileButton', 'beginning');
+        }
+
+        if( !backpack_user()->can('empleados_pagos.eliminar') ){
+            $this->crud->denyAccess('delete');
+        }
     }
 
     /**
@@ -94,8 +113,6 @@ class EmpleadoPagoCrudController extends CrudController
             ->toArray(), function ($value) { // if the filter is active
             $this->crud->addClause('BySucursal', $value);
         });
-        $this->crud->addButtonFromModelFunction('line', 'fileButton', 'fileButton', 'beginning');
-
     }
 
     /**

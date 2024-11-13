@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use JWTAuth;
 use Matrix\Exception;
+use Prologue\Alerts\Facades\Alert;
 
 
 class UserController extends CrudController
@@ -30,6 +31,10 @@ class UserController extends CrudController
         $this->crud->setModel(config('backpack.permissionmanager.models.user'));
         $this->crud->setEntityNameStrings(trans('backpack::permissionmanager.user'), trans('backpack::permissionmanager.users'));
         $this->crud->setRoute(backpack_url('user'));
+        if( !backpack_user()->can('configuraciones.ver') ){
+            Alert::warning('No tienes permisos para ver las configuraciones')->flash();
+            $this->crud->denyAccess('list');
+        }
     }
 
     public function setupListOperation()

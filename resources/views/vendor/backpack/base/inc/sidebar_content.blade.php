@@ -1,9 +1,46 @@
-<li class='nav-item'><a class='nav-link' href='{{ backpack_url('producto') }}'><i class='nav-icon la la-list'></i> Productos</a></li>
-<li class='nav-item'><a class='nav-link' href='{{ backpack_url('descuento') }}'><i class='nav-icon la la-list'></i> Descuentos</a></li>
-<li class='nav-item'><a class='nav-link' href='{{ backpack_url('egreso') }}'><i class='nav-icon la la-exchange'></i> Egresos</a></li>
-<li class='nav-item'><a class='nav-link' href='{{ backpack_url('corte') }}'><i class='nav-icon la la-list'></i> Cortes</a></li>
-<li class='nav-item'><a class='nav-link' href='{{ backpack_url('empleado') }}'><i class='nav-icon la la-users'></i> Empleados</a></li>
-<li class='nav-item'><a class='nav-link' href='{{ backpack_url('empleado-pago') }}'><i class='nav-icon la la-list'></i> Empleados Pagos</a></li>
+@can('productos.ver')
+    <li class='nav-item'>
+        <a class='nav-link' href='{{ backpack_url('producto') }}'>
+            <i class='nav-icon la la-list'></i> Productos
+        </a>
+    </li>
+@endcan
+@can('descuentos.ver')
+    <li class='nav-item'>
+        <a class='nav-link' href='{{ backpack_url('descuento') }}'>
+            <i class='nav-icon la la-list'></i> Descuentos
+        </a>
+    </li>
+@endcan
+@can('egresos.ver')
+    <li class='nav-item'>
+        <a class='nav-link' href='{{ backpack_url('egreso') }}'>
+            <i class='nav-icon la la-exchange'></i> Egresos
+        </a>
+    </li>
+@endcan
+@can('cortes.ver')
+    <li class='nav-item'>
+        <a class='nav-link' href='{{ backpack_url('corte') }}'>
+            <i class='nav-icon la la-list'></i> Cortes
+        </a>
+    </li>
+@endcan
+@can('empleados.ver')
+    <li class='nav-item'>
+        <a class='nav-link' href='{{ backpack_url('empleado') }}'>
+            <i class='nav-icon la la-users'></i> Empleados
+        </a>
+    </li>
+@endcan
+@can('empleados_pagos.ver')
+    <li class='nav-item'>
+        <a class='nav-link' href='{{ backpack_url('empleado-pago') }}'>
+            <i class='nav-icon la la-list'></i> Empleados Pagos
+        </a>
+    </li>
+@endcan
+@can('configuraciones.ver')
 <li class="nav-item nav-dropdown">
     <a class="nav-link nav-dropdown-toggle" href="#"><i class="nav-icon la la-gear"></i> Configuracion</a>
     <ul class="nav-dropdown-items">
@@ -22,3 +59,4 @@
         </li>
     </ul>
 </li>
+@endcan

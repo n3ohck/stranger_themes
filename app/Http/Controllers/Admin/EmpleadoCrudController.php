@@ -8,6 +8,7 @@ use App\Models\Sucursal;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Http\Request;
+use Prologue\Alerts\Facades\Alert;
 
 /**
  * Class EmpleadoCrudController
@@ -31,6 +32,22 @@ class EmpleadoCrudController extends CrudController
         CRUD::setModel(\App\Models\Empleado::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/empleado');
         CRUD::setEntityNameStrings('empleado', 'empleados');
+        if( !backpack_user()->can('empleados.ver') ){
+            Alert::warning('No tienes permisos para ver los empleados')->flash();
+            $this->crud->denyAccess('list');
+        }
+
+        if( !backpack_user()->can('empleados.crear') ){
+            $this->crud->denyAccess('create');
+        }
+
+        if( !backpack_user()->can('empleados.editar') ){
+            $this->crud->denyAccess('update');
+        }
+
+        if( !backpack_user()->can('empleados.eliminar') ){
+            $this->crud->denyAccess('delete');
+        }
     }
 
     /**

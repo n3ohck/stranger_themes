@@ -12,6 +12,7 @@ use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Prologue\Alerts\Facades\Alert;
 
 /**
  * Class EgresoCrudController
@@ -35,6 +36,24 @@ class EgresoCrudController extends CrudController
         CRUD::setModel(\App\Models\Egreso::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/egreso');
         CRUD::setEntityNameStrings('egreso', 'egresos');
+        if( !backpack_user()->can('egresos.ver') ){
+            Alert::warning('No tienes permisos para ver los egresos')->flash();
+            $this->crud->denyAccess('list');
+        }
+
+        if( !backpack_user()->can('egresos.crear') ){
+            $this->crud->denyAccess('create');
+        }else{
+            $this->crud->addButtonFromModelFunction('line', 'fileButton', 'fileButton', 'beginning');
+        }
+
+        if( !backpack_user()->can('egresos.editar') ){
+            $this->crud->denyAccess('update');
+        }
+
+        if( !backpack_user()->can('egresos.eliminar') ){
+            $this->crud->denyAccess('delete');
+        }
     }
 
     /**
@@ -140,7 +159,6 @@ class EgresoCrudController extends CrudController
             $this->crud->addClause('where', 'estatus', $value);
         });
 
-        $this->crud->addButtonFromModelFunction('line', 'fileButton', 'fileButton', 'beginning');
         $this->crud->enableExportButtons();
     }
 

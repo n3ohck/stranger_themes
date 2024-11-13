@@ -12,6 +12,7 @@ use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Prologue\Alerts\Facades\Alert;
 
 /**
  * Class CorteCrudController
@@ -34,6 +35,10 @@ class CorteCrudController extends CrudController
         CRUD::setModel(\App\Models\Corte::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/corte');
         CRUD::setEntityNameStrings('corte', 'cortes');
+        if( !backpack_user()->can('cortes.ver') ){
+            Alert::warning('No tienes permisos para ver los cortes')->flash();
+            $this->crud->denyAccess('list');
+        }
     }
 
     /**

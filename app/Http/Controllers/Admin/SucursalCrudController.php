@@ -8,6 +8,7 @@ use App\Models\User;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Illuminate\Http\Request;
+use Prologue\Alerts\Facades\Alert;
 
 /**
  * Class SucursalCrudController
@@ -31,6 +32,10 @@ class SucursalCrudController extends CrudController
         CRUD::setModel(\App\Models\Sucursal::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/sucursal');
         CRUD::setEntityNameStrings('Sucursal', 'Sucursales');
+        if( !backpack_user()->can('configuraciones.ver') ){
+            Alert::warning('No tienes permisos para ver las configuraciones')->flash();
+            $this->crud->denyAccess('list');
+        }
     }
 
     /**
