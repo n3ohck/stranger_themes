@@ -308,7 +308,7 @@ class VentaCrudController extends CrudController
                         'precio' => $producto->precio,
                         'descuento' => $producto->descuento,
                         'porcentaje_descuento' => $producto->porcentaje_descuento,
-                        'codigo_descuento' => $producto->descuento->codigo,
+                        'codigo_descuento' => $producto->descuento->codigo ?? '-',
                         'total' => $producto->total
                     ];
                 });
