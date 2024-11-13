@@ -297,7 +297,8 @@ class VentaCrudController extends CrudController
                     $query->Filters($params);
                 })
                 ->with([
-                    'producto'
+                    'producto',
+                    'descuento'
                 ])
                 ->where('descuento','>',0)
                 ->get()
@@ -307,7 +308,7 @@ class VentaCrudController extends CrudController
                         'precio' => $producto->precio,
                         'descuento' => $producto->descuento,
                         'porcentaje_descuento' => $producto->porcentaje_descuento,
-                        'codigo_descuento' => $producto->venta->codigo_descuento,
+                        'codigo_descuento' => $producto->descuento->codigo,
                         'total' => $producto->total
                     ];
                 });
