@@ -95,14 +95,18 @@ class VentaAction
                 'producto_id' => $producto['producto_id'],
                 'precio' => $producto['precio'],
                 'cantidad' => $producto['cantidad'],
-                'total' => $producto['total']
+                'total' => $producto['total'],
+                'descuento_id' => $producto['descuentos'][0]['descuento_id'] ?? null,
+                'codigo_descuento' => $producto['descuentos'][0]['codigo_descuento'] ?? null,
+                'descuento' => $producto['descuentos'][0]['descuento'] ?? null,
+                'porcentaje_descuento' => $producto['descuentos'][0]['porcentaje_descuento'] ?? null
             ]);
             (new ExistenciaAction())::salidarPorVenta($producto['producto_id'], $producto['cantidad']);
         }
         $venta = Venta::find($ventaId);
         $venta->update([
             'descuento' => $totalDescuento,
-            'porcentaje_descuento' => ($subtotal) ? ($totalDescuento / $subtotal) * 100 : 0
+            'porcentaje_descuento' => ($subtotal) ? number_format(($totalDescuento / $subtotal) * 100,2,'.') : 0
         ]);
     }
 

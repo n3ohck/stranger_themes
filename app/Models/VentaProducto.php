@@ -27,7 +27,11 @@ class VentaProducto extends Model
         'producto_id',
         'precio',
         'cantidad',
-        'total'
+        'total',
+        'descuento_id',
+        'codigo_descuento',
+        'descuento',
+        'porcentaje_descuento'
 
     ];
     // protected $hidden = [];
@@ -40,7 +44,9 @@ class VentaProducto extends Model
     protected $casts = [
         'precio' => 'float',
         'cantidad' => 'float',
-        'total' => 'float'
+        'total' => 'float',
+        'descuento' => 'float',
+        'porcentaje_descuento' => 'float'
     ];
 
     /*
@@ -62,6 +68,11 @@ class VentaProducto extends Model
     public function producto():BelongsTo
     {
         return $this->belongsTo(Producto::class);
+    }
+
+    public function descuento():BelongsTo
+    {
+        return $this->belongsTo(Descuento::class,'descuento_id');
     }
     /*
     |--------------------------------------------------------------------------
