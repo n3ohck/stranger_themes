@@ -90,23 +90,24 @@ class VentaAction
         foreach ($productos as $producto){
             $totalDescuento+= $producto['precio'] - $producto['total'];
             $subtotal+=$producto['precio'];
+            $descuentos = ( count($producto['descuentos']) > 0 )  ? $producto['descuentos'][0] : null;
             VentaProducto::create([
                 'venta_id' => $ventaId,
                 'producto_id' => $producto['producto_id'],
                 'precio' => $producto['precio'],
                 'cantidad' => $producto['cantidad'],
                 'total' => $producto['total'],
-                'descuento_id' => $producto['descuentos'][0]['descuento_id'] ?? null,
-                'codigo_descuento' => $producto['descuentos'][0]['codigo_descuento'] ?? null,
-                'descuento' => $producto['descuentos'][0]['descuento'] ?? null,
-                'porcentaje_descuento' => $producto['descuentos'][0]['porcentaje_descuento'] ?? null
+                'descuento_id' => ( !isset( $descuentos['descuento_id'] ) ) ? null : $descuentos['descuento_id'],
+                'codigo_descuento' => ( !isset( $descuentos['codigo_descuento'] ) ) ? null : $descuentos['codigo_descuento'],
+                'descuento' => number_format($producto['precio'] - $producto['total'],2,'.',''),
+                'porcentaje_descuento' => ( !isset( $descuentos['porcentaje_descuento'] ) ) ? null : $descuentos['porcentaje_descuento']
             ]);
             (new ExistenciaAction())::salidarPorVenta($producto['producto_id'], $producto['cantidad']);
         }
         $venta = Venta::find($ventaId);
         $venta->update([
             'descuento' => $totalDescuento,
-            'porcentaje_descuento' => ($subtotal) ? number_format(($totalDescuento / $subtotal) * 100,2,'.') : 0
+            'porcentaje_descuento' => ($subtotal) ? number_format(($totalDescuento / $subtotal) * 100,2,'.','') : 0
         ]);
     }
 
