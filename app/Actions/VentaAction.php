@@ -100,7 +100,7 @@ class VentaAction
                 'descuento_id' => ( !isset( $descuentos['descuento_id'] ) ) ? null : $descuentos['descuento_id'],
                 'codigo_descuento' => ( !isset( $descuentos['codigo_descuento'] ) ) ? null : $descuentos['codigo_descuento'],
                 'descuento' => number_format($producto['precio'] - $producto['total'],2,'.',''),
-                'porcentaje_descuento' => ( !isset( $descuentos['porcentaje_descuento'] ) ) ? null : $descuentos['porcentaje_descuento']
+                'porcentaje_descuento' => ( !isset( $descuentos['porcentaje_descuento'] ) ) ? 0 : $descuentos['porcentaje_descuento']
             ]);
             (new ExistenciaAction())::salidarPorVenta($producto['producto_id'], $producto['cantidad']);
         }
