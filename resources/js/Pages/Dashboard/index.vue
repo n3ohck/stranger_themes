@@ -109,7 +109,7 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-12 p-0" style="margin: -17px 0 0 0;">
-                                <el-tabs v-model="activeName">
+                                <el-tabs v-model="activeName" v-loading="loading">
                                     <el-tab-pane label="Resumen Ventas" name="first">
                                         <el-table
                                             :data="tableData.filter(data => !query.search || data.folio.toLowerCase().includes(query.search.toLowerCase()))"
@@ -242,6 +242,12 @@
                                             style="width: 100%">
                                             <el-table-column
                                                 sortable
+                                                label="Fecha"
+                                                fixed="left"
+                                                prop="created_at">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
                                                 label="Producto"
                                                 fixed="left"
                                                 prop="producto">
@@ -334,7 +340,6 @@ export default {
         activeName: 'first'
     }),
     computed: {
-
     },
     methods: {
         handleGet(){
@@ -433,6 +438,7 @@ export default {
         },
         exportToExcelProductosDescuento() {
             const data = this.tableDataProductos.map(item => ({
+                fecha: item.fecha,
                 producto: item.producto,
                 precio: item.precio,
                 total: item.total,

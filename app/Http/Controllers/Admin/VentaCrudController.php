@@ -304,6 +304,7 @@ class VentaCrudController extends CrudController
                 ->get()
                 ->map(function($producto){
                     return [
+                        'fecha' => $producto->created_at->format('Y-m-d H:i:s'),
                         'producto' => $producto->producto->descripcion,
                         'precio' => $producto->precio,
                         'descuento' => $producto->descuento,
