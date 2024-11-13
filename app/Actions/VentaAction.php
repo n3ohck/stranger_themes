@@ -86,8 +86,10 @@ class VentaAction
     public function makeVentaProductos(int $ventaId, array $productos):void
     {
         $totalDescuento = 0;
+        $subtotal = 0;
         foreach ($productos as $producto){
             $totalDescuento+= $producto['precio'] - $producto['total'];
+            $subtotal+=$producto['precio'];
             VentaProducto::create([
                 'venta_id' => $ventaId,
                 'producto_id' => $producto['producto_id'],
@@ -99,7 +101,8 @@ class VentaAction
         }
         $venta = Venta::find($ventaId);
         $venta->update([
-            'descuento' => $totalDescuento
+            'descuento' => $totalDescuento,
+            'porcentaje_descuento' => ($subtotal) ? ($totalDescuento / $subtotal) * 100 : 0
         ]);
     }
 
