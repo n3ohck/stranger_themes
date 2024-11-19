@@ -147,7 +147,7 @@ class ProductoCrudController extends CrudController
                 'name' => 'descripcion',
                 'type' => 'text',
                 'label' => 'Descripción',
-                'hint'       => 'Descripcion y/o nombre del producto', // helpful text, shows up after the input
+                'hint'       => 'Descripcion del producto. Es lo que se imprime en el ticket', // helpful text, shows up after the input
                 'attributes' => [
                     'placeholder' => 'Descripcion y/o nombre del producto',
                     'class'       => 'form-control'
