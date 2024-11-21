@@ -11,15 +11,23 @@ class ExistenciaAction
 {
     public static function salidarPorVenta(int $productoId, int $cantidad):void
     {
-        $producto = Producto::where('id', $productoId)->first();
-        $producto->existencia -= $cantidad;
-        $producto->save();
+        $producto = Producto::where('id', $productoId)
+            ->where('tipo','articulo')
+            ->first();
+        if( isset( $producto->id ) ){
+            $producto->existencia -= $cantidad;
+            $producto->save();
+        }
     }
 
     public static function existenciaCancelacion(int $productoId, int $cantidad):void
     {
-        $producto = Producto::where('id', $productoId)->first();
-        $producto->existencia += $cantidad;
-        $producto->save();
+        $producto = Producto::where('id', $productoId)
+            ->where('tipo','articulo')
+            ->first();
+        if(isset( $producto->id )){
+            $producto->existencia += $cantidad;
+            $producto->save();
+        }
     }
 }
