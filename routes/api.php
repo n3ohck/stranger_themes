@@ -19,6 +19,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 Route::post('register', 'App\Http\Controllers\AuthController@register');
 Route::post('login', 'App\Http\Controllers\AuthController@authenticate');
+Route::get('reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'fetch']);
 Route::group(['middleware' => ['jwt.verify']], function () {
     //Login
     Route::post('user', 'App\Http\Controllers\Admin\UserController@getAuthenticatedUser');
@@ -36,7 +37,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::get('descuentos', [\App\Http\Controllers\Admin\DescuentoCrudController::class,'fetch']);
 
     //Reservas
-    Route::get('reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'fetch']);
+    //Route::get('reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'fetch']);
     Route::post('reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'createReserva']);
 
     //Aperturas
