@@ -23,7 +23,7 @@ class AuthController extends Controller
             $roles = $user
                 ->getRoleNames()
                 ->filter(function ($role) {
-                    return $role->name === 'APP_USER' || $role->name === 'CONSULTA';
+                    return $role === 'APP USER' || $role === 'CONSULTA';
                 });
 
             if (!$roles->count()) {
