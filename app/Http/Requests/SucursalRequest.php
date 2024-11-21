@@ -27,11 +27,12 @@ class SucursalRequest extends FormRequest
         return [
             'razon_social' => 'required|min:5|max:255',
             'rfc' => 'required|min:10|max:13',
-            'email'=> 'required|email:rfc,dns',
+            'email'=> 'nullable|email:rfc,dns',
             'telefono' => 'nullable|max:10',
             'direccion' => 'nullable',
             'logotipo' => 'nullable',
-            'horarios' => 'required|json'
+            'horarios' => 'required|json',
+            'sucursal_id' => 'required'
         ];
     }
 

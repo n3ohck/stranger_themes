@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div class="row">
+        <div class="row" v-if="esadmin">
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-body pt-0">
@@ -318,6 +318,10 @@ export default {
                 {label: 'Activo', value: 'activo'},
                 {label: 'Inactivo', value: 'cancelado'}
             ]
+        },
+        esadmin:{
+            type: Boolean,
+            default: false
         }
     },
     data: () => ({

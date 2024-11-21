@@ -15,7 +15,8 @@ class DashboardController extends Controller
             ->orderBy('nombre')
             ->get();
         return Inertia::render('Dashboard/index', [
-            'sucursales' => $sucursales
+            'sucursales' => $sucursales,
+            'esadmin' => backpack_user()->hasRole('administrador')
         ]);
     }
 }
