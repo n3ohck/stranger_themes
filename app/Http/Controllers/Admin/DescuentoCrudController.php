@@ -128,7 +128,10 @@ class DescuentoCrudController extends CrudController
             [
                 'name' => 'porcentaje',
                 'label' => 'Porcentaje',
-                'type' => 'number'
+                'type' => 'number',
+                'attributes' => [
+                    'step' => '0.01'
+                ]
             ],
             [
                 'name' => 'producto_tipo',
