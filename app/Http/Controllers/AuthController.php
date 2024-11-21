@@ -20,7 +20,10 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Los datos ingresados son invalidos, por favor intenta nuevamente.'], 400);
             }
 
-            $roles = $user->getRoleNames()->where('APP USER')->orWhere('CONSULTA');
+            $roles = $user->getRoleNames()
+                ->filter(function ($role) {
+                    return $role->name === 'APP_USER' || $role->name === 'CONSULTA';
+                });
 
             if (!$roles->count()) {
                 return response()->json(['message' => 'Este usuario no tiene permisos para acceder al sistema'], 400);
@@ -29,8 +32,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'could_not_create_token'], 500);
         }
 
-        $user->load('roles','sucursal');
-        return response()->json(compact('token','user'));
+        $user->load('roles', 'sucursal');
+        return response()->json(compact('token', 'user'));
     }
 
     public function register(Request $request)
