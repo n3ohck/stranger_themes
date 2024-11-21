@@ -20,7 +20,8 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Los datos ingresados son invalidos, por favor intenta nuevamente.'], 400);
             }
 
-            $roles = $user->getRoleNames()
+            $roles = $user
+                ->getRoleNames()
                 ->filter(function ($role) {
                     return $role->name === 'APP_USER' || $role->name === 'CONSULTA';
                 });
