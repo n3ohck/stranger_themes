@@ -10,6 +10,9 @@ class SucursalFilterScope implements Scope
 {
     public function apply(Builder $builder, Model $model)
     {
+        if( !backpack_user() ){
+            return $builder;
+        }
         if(!backpack_user()->hasRole('administrador')){
             $builder->where('sucursal_id', backpack_user()->sucursal_id);
         }
