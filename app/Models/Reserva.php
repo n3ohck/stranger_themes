@@ -58,7 +58,7 @@ class Reserva extends Model
     */
     public function producto(): BelongsTo
     {
-        return $this->belongsTo(Producto::class, 'producto_id');
+        return $this->belongsTo(Producto::class, 'producto_id')->withTrashed();
     }
 
     /*
