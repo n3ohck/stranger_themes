@@ -28,8 +28,8 @@ class UserRequest extends FormRequest
             'birthday' => 'nullable|date',
             'phone_ext' => 'nullable|min:3|max:75',
             'company_position' => 'nullable|min:3|max:75',
-            'departament' => 'nullable|min:3|max:75',
             'profile_image' => 'nullable',
+            'sucursal_id' => 'required'
         ];
 
         if (!$this->id) {
@@ -63,9 +63,10 @@ class UserRequest extends FormRequest
     public function messages()
     {
         return [
-            'name.required' => 'El nombre del departamento es requerido.',
-            'name.min' => 'El departamento debe contener al menos 5 caracteres.',
-            'name.max' => 'El departamento debe contener maximo 255 caracteres.'
+            'first_name.required' => 'El nombre es requerido.',
+            'first_name.min' => 'El nombre debe contener al menos 5 caracteres.',
+            'first_name.max' => 'El nombre debe contener maximo 255 caracteres.',
+            'sucursal_id.required' => 'La sucursal es requerida.'
         ];
     }
 }
