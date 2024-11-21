@@ -56,6 +56,11 @@ class UserController extends CrudController
                 'type'  => 'text',
             ],
             [
+                'name'  => 'phone',
+                'label' => 'Telefono',
+                'type'  => 'text',
+            ],
+            [
                 // 1-n relationship
                 'label'     => 'Sucursal', // Table column heading
                 'type'      => 'select',
@@ -225,6 +230,11 @@ class UserController extends CrudController
             [
                 'name'  => 'user',
                 'label' => 'Nombre de usuario',
+                'type'  => 'text',
+            ],
+            [
+                'name'  => 'phone',
+                'label' => 'Telefono',
                 'type'  => 'text',
             ],
             [
