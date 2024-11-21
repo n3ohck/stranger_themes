@@ -20,7 +20,9 @@ class AuthController extends Controller
                 return response()->json(['message' => 'Los datos ingresados son invalidos, por favor intenta nuevamente.'], 400);
             }
 
-            if (!$user->hasRole('APP USER') || !$user->hasRole('CONSULTA')) {
+            $roles = $user->getRoleNames()->where('APP USER')->orWhere('CONSULTA');
+
+            if (!$roles->count()) {
                 return response()->json(['message' => 'Este usuario no tiene permisos para acceder al sistema'], 400);
             }
         } catch (JWTException $e) {
