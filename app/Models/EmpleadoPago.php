@@ -93,7 +93,7 @@ class EmpleadoPago extends Model
                 $query->where('empleado_id', $this->search->empleado_id);
             })
             ->when($this->search->fecha_pago, function ($query) {
-                $query->where('fecha_pago', $this->search->fecha_pago);
+                $query->where('fecha_pago', '>=', $this->search->fecha_pago);
             })
             ->when($this->search->estatus, function ($query) {
                 $query->where('estatus', $this->search->estatus);
