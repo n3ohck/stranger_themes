@@ -24,7 +24,8 @@ class ProductoCreateTable extends Migration
             $table->enum('tipo',[
                 'tour',
                 'articulo',
-                'tour_paquete'
+                'tour_paquete',
+                'diferencias'
             ])->index();
             $table->timestamps();
             $table->softDeletes();
