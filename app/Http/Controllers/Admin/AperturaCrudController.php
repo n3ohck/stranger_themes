@@ -133,7 +133,7 @@ class AperturaCrudController extends CrudController
     {
         try {
             $monto = $request->get('monto_apertura');
-            if( !$monto || $monto < 0 ) throw new \Exception('El monto de apertura es requerido y debe ser mayor a 0');
+            if( $monto < 0 ) throw new \Exception('El monto de apertura es requerido y debe ser mayor a 0');
             $apertura = new Apertura();
             $apertura->user_id = backpack_user()->id;
             $apertura->sucursal_id = backpack_user()->sucursal_id;
