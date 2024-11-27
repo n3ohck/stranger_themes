@@ -261,7 +261,7 @@ class CorteCrudController extends CrudController
             throw new \Exception('Debe seleccionar una fecha de inicio y una fecha final');
         }
 
-        if ($request->get('total') <= 0) {
+        if ($request->get('total') < 0) {
             throw new \Exception('El total debe ser mayor a 0');
         }
 
