@@ -116,12 +116,10 @@ class AperturaCrudController extends CrudController
             $aperturas = Apertura::query()
                 ->Search($search)
                 ->orderBy('created_at', 'desc')
-                ->get()->map(function ($alog){
-                    dd($alog,$alog->created_at);
-                });
+                ->get();
             return response()->json([
                 'message' => 'Consulta exitosa',
-                'aperturas' => $aperturas
+                'aperturas' => $aperturas->toArray()
             ], 200);
         }catch (\Exception $e){
             return response()->json([
