@@ -116,12 +116,14 @@ class AperturaCrudController extends CrudController
             $aperturas = Apertura::query()
                 ->Search($search)
                 ->orderBy('created_at', 'desc')
-                ->get();
-            return response()->json([
-                'message' => 'Consulta exitosa',
-                'aperturas' => $aperturas->toArray()
-            ], 200);
-        }catch (\Exception $e){
+                ->get()
+                ->toArray();
+            return response()
+                ->json([
+                    'message' => 'Consulta exitosa',
+                    'aperturas' => $aperturas
+                ], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'error' => $e->getMessage(),
                 'trace' => $e->getTrace()
@@ -133,7 +135,7 @@ class AperturaCrudController extends CrudController
     {
         try {
             $monto = $request->get('monto_apertura');
-            if( $monto < 0 ) throw new \Exception('El monto de apertura es requerido y debe ser mayor a 0');
+            if ($monto < 0) throw new \Exception('El monto de apertura es requerido y debe ser mayor a 0');
             $apertura = new Apertura();
             $apertura->user_id = backpack_user()->id;
             $apertura->sucursal_id = backpack_user()->sucursal_id;
@@ -144,7 +146,7 @@ class AperturaCrudController extends CrudController
                 'message' => 'Apertura exitosa',
                 'apertura' => $apertura
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'error' => $e->getMessage(),
                 'trace' => $e->getTrace()
