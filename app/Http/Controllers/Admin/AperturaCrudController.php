@@ -122,7 +122,7 @@ class AperturaCrudController extends CrudController
                 ->map(function($apertura){
                     $apertura->created_at = $apertura->created_at
                         ->setTimezone('America/Chihuahua')
-                        ->toDateTimeString();
+                        ->format('Y-m-d H:i:s');
                     return $apertura;
                 });
             return response()
