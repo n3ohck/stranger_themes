@@ -127,7 +127,7 @@ class AperturaCrudController extends CrudController
                 });
             return response()
                 ->json([
-                    'fecha' => now(),
+                    'fecha' => Carbon::now()->format('Y-m-d H:i:s'),
                     'message' => 'Consulta exitosa',
                     'aperturas' => $aperturas
                 ], 200);
