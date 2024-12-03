@@ -117,6 +117,7 @@ class AperturaCrudController extends CrudController
                 ->Search($search)
                 ->orderBy('created_at', 'desc')
                 ->get();
+            dd($aperturas);
             return response()->json([
                 'message' => 'Consulta exitosa',
                 'aperturas' => $aperturas
