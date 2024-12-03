@@ -117,7 +117,10 @@ class AperturaCrudController extends CrudController
                 ->Search($search)
                 ->orderBy('created_at', 'desc')
                 ->get()
-                ->toArray();
+                ->map(function($apertura){
+                    $apertura->created_at = $apertura->created_at->setTimezone('America/Chihuahua');
+                    return $apertura;
+                });
             return response()
                 ->json([
                     'message' => 'Consulta exitosa',
