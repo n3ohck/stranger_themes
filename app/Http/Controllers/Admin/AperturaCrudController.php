@@ -118,11 +118,7 @@ class AperturaCrudController extends CrudController
             $aperturas = Apertura::query()
                 ->Search($search)
                 ->orderBy('created_at', 'desc')
-                ->get()
-                ->map(function($apertura){
-                    $apertura->created_at = $apertura->created_at->format('Y-m-d H:i:s');
-                    return $apertura;
-                });
+                ->get();
             return response()
                 ->json([
                     'fecha' => Carbon::now()->format('Y-m-d H:i:s'),
