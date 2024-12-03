@@ -113,12 +113,16 @@ class AperturaCrudController extends CrudController
                 'estado' => $request->get('estado'),
                 'fecha_apertura' => $this->makeDate($request->get('apertura_fecha_apertura'))
             ];
+            Carbon::setTimezone('America/Chihuahua');
+            date_default_timezone_set('America/Chihuahua');
             $aperturas = Apertura::query()
                 ->Search($search)
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function($apertura){
-                    $apertura->created_at = $apertura->created_at->setTimezone('America/Chihuahua')->toDateTimeString();
+                    $apertura->created_at = $apertura->created_at
+                        ->setTimezone('America/Chihuahua')
+                        ->toDateTimeString();
                     return $apertura;
                 });
             return response()
