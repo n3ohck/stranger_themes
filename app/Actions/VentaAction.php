@@ -90,7 +90,7 @@ class VentaAction
         foreach ($productos as $producto){
             $totalDescuento+= $producto['precio'] - $producto['total'];
             $subtotal+=$producto['precio'];
-            $descuentos = ( count($producto['descuentos']) > 0 )  ? $producto['descuentos'][0] : null;
+            $descuentos = ( !empty($producto['descuentos']) )  ? $producto['descuentos'][0] : null;
             VentaProducto::create([
                 'venta_id' => $ventaId,
                 'producto_id' => $producto['producto_id'],

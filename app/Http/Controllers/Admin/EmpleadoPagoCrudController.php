@@ -113,6 +113,16 @@ class EmpleadoPagoCrudController extends CrudController
             ->toArray(), function ($value) { // if the filter is active
             $this->crud->addClause('BySucursal', $value);
         });
+
+        $this->crud->addFilter([
+            'name' => 'fecha_pago',
+            'type' => 'date_range',
+            'label' => 'Fecha de pago'
+        ], false, function ($value) { // if the filter is active
+            $dates = json_decode($value);
+            $this->crud->addClause('where', 'fecha_pago', '>=', $dates[0]);
+            $this->crud->addClause('where', 'fecha_pago', '<=', $dates[1]);
+        });
     }
 
     /**
