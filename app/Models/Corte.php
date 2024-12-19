@@ -150,8 +150,7 @@ class Corte extends Model
             ->select(['monto','fecha_pago','estatus','sucursal_id'])
             ->whereBetween('fecha_pago', [$fechaInicio, $fechaFinal])
             ->where('estatus','activo')
-            ->where('sucursal_id', $this->attributes['sucursal_id'])
-            ->sum('monto');
+            ->sum('monto') ?? 0;
     }
 
     public function getEfectivoFondoAttribute()
