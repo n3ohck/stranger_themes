@@ -57,11 +57,17 @@ class CorteCrudController extends CrudController
         $this->crud->addColumns([
             [
                 'name' => 'apertura_id',
-                'label' => 'Apertura',
+                'label' => 'Fondo inicial',
                 'type' => 'select',
                 'entity' => 'apertura',
                 'attribute' => 'monto_apertura',
                 'model' => Apertura::class
+            ],
+            [
+                'name' => 'total',
+                'label' => 'Total Venta',
+                'type' => 'number',
+                'decimals' => 2
             ],
             [
                 'name' => 'efectivo',
@@ -76,32 +82,26 @@ class CorteCrudController extends CrudController
                 'decimals' => 2
             ],
             [
-                'name' => 'total',
-                'label' => 'Total Corte',
+                'name' => 'efectivo_fondo',
+                'label' => 'Efectivo + Fondo',
                 'type' => 'number',
                 'decimals' => 2
             ],
             [
-                'name' => 'total_caja',
-                'label' => 'Total Caja',
-                'type' => 'number',
-                'decimals' => 2
-            ],
-            [
-                'name' => 'total_egresos_efectivo',
-                'label' => 'Egresos Efectivo',
-                'type' => 'number',
-                'decimals' => 2
-            ],
-            [
-                'name' => 'efectivo_egreso',
-                'label' => 'Efectivo - Egreso',
+                'name' => 'pago_empleados',
+                'label' => 'Pago Empleados',
                 'type' => 'number',
                 'decimals' => 2
             ],
             [
                 'name' => 'total_egresos',
-                'label' => 'Total Egresos',
+                'label' => 'Pago Empleados',
+                'type' => 'number',
+                'decimals' => 2
+            ],
+            [
+                'name' => 'total_caja',
+                'label' => 'Total en caja',
                 'type' => 'number',
                 'decimals' => 2
             ],

@@ -52,7 +52,7 @@ class Corte extends Model
         'total_caja' => 'float'
     ];
 
-    protected $appends = ['total_egresos_efectivo', 'efectivo_egreso', 'total_egresos'];
+    protected $appends = ['total_egresos_efectivo', 'efectivo_egreso', 'total_egresos','efectivo_fondo','pago_empleados'];
 
     /*
     |--------------------------------------------------------------------------
@@ -140,6 +140,23 @@ class Corte extends Model
             ->where('estatus','activo')
             ->where('sucursal_id', $this->attributes['sucursal_id'])
             ->sum('monto');
+    }
+
+    public function getPagoEmpleados()
+    {
+        $fechaInicio = Carbon::parse($this->attributes['fecha_inicio'])->startOfDay();
+        $fechaFinal = Carbon::parse($this->attributes['fecha_final'])->endOfDay();
+        return EmpleadoPago::query()
+            ->select(['monto','fecha_pago','estatus','sucursal_id'])
+            ->whereBetween('fecha_pago', [$fechaInicio, $fechaFinal])
+            ->where('estatus','activo')
+            ->where('sucursal_id', $this->attributes['sucursal_id'])
+            ->sum('monto');
+    }
+
+    public function getEfectivoFondoAttribute()
+    {
+        return $this->apertura->fondo + $this->attributes['efectivo'];
     }
 
     public function getEfectivoEgresoAttribute()
