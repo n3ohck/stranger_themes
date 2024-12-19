@@ -89,7 +89,7 @@ class VentaAction
         $subtotal = 0;
         foreach ($productos as $producto){
             $subtotal+=$producto['precio'];
-            $descuentos = isset($producto['descuentos']) && !empty($producto['descuentos']) ? $producto['descuentos'][0] : null;
+            $descuentos = !empty($producto['descuentos']) ? $producto['descuentos'][0] : null;
             $descuento = $descuentos && isset($descuentos['descuento']) ? $descuentos['descuento'] : 0;
 
             if ($descuento) {
