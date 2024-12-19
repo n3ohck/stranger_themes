@@ -95,7 +95,7 @@ class VentaAction
             foreach ($producto['descuentos'] as $descuento){
                 $totalDescuento += $producto['precio'] - $producto['total'];
                 $descuento = $producto['precio'] - $producto['total'];
-                $porcentaje = $descuento['porcentaje_descuento'];
+                $porcentaje = $descuento['porcentaje_descuento'] ?? 0;
                 $descuentos = $descuento;
             }
 
