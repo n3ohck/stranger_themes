@@ -90,13 +90,16 @@ class VentaAction
         $descuentoDinero = 0;
         $porcentaje = 0;
         $descuentos = [];
+        $descuentoId = null;
+        $codigoDescuento = null;
         foreach ($productos as $producto){
             $subtotal+=$producto['precio'];
             foreach ($producto['descuentos'] as $descuento){
                 $totalDescuento += $producto['precio'] - $producto['total'];
                 $descuentoDinero = $producto['precio'] - $producto['total'];
                 $porcentaje = $descuento['porcentaje_descuento'] ?? 0;
-                $descuentos = $descuento;
+                $descuentoId =  $descuento['descuento_id'] ?? null;
+                $codigoDescuento = $descuentos['codigo_descuento'] ?? null;
             }
 
             VentaProducto::create([
@@ -105,8 +108,8 @@ class VentaAction
                 'precio' => $producto['precio'],
                 'cantidad' => $producto['cantidad'],
                 'total' => $producto['total'],
-                'descuento_id' => $descuentos['descuento_id'] ?? null,
-                'codigo_descuento' => $descuentos['codigo_descuento'] ?? null,
+                'descuento_id' => $descuentoId,
+                'codigo_descuento' => $codigoDescuento,
                 'descuento' => number_format($descuentoDinero,2,'.',''),
                 'porcentaje_descuento' => $porcentaje
             ]);
