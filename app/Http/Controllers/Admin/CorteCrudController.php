@@ -40,6 +40,10 @@ class CorteCrudController extends CrudController
             Alert::warning('No tienes permisos para ver los cortes')->flash();
             $this->crud->denyAccess('list');
         }
+
+        if( !backpack_user()->can('cortes.eliminar') ){
+            $this->crud->denyAccess('delete');
+        }
     }
 
     /**
