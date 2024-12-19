@@ -144,7 +144,7 @@ class Corte extends Model
 
     public function getPagoEmpleados()
     {
-        $fechaInicio = Carbon::parse($this->attributes['fecha_inicio'])->startOfDay();
+        $fechaInicio = $this->apertura->created_at->startOfDay();
         $fechaFinal = Carbon::parse($this->attributes['fecha_final'])->endOfDay();
         return EmpleadoPago::query()
             ->select(['monto','fecha_pago','estatus','sucursal_id'])
