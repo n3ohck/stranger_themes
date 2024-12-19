@@ -139,7 +139,7 @@ class Corte extends Model
             ->whereBetween('fecha_pago', [$fechaInicio, $fechaFinal])
             ->where('estatus','activo')
             ->where('sucursal_id', $this->attributes['sucursal_id'])
-            ->sum('monto');
+            ->sum('monto') ?? 0;
     }
 
     public function getPagoEmpleados()

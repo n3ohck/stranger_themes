@@ -95,7 +95,7 @@ class CorteCrudController extends CrudController
             ],
             [
                 'name' => 'total_egresos',
-                'label' => 'Pago Empleados',
+                'label' => 'Total Egresos',
                 'type' => 'number',
                 'decimals' => 2
             ],
