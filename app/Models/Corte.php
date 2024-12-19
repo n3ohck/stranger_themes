@@ -142,7 +142,7 @@ class Corte extends Model
             ->sum('monto') ?? 0;
     }
 
-    public function getPagoEmpleados()
+    public function getPagoEmpleadosAttribute()
     {
         $fechaInicio = $this->apertura->created_at->startOfDay();
         $fechaFinal = Carbon::parse($this->attributes['fecha_final'])->endOfDay();
