@@ -102,7 +102,7 @@ class VentaAction
                 'total' => $producto['total'],
                 'descuento_id' => $descuentos['descuento_id'] ?? null,
                 'codigo_descuento' => $descuentos['codigo_descuento'] ?? null,
-                'descuento' => $descuento <= 0 ? 0 : number_format($producto['precio'] - $producto['total'],2,'.',''),
+                'descuento' => ($descuento) ? number_format($producto['precio'] - $producto['total'],2,'.','') : 0,
                 'porcentaje_descuento' => $descuentos['porcentaje_descuento'] ?? 0
             ]);
             (new ExistenciaAction())::salidarPorVenta($producto['producto_id'], $producto['cantidad']);
