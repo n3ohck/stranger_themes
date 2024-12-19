@@ -88,20 +88,22 @@ class VentaAction
         $totalDescuento = 0;
         $subtotal = 0;
         foreach ($productos as $producto){
-            $totalDescuento+= $producto['precio'] - $producto['total'];
             $subtotal+=$producto['precio'];
             $descuentos = ( !empty($producto['descuentos']) )  ? $producto['descuentos'][0] : null;
-            $descuento = ( !empty($producto['descuentos']) )  ? $producto['descuentos'][0]['descuento'] ?? 0 : 0;
+            $descuento = ( $descuentos )  ? $descuentos['descuento'] ?? 0 : 0;
+            if( $descuento ){
+                $totalDescuento+= $producto['precio'] - $producto['total'];
+            }
             VentaProducto::create([
                 'venta_id' => $ventaId,
                 'producto_id' => $producto['producto_id'],
                 'precio' => $producto['precio'],
                 'cantidad' => $producto['cantidad'],
                 'total' => $producto['total'],
-                'descuento_id' => ( !isset( $descuentos['descuento_id'] ) ) ? null : $descuentos['descuento_id'],
-                'codigo_descuento' => ( !isset( $descuentos['codigo_descuento'] ) ) ? null : $descuentos['codigo_descuento'],
-                'descuento' => ( $descuento > 0 ) ? number_format($producto['precio'] - $producto['total'],2,'.','') : 0,
-                'porcentaje_descuento' => ( !isset( $descuentos['porcentaje_descuento'] ) ) ? 0 : $descuentos['porcentaje_descuento']
+                'descuento_id' => $descuentos['descuento_id'] ?? null,
+                'codigo_descuento' => $descuentos['codigo_descuento'] ?? null,
+                'descuento' => $descuento <= 0 ? 0 : number_format($producto['precio'] - $producto['total'],2,'.',''),
+                'porcentaje_descuento' => $descuentos['porcentaje_descuento'] ?? 0
             ]);
             (new ExistenciaAction())::salidarPorVenta($producto['producto_id'], $producto['cantidad']);
         }
