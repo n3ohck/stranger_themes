@@ -1,0 +1,743 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="fix: descuento negativo y filtro de fecha de empleado pagos" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerConfigs">
+    <option name="configs">
+      <option value="$PROJECT_DIR$/public/packages/ckeditor/composer.json" />
+    </option>
+  </component>
+  <component name="ComposerSettings" synchronizationState="SYNCHRONIZE">
+    <pharConfigPath>$PROJECT_DIR$/composer.json</pharConfigPath>
+    <execution />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="feature/permissions" />
+      </map>
+    </option>
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="PackageJsonUpdateNotifier">
+    <dismissed value="$PROJECT_DIR$/package.json" />
+  </component>
+  <component name="PhpWorkspaceProjectConfiguration" interpreter_name="C:\laragon\bin\php\php-7.4.28-Win32-vc15-x64\php.exe">
+    <include_path>
+      <path value="$PROJECT_DIR$/vendor/league/uri-interfaces" />
+      <path value="$PROJECT_DIR$/vendor/league/flysystem" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/php-timer" />
+      <path value="$PROJECT_DIR$/vendor/league/oauth2-server" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/phpunit" />
+      <path value="$PROJECT_DIR$/vendor/league/event" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/php-text-template" />
+      <path value="$PROJECT_DIR$/vendor/tymon/jwt-auth" />
+      <path value="$PROJECT_DIR$/vendor/league/commonmark" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/php-invoker" />
+      <path value="$PROJECT_DIR$/vendor/graham-campbell/result-type" />
+      <path value="$PROJECT_DIR$/vendor/spatie/laravel-permission" />
+      <path value="$PROJECT_DIR$/vendor/facade/ignition" />
+      <path value="$PROJECT_DIR$/vendor/theseer/tokenizer" />
+      <path value="$PROJECT_DIR$/vendor/markbaker/complex" />
+      <path value="$PROJECT_DIR$/vendor/facade/ignition-contracts" />
+      <path value="$PROJECT_DIR$/vendor/markbaker/matrix" />
+      <path value="$PROJECT_DIR$/vendor/facade/flare-client-php" />
+      <path value="$PROJECT_DIR$/vendor/psr/event-dispatcher" />
+      <path value="$PROJECT_DIR$/vendor/phar-io/manifest" />
+      <path value="$PROJECT_DIR$/vendor/backpack/generators" />
+      <path value="$PROJECT_DIR$/vendor/psr/http-message" />
+      <path value="$PROJECT_DIR$/vendor/phar-io/version" />
+      <path value="$PROJECT_DIR$/vendor/backpack/permissionmanager" />
+      <path value="$PROJECT_DIR$/vendor/psr/http-client" />
+      <path value="$PROJECT_DIR$/vendor/psr/container" />
+      <path value="$PROJECT_DIR$/vendor/psr/http-factory" />
+      <path value="$PROJECT_DIR$/vendor/maatwebsite/excel" />
+      <path value="$PROJECT_DIR$/vendor/psr/simple-cache" />
+      <path value="$PROJECT_DIR$/vendor/vlucas/phpdotenv" />
+      <path value="$PROJECT_DIR$/vendor/psr/log" />
+      <path value="$PROJECT_DIR$/vendor/backpack/revise-operation" />
+      <path value="$PROJECT_DIR$/vendor/psr/cache" />
+      <path value="$PROJECT_DIR$/vendor/backpack/crud" />
+      <path value="$PROJECT_DIR$/vendor/tijsverkoyen/css-to-inline-styles" />
+      <path value="$PROJECT_DIR$/vendor/paragonie/random_compat" />
+      <path value="$PROJECT_DIR$/vendor/paragonie/constant_time_encoding" />
+      <path value="$PROJECT_DIR$/vendor/nyholm/psr7" />
+      <path value="$PROJECT_DIR$/vendor/defuse/php-encryption" />
+      <path value="$PROJECT_DIR$/vendor/symfony/routing" />
+      <path value="$PROJECT_DIR$/vendor/lcobucci/jwt" />
+      <path value="$PROJECT_DIR$/vendor/symfony/finder" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-mbstring" />
+      <path value="$PROJECT_DIR$/vendor/symfony/deprecation-contracts" />
+      <path value="$PROJECT_DIR$/vendor/venturecraft/revisionable" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php72" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-ctype" />
+      <path value="$PROJECT_DIR$/vendor/symfony/mime" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php80" />
+      <path value="$PROJECT_DIR$/vendor/symfony/psr-http-message-bridge" />
+      <path value="$PROJECT_DIR$/vendor/webmozart/assert" />
+      <path value="$PROJECT_DIR$/vendor/namshi/jose" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-intl-normalizer" />
+      <path value="$PROJECT_DIR$/vendor/symfony/css-selector" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-intl-grapheme" />
+      <path value="$PROJECT_DIR$/vendor/lcobucci/clock" />
+      <path value="$PROJECT_DIR$/vendor/symfony/var-dumper" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/type" />
+      <path value="$PROJECT_DIR$/vendor/symfony/event-dispatcher" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-iconv" />
+      <path value="$PROJECT_DIR$/vendor/symfony/console" />
+      <path value="$PROJECT_DIR$/vendor/fzaninotto/faker" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-intl-idn" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php73" />
+      <path value="$PROJECT_DIR$/vendor/ramsey/uuid" />
+      <path value="$PROJECT_DIR$/vendor/symfony/event-dispatcher-contracts" />
+      <path value="$PROJECT_DIR$/vendor/ralouphie/getallheaders" />
+      <path value="$PROJECT_DIR$/vendor/ramsey/collection" />
+      <path value="$PROJECT_DIR$/vendor/symfony/error-handler" />
+      <path value="$PROJECT_DIR$/vendor/symfony/process" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/version" />
+      <path value="$PROJECT_DIR$/vendor/dragonmantank/cron-expression" />
+      <path value="$PROJECT_DIR$/vendor/symfony/translation" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/cli-parser" />
+      <path value="$PROJECT_DIR$/vendor/filp/whoops" />
+      <path value="$PROJECT_DIR$/vendor/symfony/string" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/exporter" />
+      <path value="$PROJECT_DIR$/vendor/symfony/service-contracts" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/code-unit" />
+      <path value="$PROJECT_DIR$/vendor/symfony/translation-contracts" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/comparator" />
+      <path value="$PROJECT_DIR$/vendor/dflydev/dot-access-data" />
+      <path value="$PROJECT_DIR$/vendor/symfony/http-kernel" />
+      <path value="$PROJECT_DIR$/vendor/phpoffice/phpspreadsheet" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/object-enumerator" />
+      <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php81" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/lines-of-code" />
+      <path value="$PROJECT_DIR$/vendor/symfony/http-foundation" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/diff" />
+      <path value="$PROJECT_DIR$/vendor/egulias/email-validator" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/object-reflector" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/code-unit-reverse-lookup" />
+      <path value="$PROJECT_DIR$/vendor/monolog/monolog" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/global-state" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/environment" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/resource-operations" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/recursion-context" />
+      <path value="$PROJECT_DIR$/vendor/sebastian/complexity" />
+      <path value="$PROJECT_DIR$/vendor/phpspec/prophecy" />
+      <path value="$PROJECT_DIR$/vendor/psy/psysh" />
+      <path value="$PROJECT_DIR$/vendor/phpdocumentor/reflection-common" />
+      <path value="$PROJECT_DIR$/vendor/phpdocumentor/type-resolver" />
+      <path value="$PROJECT_DIR$/vendor/phpdocumentor/reflection-docblock" />
+      <path value="$PROJECT_DIR$/vendor/ezyang/htmlpurifier" />
+      <path value="$PROJECT_DIR$/vendor/guzzlehttp/guzzle" />
+      <path value="$PROJECT_DIR$/vendor/guzzlehttp/psr7" />
+      <path value="$PROJECT_DIR$/vendor/guzzlehttp/promises" />
+      <path value="$PROJECT_DIR$/vendor/asm89/stack-cors" />
+      <path value="$PROJECT_DIR$/vendor/barryvdh/laravel-snappy" />
+      <path value="$PROJECT_DIR$/vendor/brick/math" />
+      <path value="$PROJECT_DIR$/vendor/firebase/php-jwt" />
+      <path value="$PROJECT_DIR$/vendor/php-http/message-factory" />
+      <path value="$PROJECT_DIR$/vendor/hamcrest/hamcrest-php" />
+      <path value="$PROJECT_DIR$/vendor/opis/closure" />
+      <path value="$PROJECT_DIR$/vendor/nette/utils" />
+      <path value="$PROJECT_DIR$/vendor/nesbot/carbon" />
+      <path value="$PROJECT_DIR$/vendor/nette/schema" />
+      <path value="$PROJECT_DIR$/vendor/voku/portable-ascii" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/inflector" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/instantiator" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/event-manager" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/deprecations" />
+      <path value="$PROJECT_DIR$/vendor/prologue/alerts" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/lexer" />
+      <path value="$PROJECT_DIR$/vendor/intervention/image" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/cache" />
+      <path value="$PROJECT_DIR$/vendor/doctrine/dbal" />
+      <path value="$PROJECT_DIR$/vendor/fideloper/proxy" />
+      <path value="$PROJECT_DIR$/vendor/knplabs/knp-snappy" />
+      <path value="$PROJECT_DIR$/vendor/fruitcake/laravel-cors" />
+      <path value="$PROJECT_DIR$/vendor/phpoption/phpoption" />
+      <path value="$PROJECT_DIR$/vendor/swiftmailer/swiftmailer" />
+      <path value="$PROJECT_DIR$/vendor/laravel/framework" />
+      <path value="$PROJECT_DIR$/vendor/phpseclib/phpseclib" />
+      <path value="$PROJECT_DIR$/vendor/laravel/serializable-closure" />
+      <path value="$PROJECT_DIR$/vendor/laravel/tinker" />
+      <path value="$PROJECT_DIR$/vendor/mockery/mockery" />
+      <path value="$PROJECT_DIR$/vendor/laravel/passport" />
+      <path value="$PROJECT_DIR$/vendor/inertiajs/inertia-laravel" />
+      <path value="$PROJECT_DIR$/vendor/composer" />
+      <path value="$PROJECT_DIR$/vendor/nikic/php-parser" />
+      <path value="$PROJECT_DIR$/vendor/myclabs/deep-copy" />
+      <path value="$PROJECT_DIR$/vendor/league/uri" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/php-file-iterator" />
+      <path value="$PROJECT_DIR$/vendor/league/mime-type-detection" />
+      <path value="$PROJECT_DIR$/vendor/phpunit/php-code-coverage" />
+      <path value="$PROJECT_DIR$/vendor/league/config" />
+      <path value="$PROJECT_DIR$/vendor/nunomaduro/collision" />
+      <path value="$PROJECT_DIR$/vendor/maennchen/zipstream-php" />
+      <path value="$PROJECT_DIR$/vendor/creativeorange/gravatar" />
+      <path value="$PROJECT_DIR$/vendor/myclabs/php-enum" />
+      <path value="$PROJECT_DIR$/vendor/h4cc/wkhtmltopdf-amd64" />
+      <path value="$PROJECT_DIR$/vendor/h4cc/wkhtmltoimage-amd64" />
+    </include_path>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 8
+}</component>
+  <component name="ProjectId" id="2mcDN2HuwJuDIPA2ZnHLEiLjK7J" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/laragon/www/stranger_themes/public/images",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\PhpStorm 2024.2.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
+    ]
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\laragon\www\stranger_themes\public\images" />
+      <recent name="C:\laragon\www\stranger_themes\storage\app\public\uploads\logotipos" />
+      <recent name="C:\laragon\www\stranger_themes" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\laragon\www\stranger_themes\storage\app\public" />
+      <recent name="C:\laragon\www\stranger_themes\app" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="Main" type="PHPUnitRunConfigurationType" factoryName="PHPUnit">
+      <TestRunner configuration_file="$PROJECT_DIR$/phpunit.xml" scope="XML" use_alternative_configuration_file="true" />
+      <method v="2" />
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-deb605915726-JavaScript-PS-243.22562.164" />
+        <option value="bundled-php-predefined-a98d8de5180a-7980c7aaca61-com.jetbrains.php.sharedIndexes-PS-243.22562.164" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="" />
+      <created>1727366927592</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1727366927592</updated>
+      <workItem from="1727366928526" duration="910000" />
+      <workItem from="1727369884537" duration="288000" />
+      <workItem from="1727376333499" duration="632000" />
+      <workItem from="1727478884647" duration="870000" />
+      <workItem from="1727544213610" duration="3382000" />
+      <workItem from="1728183779817" duration="23989000" />
+      <workItem from="1728328348940" duration="453000" />
+      <workItem from="1728329968655" duration="15611000" />
+      <workItem from="1728412884834" duration="9000" />
+      <workItem from="1728441965819" duration="3474000" />
+      <workItem from="1728447730855" duration="51000" />
+      <workItem from="1728614217215" duration="241000" />
+      <workItem from="1729714232007" duration="1458000" />
+      <workItem from="1729814530270" duration="26330000" />
+      <workItem from="1730175407153" duration="3722000" />
+      <workItem from="1730303757336" duration="1970000" />
+      <workItem from="1730312744460" duration="3810000" />
+      <workItem from="1730821773307" duration="2888000" />
+      <workItem from="1730947535702" duration="1376000" />
+      <workItem from="1730950439792" duration="2657000" />
+      <workItem from="1730953459387" duration="6926000" />
+      <workItem from="1731066431024" duration="5588000" />
+      <workItem from="1731079244597" duration="4739000" />
+      <workItem from="1731111083841" duration="2783000" />
+      <workItem from="1731122655559" duration="5555000" />
+      <workItem from="1731332235073" duration="6000" />
+      <workItem from="1731378311394" duration="524000" />
+      <workItem from="1731510076328" duration="8347000" />
+      <workItem from="1732052341802" duration="485000" />
+      <workItem from="1732204364719" duration="1829000" />
+      <workItem from="1732208592942" duration="469000" />
+      <workItem from="1732211428480" duration="626000" />
+      <workItem from="1732212422899" duration="8242000" />
+      <workItem from="1732233303009" duration="250000" />
+      <workItem from="1732296265277" duration="302000" />
+      <workItem from="1732301906802" duration="1371000" />
+      <workItem from="1732664901929" duration="2445000" />
+      <workItem from="1732674553629" duration="1628000" />
+      <workItem from="1733172515684" duration="992000" />
+      <workItem from="1733258370333" duration="4716000" />
+      <workItem from="1733339603695" duration="2006000" />
+      <workItem from="1734388821992" duration="2086000" />
+    </task>
+    <task id="LOCAL-00102" summary="debugging">
+      <option name="closed" value="true" />
+      <created>1731513583222</created>
+      <option name="number" value="00102" />
+      <option name="presentableId" value="LOCAL-00102" />
+      <option name="project" value="LOCAL" />
+      <updated>1731513583222</updated>
+    </task>
+    <task id="LOCAL-00103" summary="debugging">
+      <option name="closed" value="true" />
+      <created>1731514266572</created>
+      <option name="number" value="00103" />
+      <option name="presentableId" value="LOCAL-00103" />
+      <option name="project" value="LOCAL" />
+      <updated>1731514266573</updated>
+    </task>
+    <task id="LOCAL-00104" summary="debugging">
+      <option name="closed" value="true" />
+      <created>1731514334574</created>
+      <option name="number" value="00104" />
+      <option name="presentableId" value="LOCAL-00104" />
+      <option name="project" value="LOCAL" />
+      <updated>1731514334574</updated>
+    </task>
+    <task id="LOCAL-00105" summary="debugging">
+      <option name="closed" value="true" />
+      <created>1731514373679</created>
+      <option name="number" value="00105" />
+      <option name="presentableId" value="LOCAL-00105" />
+      <option name="project" value="LOCAL" />
+      <updated>1731514373679</updated>
+    </task>
+    <task id="LOCAL-00106" summary="debugging">
+      <option name="closed" value="true" />
+      <created>1731514450005</created>
+      <option name="number" value="00106" />
+      <option name="presentableId" value="LOCAL-00106" />
+      <option name="project" value="LOCAL" />
+      <updated>1731514450005</updated>
+    </task>
+    <task id="LOCAL-00107" summary="debugging">
+      <option name="closed" value="true" />
+      <created>1731514809925</created>
+      <option name="number" value="00107" />
+      <option name="presentableId" value="LOCAL-00107" />
+      <option name="project" value="LOCAL" />
+      <updated>1731514809925</updated>
+    </task>
+    <task id="LOCAL-00108" summary="debugging">
+      <option name="closed" value="true" />
+      <created>1731514996624</created>
+      <option name="number" value="00108" />
+      <option name="presentableId" value="LOCAL-00108" />
+      <option name="project" value="LOCAL" />
+      <updated>1731514996624</updated>
+    </task>
+    <task id="LOCAL-00109" summary="feature:permissions">
+      <option name="closed" value="true" />
+      <created>1731518121493</created>
+      <option name="number" value="00109" />
+      <option name="presentableId" value="LOCAL-00109" />
+      <option name="project" value="LOCAL" />
+      <updated>1731518121493</updated>
+    </task>
+    <task id="LOCAL-00110" summary="feature:permissions">
+      <option name="closed" value="true" />
+      <created>1731519632922</created>
+      <option name="number" value="00110" />
+      <option name="presentableId" value="LOCAL-00110" />
+      <option name="project" value="LOCAL" />
+      <updated>1731519632922</updated>
+    </task>
+    <task id="LOCAL-00111" summary="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto q">
+      <option name="closed" value="true" />
+      <created>1732052434736</created>
+      <option name="number" value="00111" />
+      <option name="presentableId" value="LOCAL-00111" />
+      <option name="project" value="LOCAL" />
+      <updated>1732052434736</updated>
+    </task>
+    <task id="LOCAL-00112" summary="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto que sale en">
+      <option name="closed" value="true" />
+      <created>1732204430177</created>
+      <option name="number" value="00112" />
+      <option name="presentableId" value="LOCAL-00112" />
+      <option name="project" value="LOCAL" />
+      <updated>1732204430177</updated>
+    </task>
+    <task id="LOCAL-00113" summary="feature: se expone la ruta de consulta de reservas">
+      <option name="closed" value="true" />
+      <created>1732211538338</created>
+      <option name="number" value="00113" />
+      <option name="presentableId" value="LOCAL-00113" />
+      <option name="project" value="LOCAL" />
+      <updated>1732211538338</updated>
+    </task>
+    <task id="LOCAL-00114" summary="feature: se expone la ruta de consulta de reservas">
+      <option name="closed" value="true" />
+      <created>1732211585903</created>
+      <option name="number" value="00114" />
+      <option name="presentableId" value="LOCAL-00114" />
+      <option name="project" value="LOCAL" />
+      <updated>1732211585903</updated>
+    </task>
+    <task id="LOCAL-00115" summary="feature: se expone la ruta de consulta de reservas">
+      <option name="closed" value="true" />
+      <created>1732212640814</created>
+      <option name="number" value="00115" />
+      <option name="presentableId" value="LOCAL-00115" />
+      <option name="project" value="LOCAL" />
+      <updated>1732212640814</updated>
+    </task>
+    <task id="LOCAL-00116" summary="feature: se expone la ruta de consulta de reservas">
+      <option name="closed" value="true" />
+      <created>1732213787415</created>
+      <option name="number" value="00116" />
+      <option name="presentableId" value="LOCAL-00116" />
+      <option name="project" value="LOCAL" />
+      <updated>1732213787415</updated>
+    </task>
+    <task id="LOCAL-00117" summary="feature: se expone la ruta de consulta de reservas">
+      <option name="closed" value="true" />
+      <created>1732214048435</created>
+      <option name="number" value="00117" />
+      <option name="presentableId" value="LOCAL-00117" />
+      <option name="project" value="LOCAL" />
+      <updated>1732214048435</updated>
+    </task>
+    <task id="LOCAL-00118" summary="feature: se expone la ruta de consulta de reservas">
+      <option name="closed" value="true" />
+      <created>1732214653363</created>
+      <option name="number" value="00118" />
+      <option name="presentableId" value="LOCAL-00118" />
+      <option name="project" value="LOCAL" />
+      <updated>1732214653363</updated>
+    </task>
+    <task id="LOCAL-00119" summary="feature: se expone la ruta de consulta de reservas">
+      <option name="closed" value="true" />
+      <created>1732215469151</created>
+      <option name="number" value="00119" />
+      <option name="presentableId" value="LOCAL-00119" />
+      <option name="project" value="LOCAL" />
+      <updated>1732215469151</updated>
+    </task>
+    <task id="LOCAL-00120" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+      <option name="closed" value="true" />
+      <created>1732215947049</created>
+      <option name="number" value="00120" />
+      <option name="presentableId" value="LOCAL-00120" />
+      <option name="project" value="LOCAL" />
+      <updated>1732215947049</updated>
+    </task>
+    <task id="LOCAL-00121" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+      <option name="closed" value="true" />
+      <created>1732216604977</created>
+      <option name="number" value="00121" />
+      <option name="presentableId" value="LOCAL-00121" />
+      <option name="project" value="LOCAL" />
+      <updated>1732216604977</updated>
+    </task>
+    <task id="LOCAL-00122" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+      <option name="closed" value="true" />
+      <created>1732217421079</created>
+      <option name="number" value="00122" />
+      <option name="presentableId" value="LOCAL-00122" />
+      <option name="project" value="LOCAL" />
+      <updated>1732217421079</updated>
+    </task>
+    <task id="LOCAL-00123" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+      <option name="closed" value="true" />
+      <created>1732217770828</created>
+      <option name="number" value="00123" />
+      <option name="presentableId" value="LOCAL-00123" />
+      <option name="project" value="LOCAL" />
+      <updated>1732217770828</updated>
+    </task>
+    <task id="LOCAL-00124" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+      <option name="closed" value="true" />
+      <created>1732217944983</created>
+      <option name="number" value="00124" />
+      <option name="presentableId" value="LOCAL-00124" />
+      <option name="project" value="LOCAL" />
+      <updated>1732217944983</updated>
+    </task>
+    <task id="LOCAL-00125" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+      <option name="closed" value="true" />
+      <created>1732217989236</created>
+      <option name="number" value="00125" />
+      <option name="presentableId" value="LOCAL-00125" />
+      <option name="project" value="LOCAL" />
+      <updated>1732217989236</updated>
+    </task>
+    <task id="LOCAL-00126" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+      <option name="closed" value="true" />
+      <created>1732218202579</created>
+      <option name="number" value="00126" />
+      <option name="presentableId" value="LOCAL-00126" />
+      <option name="project" value="LOCAL" />
+      <updated>1732218202579</updated>
+    </task>
+    <task id="LOCAL-00127" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+      <option name="closed" value="true" />
+      <created>1732219522116</created>
+      <option name="number" value="00127" />
+      <option name="presentableId" value="LOCAL-00127" />
+      <option name="project" value="LOCAL" />
+      <updated>1732219522116</updated>
+    </task>
+    <task id="LOCAL-00128" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+      <option name="closed" value="true" />
+      <created>1732219591013</created>
+      <option name="number" value="00128" />
+      <option name="presentableId" value="LOCAL-00128" />
+      <option name="project" value="LOCAL" />
+      <updated>1732219591013</updated>
+    </task>
+    <task id="LOCAL-00129" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+      <option name="closed" value="true" />
+      <created>1732233320878</created>
+      <option name="number" value="00129" />
+      <option name="presentableId" value="LOCAL-00129" />
+      <option name="project" value="LOCAL" />
+      <updated>1732233320878</updated>
+    </task>
+    <task id="LOCAL-00130" summary="feature: cambio de consulta de api de pago de empleados.">
+      <option name="closed" value="true" />
+      <created>1732301964953</created>
+      <option name="number" value="00130" />
+      <option name="presentableId" value="LOCAL-00130" />
+      <option name="project" value="LOCAL" />
+      <updated>1732301964953</updated>
+    </task>
+    <task id="LOCAL-00131" summary="feature: cambio de consulta de api de pago de empleados.">
+      <option name="closed" value="true" />
+      <created>1732664978930</created>
+      <option name="number" value="00131" />
+      <option name="presentableId" value="LOCAL-00131" />
+      <option name="project" value="LOCAL" />
+      <updated>1732664978930</updated>
+    </task>
+    <task id="LOCAL-00132" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1732667428587</created>
+      <option name="number" value="00132" />
+      <option name="presentableId" value="LOCAL-00132" />
+      <option name="project" value="LOCAL" />
+      <updated>1732667428587</updated>
+    </task>
+    <task id="LOCAL-00133" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1732676098238</created>
+      <option name="number" value="00133" />
+      <option name="presentableId" value="LOCAL-00133" />
+      <option name="project" value="LOCAL" />
+      <updated>1732676098238</updated>
+    </task>
+    <task id="LOCAL-00134" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1732676150013</created>
+      <option name="number" value="00134" />
+      <option name="presentableId" value="LOCAL-00134" />
+      <option name="project" value="LOCAL" />
+      <updated>1732676150013</updated>
+    </task>
+    <task id="LOCAL-00135" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733259153095</created>
+      <option name="number" value="00135" />
+      <option name="presentableId" value="LOCAL-00135" />
+      <option name="project" value="LOCAL" />
+      <updated>1733259153095</updated>
+    </task>
+    <task id="LOCAL-00136" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733259432095</created>
+      <option name="number" value="00136" />
+      <option name="presentableId" value="LOCAL-00136" />
+      <option name="project" value="LOCAL" />
+      <updated>1733259432095</updated>
+    </task>
+    <task id="LOCAL-00137" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733259492656</created>
+      <option name="number" value="00137" />
+      <option name="presentableId" value="LOCAL-00137" />
+      <option name="project" value="LOCAL" />
+      <updated>1733259492656</updated>
+    </task>
+    <task id="LOCAL-00138" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733259566604</created>
+      <option name="number" value="00138" />
+      <option name="presentableId" value="LOCAL-00138" />
+      <option name="project" value="LOCAL" />
+      <updated>1733259566605</updated>
+    </task>
+    <task id="LOCAL-00139" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733261326100</created>
+      <option name="number" value="00139" />
+      <option name="presentableId" value="LOCAL-00139" />
+      <option name="project" value="LOCAL" />
+      <updated>1733261326100</updated>
+    </task>
+    <task id="LOCAL-00140" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733261396941</created>
+      <option name="number" value="00140" />
+      <option name="presentableId" value="LOCAL-00140" />
+      <option name="project" value="LOCAL" />
+      <updated>1733261396941</updated>
+    </task>
+    <task id="LOCAL-00141" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733261520887</created>
+      <option name="number" value="00141" />
+      <option name="presentableId" value="LOCAL-00141" />
+      <option name="project" value="LOCAL" />
+      <updated>1733261520887</updated>
+    </task>
+    <task id="LOCAL-00142" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733261736481</created>
+      <option name="number" value="00142" />
+      <option name="presentableId" value="LOCAL-00142" />
+      <option name="project" value="LOCAL" />
+      <updated>1733261736481</updated>
+    </task>
+    <task id="LOCAL-00143" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733261800748</created>
+      <option name="number" value="00143" />
+      <option name="presentableId" value="LOCAL-00143" />
+      <option name="project" value="LOCAL" />
+      <updated>1733261800749</updated>
+    </task>
+    <task id="LOCAL-00144" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733261929412</created>
+      <option name="number" value="00144" />
+      <option name="presentableId" value="LOCAL-00144" />
+      <option name="project" value="LOCAL" />
+      <updated>1733261929412</updated>
+    </task>
+    <task id="LOCAL-00145" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733261974186</created>
+      <option name="number" value="00145" />
+      <option name="presentableId" value="LOCAL-00145" />
+      <option name="project" value="LOCAL" />
+      <updated>1733261974186</updated>
+    </task>
+    <task id="LOCAL-00146" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733262045686</created>
+      <option name="number" value="00146" />
+      <option name="presentableId" value="LOCAL-00146" />
+      <option name="project" value="LOCAL" />
+      <updated>1733262045686</updated>
+    </task>
+    <task id="LOCAL-00147" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733262215249</created>
+      <option name="number" value="00147" />
+      <option name="presentableId" value="LOCAL-00147" />
+      <option name="project" value="LOCAL" />
+      <updated>1733262215249</updated>
+    </task>
+    <task id="LOCAL-00148" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+      <option name="closed" value="true" />
+      <created>1733263450437</created>
+      <option name="number" value="00148" />
+      <option name="presentableId" value="LOCAL-00148" />
+      <option name="project" value="LOCAL" />
+      <updated>1733263450437</updated>
+    </task>
+    <task id="LOCAL-00149" summary="fix: descuento negativo y filtro de fecha de empleado pagos">
+      <option name="closed" value="true" />
+      <created>1734390234023</created>
+      <option name="number" value="00149" />
+      <option name="presentableId" value="LOCAL-00149" />
+      <option name="project" value="LOCAL" />
+      <updated>1734390234023</updated>
+    </task>
+    <task id="LOCAL-00150" summary="fix: descuento negativo y filtro de fecha de empleado pagos">
+      <option name="closed" value="true" />
+      <created>1734390660040</created>
+      <option name="number" value="00150" />
+      <option name="presentableId" value="LOCAL-00150" />
+      <option name="project" value="LOCAL" />
+      <updated>1734390660040</updated>
+    </task>
+    <option name="localTasksCounter" value="151" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <MESSAGE value="feature: se agrego crud de empleados" />
+    <MESSAGE value="feature: se agrego crud de empleados pagos" />
+    <MESSAGE value="feature: se agrego columna de puesto a tabla de empleados" />
+    <MESSAGE value="feature: se agrego columna de puesto a tabla de empleados al crud y validaciones al form request" />
+    <MESSAGE value="feature: se acomodo el listado de cortes para mostrar la informacion requerida, asi como, se agregaron los appends en el modelo de corte para calcular los totales de egresos relacionados al corte." />
+    <MESSAGE value="feature: sidebar iconos de cortes y aperturas y remover menu de aperturas" />
+    <MESSAGE value="feature: filtro por usuario en consulta de ventas api" />
+    <MESSAGE value="feature: migracion descuentos tipo de producto" />
+    <MESSAGE value="feature: descuentos tipo de producto" />
+    <MESSAGE value="change: se agrego a sucursales la columna de horarios json que se maneja con array de lado de backpack y tambien se retiro la columna de hora de cierre y apertura." />
+    <MESSAGE value="change: cambio de pantalla de login y publish de vendor backpack views" />
+    <MESSAGE value="change: time zone" />
+    <MESSAGE value="fix: undefined descuento" />
+    <MESSAGE value="fix: dashboard" />
+    <MESSAGE value="feature: dashboard" />
+    <MESSAGE value="change: se remueven opciones de menu que ya no se van a utilizar" />
+    <MESSAGE value="debugging" />
+    <MESSAGE value="feature:permissions" />
+    <MESSAGE value="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto q" />
+    <MESSAGE value="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto que sale en" />
+    <MESSAGE value="feature: se expone la ruta de consulta de reservas" />
+    <MESSAGE value="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete" />
+    <MESSAGE value="feature: cambio de consulta de api de pago de empleados." />
+    <MESSAGE value="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum" />
+    <MESSAGE value="fix: descuento negativo y filtro de fecha de empleado pagos" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix: descuento negativo y filtro de fecha de empleado pagos" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="php">
+          <url>file://$PROJECT_DIR$/resources/views/vendor/backpack/base/dashboard.blade.php</url>
+          <line>1</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
