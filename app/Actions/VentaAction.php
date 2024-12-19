@@ -91,7 +91,7 @@ class VentaAction
             $totalDescuento+= $producto['precio'] - $producto['total'];
             $subtotal+=$producto['precio'];
             $descuentos = ( !empty($producto['descuentos']) )  ? $producto['descuentos'][0] : null;
-            $descuento = ( !empty($producto['descuentos']) )  ? $producto['descuentos'][0]['descuento'] : 0;
+            $descuento = ( !empty($producto['descuentos']) )  ? $producto['descuentos'][0]['descuento'] ?? 0 : 0;
             VentaProducto::create([
                 'venta_id' => $ventaId,
                 'producto_id' => $producto['producto_id'],
