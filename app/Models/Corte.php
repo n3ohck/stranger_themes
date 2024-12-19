@@ -155,7 +155,7 @@ class Corte extends Model
 
     public function getEfectivoFondoAttribute()
     {
-        return $this->apertura->fondo + $this->attributes['efectivo'];
+        return $this->apertura->monto_apertura + $this->attributes['efectivo'];
     }
 
     public function getEfectivoEgresoAttribute()
