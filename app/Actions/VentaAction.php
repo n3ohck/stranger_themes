@@ -89,11 +89,13 @@ class VentaAction
         $subtotal = 0;
         foreach ($productos as $producto){
             $subtotal+=$producto['precio'];
-            $descuentos = ( !empty($producto['descuentos']) )  ? $producto['descuentos'][0] : null;
-            $descuento = ( $descuentos )  ? $descuentos['descuento'] ?? 0 : 0;
-            if( $descuento ){
-                $totalDescuento+= $producto['precio'] - $producto['total'];
+            $descuentos = isset($producto['descuentos']) && !empty($producto['descuentos']) ? $producto['descuentos'][0] : null;
+            $descuento = $descuentos && isset($descuentos['descuento']) ? $descuentos['descuento'] : 0;
+
+            if ($descuento) {
+                $totalDescuento += $producto['precio'] - $producto['total'];
             }
+
             VentaProducto::create([
                 'venta_id' => $ventaId,
                 'producto_id' => $producto['producto_id'],
