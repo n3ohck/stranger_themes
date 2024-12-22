@@ -103,7 +103,7 @@ class CorteCrudController extends CrudController
             ],
             [
                 'name' => 'total_caja',
-                'label' => 'Total en caja',
+                'label' => 'Total en caja efectivo',
                 'type' => 'number',
                 'decimals' => 2
             ],
