@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Requests\CorteRequest;
 use App\Models\Apertura;
 use App\Models\Corte;
+use App\Models\Reserva;
 use App\Models\Sucursal;
 use App\Models\User;
+use App\Models\Venta;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
@@ -36,12 +38,12 @@ class CorteCrudController extends CrudController
         CRUD::setModel(\App\Models\Corte::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/corte');
         CRUD::setEntityNameStrings('corte', 'cortes');
-        if( !backpack_user()->can('cortes.ver') ){
+        if (!backpack_user()->can('cortes.ver')) {
             Alert::warning('No tienes permisos para ver los cortes')->flash();
             $this->crud->denyAccess('list');
         }
 
-        if( !backpack_user()->can('cortes.eliminar') ){
+        if (!backpack_user()->can('cortes.eliminar')) {
             $this->crud->denyAccess('delete');
         }
     }
@@ -247,7 +249,7 @@ class CorteCrudController extends CrudController
                 'cortes' => $cortes,
                 'qty' => $cortes->count()
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()
                 ->json([
                     'error' => $e->getMessage()
@@ -258,9 +260,9 @@ class CorteCrudController extends CrudController
     public function validateRequest($request)
     {
         $aperturaId = $request->get('apertura_id');
-        if( !$aperturaId ) throw new \Exception('Debe seleccionar una apertura');
+        if (!$aperturaId) throw new \Exception('Debe seleccionar una apertura');
         $apertura = Apertura::find($aperturaId);
-        if(!$apertura) throw new \Exception('Apertura no encontrada');
+        if (!$apertura) throw new \Exception('Apertura no encontrada');
 
         if (!$request->get('fecha_inicio') || !$request->get('fecha_final')) {
             throw new \Exception('Debe seleccionar una fecha de inicio y una fecha final');
@@ -270,7 +272,7 @@ class CorteCrudController extends CrudController
             throw new \Exception('El total debe ser mayor a 0');
         }
 
-        if($apertura->user_id_cerro) {
+        if ($apertura->user_id_cerro) {
             throw new \Exception('La apertura ya fue cerrada');
         }
 
@@ -308,7 +310,50 @@ class CorteCrudController extends CrudController
                 'message' => 'Corte realizado con exito',
                 'corte' => $corte
             ], 200);
-        }catch (\Exception $e) {
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()
+                ->json([
+                    'error' => $e->getMessage()
+                ], 500);
+        }
+    }
+
+    public function destroy($id)
+    {
+        try {
+            $corte = Corte::find($id);
+            if (!$corte) {
+                throw new \Exception('Corte no encontrado');
+            }
+            $fecha_inicio = Carbon::parse($corte->fecha_inicio)->startOfDay();
+            $fecha_final = Carbon::parse($corte->fecha_final) ?? Carbon::now();
+            $fecha_final = $fecha_final->endOfDay();
+            DB::beginTransaction();
+            $corte->delete();
+
+            Venta::whereBetween('created_at', [$fecha_inicio, $fecha_final])
+                ->with([
+                    'productos', 'pagos', 'reservaciones'
+                ])
+                ->where('sucursal_id', $corte->sucursal_id)
+                ->chunk(100, function ($ventas) {
+                    foreach ($ventas as $venta) {
+                        $venta->productos->each(function ($producto) {
+                            $producto->delete();
+                        });
+                        $venta->pagos->each(function ($pago) {
+                            $pago->delete();
+                        });
+                        $venta->reservaciones->each(function ($reserva) {
+                            $reserva->delete();
+                        });
+                        $venta->delete();
+                    }
+                });
+            DB::commit();
+            return true;
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()
                 ->json([
