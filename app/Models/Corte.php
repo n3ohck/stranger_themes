@@ -52,7 +52,7 @@ class Corte extends Model
         'total_caja' => 'float'
     ];
 
-    protected $appends = ['total_egresos_efectivo', 'efectivo_egreso', 'total_egresos','efectivo_fondo','pago_empleados'];
+    protected $appends = ['total_egresos_efectivo', 'efectivo_egreso', 'total_egresos','efectivo_fondo','pago_empleados','ganancia'];
 
     /*
     |--------------------------------------------------------------------------
@@ -161,5 +161,11 @@ class Corte extends Model
     public function getEfectivoEgresoAttribute()
     {
         return number_format(($this->attributes['efectivo'] - $this->total_egresos), 2, '.', '');
+    }
+
+    public function getGananciaAttribute()
+    {
+        $totalEgresos = $this->total_egresos ?? 0 + $this->pago_empleados ?? 0;
+        return number_format(($this->attributes['total'] - $totalEgresos), 2, '.', '');
     }
 }

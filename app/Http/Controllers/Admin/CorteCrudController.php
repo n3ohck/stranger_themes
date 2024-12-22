@@ -108,6 +108,12 @@ class CorteCrudController extends CrudController
                 'decimals' => 2
             ],
             [
+                'name' => 'ganancia',
+                'label' => 'Ganancia',
+                'type' => 'number',
+                'decimals' => 2
+            ],
+            [
                 'name' => 'fecha_inicio',
                 'label' => 'Fecha Inicio',
                 'type' => 'datetime'
