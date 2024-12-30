@@ -295,14 +295,16 @@ class CorteCrudController extends CrudController
         try {
             $apertura = $this->validateRequest($request);
             DB::beginTransaction();
+            $fechaInicio = Carbon::parse($this->makeDate($request->get('fecha_inicio')))->setTimezone('America/Chihuahua');
+            $fechaFinal = Carbon::parse($this->makeDate($request->get('fecha_final'))->setTimezone('America/Chihuahua'));
             $corte = Corte::create([
                 'total' => $request->get('total'),
                 'efectivo' => $request->get('efectivo'),
                 'tarjeta' => $request->get('tarjeta'),
                 'transferencia' => $request->get('transferencia'),
                 'total_caja' => $request->get('total_caja'),
-                'fecha_inicio' => $this->makeDate($request->get('fecha_inicio')),
-                'fecha_final' => $this->makeDate($request->get('fecha_final')),
+                'fecha_inicio' => $fechaInicio,
+                'fecha_final' => $fechaFinal,
                 'user_id' => backpack_user()->id,
                 'sucursal_id' => backpack_user()->sucursal_id,
                 'apertura_id' => $apertura->id
