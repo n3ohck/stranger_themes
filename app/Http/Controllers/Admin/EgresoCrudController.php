@@ -254,14 +254,15 @@ class EgresoCrudController extends CrudController
     public function make(Request $request)
     {
         try {
+
             $request->validate([
                 'monto' => 'required|numeric',
                 'descripcion' => 'required|string',
                 'tipo_pago' => 'required|string',
                 'referencia' => 'required|string',
-                'fecha_pago' => 'required',
-                'imagen' => 'required|file',
+                'fecha_pago' => 'required'
             ]);
+
             DB::beginTransaction();
             $egreso = Egreso::create([
                 'user_id' => backpack_user()->id,
@@ -270,7 +271,7 @@ class EgresoCrudController extends CrudController
                 'tipo_pago' => $request->tipo_pago,
                 'estatus' => 'activo',
                 'referencia' => $request->referencia,
-                'imagen' => $request->file('imagen')->store('egresos', 'pagos'),
+                'imagen' => $request->has('imagen') ? $request->file('imagen')->store('egresos', 'pagos') : null,
                 'fecha_pago' => $this->makeDate($request->fecha_pago),
                 'sucursal_id' => backpack_user()->sucursal_id
             ]);
