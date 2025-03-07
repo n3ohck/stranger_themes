@@ -259,7 +259,6 @@ class EgresoCrudController extends CrudController
                 'monto' => 'required|numeric',
                 'descripcion' => 'required|string',
                 'tipo_pago' => 'required|string',
-                'referencia' => 'required|string',
                 'fecha_pago' => 'required'
             ]);
 
@@ -270,7 +269,7 @@ class EgresoCrudController extends CrudController
                 'descripcion' => $request->descripcion,
                 'tipo_pago' => $request->tipo_pago,
                 'estatus' => 'activo',
-                'referencia' => $request->referencia,
+                'referencia' => $request->has('referencia') ? $request->referencia : 'N/A',
                 'imagen' => $request->has('imagen') ? $request->file('imagen')->store('egresos', 'pagos') : null,
                 'fecha_pago' => $this->makeDate($request->fecha_pago),
                 'sucursal_id' => backpack_user()->sucursal_id
