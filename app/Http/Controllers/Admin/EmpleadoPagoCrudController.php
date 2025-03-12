@@ -221,10 +221,12 @@ class EmpleadoPagoCrudController extends CrudController
     public function getTotal($dates)
     {
         $dates[0] = Carbon::parse($dates[0])->startOfDay();
-        $dates[1] = Carbon::parse($dates[1])->modify('+1 day')->startOfDay();
+        $dates[1] = Carbon::parse($dates[1])
+            ->modify('+1 day')
+            ->startOfDay();
 
         return EmpleadoPago::query()
-            ->whereBetween(DB::raw('DATE(fecha_pago)'), ['2025-03-08','2025-03-08'])
+            ->whereBetween('created_at', $dates)
             ->where('estatus','activo')
             ->sum('monto');
     }
