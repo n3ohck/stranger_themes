@@ -145,10 +145,10 @@ class Corte extends Model
     public function getPagoEmpleadosAttribute()
     {
         $fechaInicio = Carbon::parse($this->apertura->created_at)->startOfDay();
-        $fechaFinal = Carbon::parse($this->attributes['created_at'])->endOfDay();
+        $fechaFinal = Carbon::parse($this->attributes['fecha_final'])->endOfDay();
         return EmpleadoPago::query()
             ->select(['monto','fecha_pago','estatus'])
-            ->whereBetween('fecha_pago', [$fechaInicio, $fechaFinal])
+            ->whereBetween('created_at', [$fechaInicio, $fechaFinal])
             ->where('estatus','activo')
             ->sum('monto') ?? 0;
     }
