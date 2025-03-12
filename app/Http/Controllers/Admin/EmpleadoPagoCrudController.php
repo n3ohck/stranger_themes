@@ -222,9 +222,13 @@ class EmpleadoPagoCrudController extends CrudController
     {
         $dates[0] = Carbon::parse($dates[0])->startOfDay();
         $dates[1] = Carbon::parse($dates[1])->endOfDay();
-        return EmpleadoPago::query()
+
+        $pagosEmpleados = EmpleadoPago::query()
             ->whereBetween('fecha_pago', $dates)
             ->where('estatus','activo')
-            ->sum('monto');
+            ->get();
+
+        dd($dates,$pagosEmpleados);
+        //->sum('monto');
     }
 }
