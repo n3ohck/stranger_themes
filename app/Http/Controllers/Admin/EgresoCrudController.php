@@ -263,6 +263,8 @@ class EgresoCrudController extends CrudController
             ]);
 
             DB::beginTransaction();
+            $formato = 'd/m/Y, h:i:s a';
+            $fechaPago = Carbon::createFromFormat($formato, $request->fecha_pago);
             $egreso = Egreso::create([
                 'user_id' => backpack_user()->id,
                 'monto' => $request->monto,
@@ -271,7 +273,7 @@ class EgresoCrudController extends CrudController
                 'estatus' => 'activo',
                 'referencia' => $request->has('referencia') ? $request->referencia : 'N/A',
                 'imagen' => $request->has('imagen') ? $request->file('imagen')->store('egresos', 'pagos') : null,
-                'fecha_pago' => $this->makeDate($request->fecha_pago),
+                'fecha_pago' => $fechaPago,
                 'sucursal_id' => backpack_user()->sucursal_id
             ]);
             DB::commit();
