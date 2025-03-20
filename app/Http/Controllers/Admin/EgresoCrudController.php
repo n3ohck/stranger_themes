@@ -297,10 +297,12 @@ class EgresoCrudController extends CrudController
                 'estatus' => $request->get('estatus'),
                 'tipo_pago' => $request->get('tipo_pago')
             ];
+
             $egresos = Egreso::query()
                 ->Search($search)
                 ->orderBy('fecha_pago', 'desc')
                 ->get();
+
             return response()->json([
                 'message' => 'Egresos encontrados',
                 'egresos' => $egresos,

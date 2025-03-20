@@ -113,7 +113,7 @@ class Egreso extends Model
                 $query->where('estatus', $this->search->estatus);
             })
             ->when($this->search->fecha_pago, function ($query) {
-                $query->whereDate('fecha_pago', $this->search->fecha_pago);
+                $query->whereDate('fecha_pago', '>=', $this->search->fecha_pago);
             });
     }
     /*
