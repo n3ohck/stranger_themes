@@ -127,4 +127,8 @@ class Egreso extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
+    public function getFechaPagoAttribute()
+    {
+        return $this->fecha_pago->format('Y-m-d H:i:s');
+    }
 }
