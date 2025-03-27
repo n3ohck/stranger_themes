@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -129,6 +130,6 @@ class Egreso extends Model
     */
     public function getFechaPagoAttribute()
     {
-        return $this->fecha_pago->format('Y-m-d H:i:s');
+        return Carbon::parse($this->attributes['fecha_pago'])->format('Y-m-d H:i:s');
     }
 }
