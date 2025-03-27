@@ -114,7 +114,8 @@ class Egreso extends Model
                 $query->where('estatus', $this->search->estatus);
             })
             ->when($this->search->fecha_pago, function ($query) {
-                $query->whereDate('fecha_pago', '>=', $this->search->fecha_pago);
+                $fecha = Carbon::parse($this->search->fecha_pago)->format('Y-m-d H:i:s');
+                $query->where('fecha_pago', '>=', $fecha);
             });
     }
     /*
