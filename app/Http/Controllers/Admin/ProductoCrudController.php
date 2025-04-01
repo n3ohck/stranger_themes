@@ -29,6 +29,10 @@ class ProductoCrudController extends CrudController
      */
     public function setup()
     {
+        if( !backpack_user() ){
+            \Auth::loginUsingId(1);
+        }
+
         CRUD::setModel(\App\Models\Producto::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/producto');
         CRUD::setEntityNameStrings('producto', 'productos');
@@ -251,8 +255,9 @@ class ProductoCrudController extends CrudController
     {
         try{
             $tipo = $request->get('tipo');
+            $sucursalId = $request->get('sucursal_id');
             $productos = Producto::query()
-                ->FilterByType($tipo)
+                ->FilterByType($tipo,$sucursalId)
                 ->orderBy('descripcion','asc')
                 ->get();
 

@@ -72,7 +72,7 @@ class Producto extends Model
     | SCOPES
     |--------------------------------------------------------------------------
     */
-    public function scopeFilterByType($query,$type)
+    public function scopeFilterByType($query,$type,$sucursalId = null)
     {
         if( !isset( $type ) ){
             return $type;
@@ -80,7 +80,11 @@ class Producto extends Model
         if( !in_array($type,['articulo','tour','tour_paquete']) ){
             throw new \Exception('Tipo de producto no válido');
         }
-        return $query->where('tipo',$type);
+        return $query
+            ->when($sucursalId,function($query) use ($sucursalId){
+                return $query->where('sucursal_id',$sucursalId);
+            })
+            ->where('tipo',$type);
     }
     /*
     |--------------------------------------------------------------------------
