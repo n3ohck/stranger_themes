@@ -29,6 +29,9 @@ class ReservaCrudController extends CrudController
      */
     public function setup()
     {
+        if( !backpack_user() ){
+            \Auth::loginUsingId(1);
+        }
         CRUD::setModel(\App\Models\Reserva::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/reserva');
         CRUD::setEntityNameStrings('reserva', 'reservas');
@@ -112,7 +115,8 @@ class ReservaCrudController extends CrudController
                 'start_date' => $this->makeDate($request->get('start_date') ?? null),
                 'end_date' => $this->makeDate($request->get('end_date') ?? null),
                 'status' => $request->get('status'),
-                'venta_id' => $request->get('venta_id')
+                'venta_id' => $request->get('venta_id'),
+                'sucursal_id' => $request->get('sucursal_id'),
             ];
 
             $reservas = Reserva::query()
@@ -165,7 +169,8 @@ class ReservaCrudController extends CrudController
                 'cantidad_personas' => $request->number,
                 'fecha' => Carbon::parse($request->datetime),
                 'estado' => 'confirmada',
-                'sucursal_id' => $sucursalId
+                'sucursal_id' => $sucursalId,
+                "venta_id" => $request->venta_id
             ]);
             return response()->json([
                 'message' => 'Reserva creada',

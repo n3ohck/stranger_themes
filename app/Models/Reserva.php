@@ -85,6 +85,9 @@ class Reserva extends Model
             })
             ->when($this->search->venta_id, function ($query) {
                 return $query->where('venta_id', $this->search->venta_id);
+            })
+            ->when($this->search->sucursal_id, function ($query) {
+                return $query->where('sucursal_id', $this->search->sucursal_id);
             });
     }
     /*

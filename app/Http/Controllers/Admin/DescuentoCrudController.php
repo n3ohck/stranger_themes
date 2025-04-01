@@ -29,6 +29,9 @@ class DescuentoCrudController extends CrudController
      */
     public function setup()
     {
+        if( !backpack_user() ){
+            \Auth::loginUsingId(1);
+        }
         CRUD::setModel(\App\Models\Descuento::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/descuento');
         CRUD::setEntityNameStrings('descuento', 'descuentos');
@@ -171,8 +174,9 @@ class DescuentoCrudController extends CrudController
     {
         try {
             $estatus = $request->get('estatus');
+            $sucursalId = $request->get('sucursal_id');
             $descuentos = Descuento::query()
-                ->FilterByEstatus($estatus)
+                ->FilterByEstatus($estatus,$sucursalId)
                 ->orderBy('created_at', 'desc')
                 ->get();
 

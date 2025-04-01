@@ -66,7 +66,7 @@ class Descuento extends Model
     | SCOPES
     |--------------------------------------------------------------------------
     */
-    public function scopeFilterByEstatus($query, $estatus)
+    public function scopeFilterByEstatus($query, $estatus, $sucursal_id = null)
     {
         if( !isset( $estatus ) ){
             return $estatus;
@@ -74,7 +74,10 @@ class Descuento extends Model
         if( !in_array($estatus,['activo','inactivo']) ){
             throw new \Exception('Estaus de descuento no válido');
         }
-        return $query->where('estatus',$estatus);
+
+        return $query->when($sucursal_id, function($query, $sucursal_id){
+            return $query->where('sucursal_id',$sucursal_id);
+        })->where('estatus',$estatus);
     }
     /*
     |--------------------------------------------------------------------------
