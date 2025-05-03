@@ -23,7 +23,8 @@ Route::post('login', 'App\Http\Controllers\AuthController@authenticate');
 Route::get('/public/productos', [\App\Http\Controllers\Admin\ProductoCrudController::class,'fetch']);
 Route::get('/public/descuentos', [\App\Http\Controllers\Admin\DescuentoCrudController::class,'fetch']);
 Route::get('/public/reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'fetch']);
-Route::post('public/reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'createReserva']);
+//Route::post('public/reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'createReserva']);
+Route::post('public/ventas/make', [\App\Http\Controllers\Admin\VentaCrudController::class,'publicMake']);
 Route::group(['middleware' => ['jwt.verify']], function () {
     //Login
     Route::post('user', 'App\Http\Controllers\Admin\UserController@getAuthenticatedUser');
