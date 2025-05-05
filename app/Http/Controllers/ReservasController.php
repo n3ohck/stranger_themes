@@ -38,13 +38,13 @@ class ReservasController extends Controller
                 ->map(function ($reservacion){
                     return [
                         'id' => $reservacion->id,
-                        'datetime' => Carbon::parse($reservacion->fecha)->format('H')
+                        'datetime' => Carbon::parse($reservacion->fecha)->format('H:i')
                     ];
                 })
                 ->groupBy('datetime')
                 ->map(function ($reservaciones,$key){
                     return[
-                        'time' => $key.':00',
+                        'time' => $key,
                         'qty' => $reservaciones->count()
                     ];
                 });
