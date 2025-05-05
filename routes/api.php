@@ -20,10 +20,10 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::post('register', 'App\Http\Controllers\AuthController@register');
 Route::post('login', 'App\Http\Controllers\AuthController@authenticate');
 //Productos
-Route::get('/public/productos', [\App\Http\Controllers\Admin\ProductoCrudController::class,'fetch']);
-Route::get('/public/descuentos', [\App\Http\Controllers\Admin\DescuentoCrudController::class,'fetch']);
-Route::get('/public/reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'fetch']);
-//Route::post('public/reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'createReserva']);
+Route::get('public/productos', [\App\Http\Controllers\Admin\ProductoCrudController::class,'fetch']);
+Route::get('public/descuentos', [\App\Http\Controllers\Admin\DescuentoCrudController::class,'fetch']);
+Route::get('public/reservas', [\App\Http\Controllers\ReservasController::class,'fetch']);
+Route::get('public/sucursal', [\App\Http\Controllers\SucursalController::class,'getByBranch']);
 Route::post('public/ventas/make', [\App\Http\Controllers\Admin\VentaCrudController::class,'publicMake']);
 Route::group(['middleware' => ['jwt.verify']], function () {
     //Login
