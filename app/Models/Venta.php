@@ -38,7 +38,10 @@ class Venta extends Model
         'porcentaje_descuento',
         'estatus',
         'fecha_cancelacion',
-        'comentario_cancelacion'
+        'comentario_cancelacion',
+        'nombre',
+        'email',
+        'telefono'
     ];
     // protected $hidden = [];
     protected $dates = [
@@ -51,7 +54,7 @@ class Venta extends Model
     protected $casts = [
         'total' => 'float',
         'descuento' => 'float',
-        'porcentaje_descuento' => 'float',
+        'porcentaje_descuento' => 'float'
     ];
 
     /*

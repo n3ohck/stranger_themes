@@ -97,18 +97,21 @@ class VentaAction
                 $venta = Venta::create([
                     'user_id' => 1,
                     'descuento_id' => $product->descuento_id ?? null,
-                    'sucursal_id' => 1, //TODO VER QUE ONDA
+                    'sucursal_id' => $sale['sucursal_id'],
                     'folio' => $this->makeFolio(),
                     'total' => $product->total,
                     'codigo_descuento' => $product->codigo_descuento ?? null,
                     'descuento' => $product->descuento ?? null,
                     'porcentaje_descuento' => $product->porcentaje_descuento ?? null,
-                    'created_at' => $this->makeDate($reservation['datetime'])
+                    'created_at' => $this->makeDate($reservation['datetime']),
+                    'nombre' => $sale['nombre'] ?? null,
+                    'telefono' => $sale['telefono'] ?? null,
+                    'email' => $sale['email'] ?? null,
                 ]);
                 $this->makeVentaProductos($venta->id, $sale['productos']);
                 $this->makeVentaPagos($venta->id, $sale['pagos']);
                 if (isset($venta['reservaciones'])) {
-                    $reservations[] = $this->makeVentaReservacion($venta->id, $sale['reservaciones']);
+                    $reservations[] = $this->makeVentaReservacion($venta->id, $sale['reservaciones'], $sale['sucursal_id']);
                 }
 
                 return [
@@ -124,7 +127,7 @@ class VentaAction
     }
 
     public
-    function makeVentaReservacion(int $ventaId, array $reservas): array
+    function makeVentaReservacion(int $ventaId, array $reservas, $branchId = null): array
     {
         $reservasNuevas = [];
         foreach ($reservas as $reserva) {
@@ -135,7 +138,7 @@ class VentaAction
                 'cantidad_personas' => $reserva['number'],
                 'fecha' => $reserva['datetime'],
                 'estado' => 'confirmada',
-                'sucursal_id' => $this->user->sucursal_id ?? 1, //TODO VER QUE ONDA
+                'sucursal_id' => $this->user->sucursal_id ?? $branchId,
                 'venta_id' => $ventaId
             ]);
         }
