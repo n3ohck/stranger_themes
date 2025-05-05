@@ -172,6 +172,27 @@ class VentaCrudController extends CrudController
         }
     }
 
+    public function publicMake(Request $request)
+    {
+        try {
+            if( !$request->has('ventas') ) throw new \Exception('No se han enviado ventas');
+            $ventas = $request->input('ventas');
+            DB::beginTransaction();
+            foreach ($ventas as $venta){
+                if( !isset($venta['productos']) ) throw new \Exception('No se han enviado productos');
+                if( !isset($venta['pagos']) ) throw new \Exception('No se han enviado pagos');
+            }
+            $ventas = (new VentaAction())->saleOnline($request->ventas);
+            DB::commit();
+            return response()->json(['ventas' => $ventas, 'qty' => count($ventas)], 200);
+        }catch (\Exception $e){
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage(),'trace' => $e->getTrace()], 400);
+        }
+    }
+
+
+
     public function cancel(Request $request)
     {
         try {

@@ -22,9 +22,9 @@ Route::post('login', 'App\Http\Controllers\AuthController@authenticate');
 //Productos
 Route::get('/public/productos', [\App\Http\Controllers\Admin\ProductoCrudController::class,'fetch']);
 Route::get('/public/descuentos', [\App\Http\Controllers\Admin\DescuentoCrudController::class,'fetch']);
-Route::get('/public/reservas', [\App\Http\Controllers\ReservasController::class,'fetch']);
-Route::post('public/reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'createReserva']);
-Route::get('public/sucursal', [\App\Http\Controllers\SucursalController::class,'getByBranch']);
+Route::get('/public/reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'fetch']);
+//Route::post('public/reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'createReserva']);
+Route::post('public/ventas/make', [\App\Http\Controllers\Admin\VentaCrudController::class,'publicMake']);
 Route::group(['middleware' => ['jwt.verify']], function () {
     //Login
     Route::post('user', 'App\Http\Controllers\Admin\UserController@getAuthenticatedUser');
@@ -60,4 +60,5 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::get('empleados', [\App\Http\Controllers\Admin\EmpleadoCrudController::class,'fetch']);
     Route::post('empleados/pago', [\App\Http\Controllers\Admin\EmpleadoPagoCrudController::class,'make']);
     Route::get('empleados/pago', [\App\Http\Controllers\Admin\EmpleadoPagoCrudController::class,'fetch']);
+
 });

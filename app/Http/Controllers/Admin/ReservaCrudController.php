@@ -162,6 +162,9 @@ class ReservaCrudController extends CrudController
             if (!$request->has('product_id')) throw new \Exception('Falta product_id');
             if (!$request->has('datetime')) throw new \Exception('Falta fecha de reserva');
             if (!$request->has('name')) throw new \Exception('Falta name (nombre cliente) de reserva');
+            if( !backpack_user() ){
+                \Auth::loginUsingId(1);
+            }
             $sucursalId = backpack_user()->sucursal_id;
             $reserva = Reserva::create([
                 'producto_id' => $request->product_id,
