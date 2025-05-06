@@ -41,7 +41,8 @@ class Venta extends Model
         'comentario_cancelacion',
         'nombre',
         'email',
-        'telefono'
+        'telefono',
+        'created_at'
     ];
     // protected $hidden = [];
     protected $dates = [
