@@ -81,9 +81,10 @@ class VentaAction
                 ->exists();
             if ($existe) continue;
 
-            $payments = collect($sale['pagos'])->where('tipo', 'transferencia');
+            $payments = collect($sale['pagos'])
+                ->where('tipo', 'online');
             if ($payments->isEmpty()) {
-                throw new \Exception('No se han encontrado pagos TRANSFERENCIA para el venta', 400);
+                throw new \Exception('No se han encontrado pagos ONLINE para el venta', 400);
             }
 
             $products = collect($sale['productos']);

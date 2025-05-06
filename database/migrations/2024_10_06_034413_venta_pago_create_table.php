@@ -23,7 +23,8 @@ class VentaPagoCreateTable extends Migration
             $table->enum('tipo',[
                 'efectivo',
                 'tarjeta',
-                'transferencia'
+                'transferencia',
+                'online'
             ])->index();
             $table->string('referencia')->nullable();
             $table->timestamps();
