@@ -35,7 +35,8 @@ class Corte extends Model
         'fecha_final',
         'user_id',
         'sucursal_id',
-        'apertura_id'
+        'apertura_id',
+        'fondo_final'
     ];
     // protected $hidden = [];
     protected $dates = [
@@ -49,10 +50,11 @@ class Corte extends Model
         'efectivo' => 'float',
         'tarjeta' => 'float',
         'transferencia' => 'float',
-        'total_caja' => 'float'
+        'total_caja' => 'float',
+        'fondo_final' => 'float'
     ];
 
-    protected $appends = ['total_egresos_efectivo', 'efectivo_egreso', 'total_egresos','efectivo_fondo','pago_empleados','ganancia'];
+    protected $appends = ['total_egresos_efectivo', 'total_online', 'efectivo_egreso', 'total_egresos','efectivo_fondo','pago_empleados','ganancia'];
 
     /*
     |--------------------------------------------------------------------------
@@ -165,7 +167,17 @@ class Corte extends Model
 
     public function getGananciaAttribute()
     {
-        $totalGanancia =  ($this->pago_empleados + $this->total_egresos);
-        return number_format(($this->attributes['total'] - $totalGanancia), 2, '.', '');
+        $totalEgresos =  ($this->pago_empleados + $this->total_egresos);
+        return number_format(( ($this->attributes['total'] + $this->total_online) - $totalEgresos), 2, '.', '');
+    }
+
+    public function getTotalOnlineAttribute()
+    {
+        return VentaPago::query()->where('tipo','online')
+            ->whereHas('venta',function($q){
+                $q->where('sucursal_id', $this->attributes['sucursal_id']);
+            })
+            ->whereBetween('created_at', [$this->attributes['fecha_inicio'], $this->attributes['fecha_final']])
+            ->sum('monto') ?? 0;
     }
 }

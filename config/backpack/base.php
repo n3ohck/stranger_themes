@@ -72,7 +72,7 @@ return [
     // ------
 
     // Menu logo. You can replace this with an <img> tag if you have a logo.
-    'project_logo'   => '<b>STRANGER THEMES</b>',
+    'project_logo'   => '<img src="https://strangerthemes.com/wp-content/uploads/2024/07/lOGO-BLANCO-ST-sombra-grande-2048x802.png" style="width: 73.5%">',
 
     // Show / hide breadcrumbs on admin panel pages.
     'breadcrumbs' => true,

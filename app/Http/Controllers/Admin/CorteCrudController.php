@@ -66,6 +66,12 @@ class CorteCrudController extends CrudController
                 'model' => Apertura::class
             ],
             [
+                'name' => 'fondo_final',
+                'label' => 'Fondo Final',
+                'type' => 'number',
+                'decimals' => 2
+            ],
+            [
                 'name' => 'total',
                 'label' => 'Total Venta',
                 'type' => 'number',
@@ -80,6 +86,12 @@ class CorteCrudController extends CrudController
             [
                 'name' => 'tarjeta',
                 'label' => 'Tarjeta',
+                'type' => 'number',
+                'decimals' => 2
+            ],
+            [
+                'name' => 'total_online',
+                'label' => 'Online',
                 'type' => 'number',
                 'decimals' => 2
             ],
@@ -116,12 +128,16 @@ class CorteCrudController extends CrudController
             [
                 'name' => 'fecha_inicio',
                 'label' => 'Fecha Inicio',
-                'type' => 'datetime'
+                'type' => 'closure',
+                'function' => function ($entry) {
+                    return $entry->fecha_inicio ? Carbon::parse($entry->fecha_inicio)->locale('es')->translatedFormat('l, d \d\e F H:i:s') : '';                }
             ],
             [
                 'name' => 'fecha_final',
                 'label' => 'Fecha Final',
-                'type' => 'datetime'
+                'type' => 'closure',
+                'function' => function ($entry) {
+                    return $entry->fecha_final ? Carbon::parse($entry->fecha_final)->locale('es')->translatedFormat('l, d \d\e F H:i:s') : '';                 }
             ],
             [
                 'name' => 'user_id',
@@ -305,7 +321,8 @@ class CorteCrudController extends CrudController
                 'fecha_final' => $this->makeDate($request->get('fecha_final')),
                 'user_id' => backpack_user()->id,
                 'sucursal_id' => backpack_user()->sucursal_id,
-                'apertura_id' => $apertura->id
+                'apertura_id' => $apertura->id,
+                'fondo_final' => $request->get('fondo_final') ?? 0,
             ]);
             $apertura->estado = 'cerrado';
             $apertura->user_id_cerro = backpack_user()->id;
