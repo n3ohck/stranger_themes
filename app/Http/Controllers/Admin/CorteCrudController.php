@@ -104,14 +104,20 @@ class CorteCrudController extends CrudController
             [
                 'name' => 'pago_empleados',
                 'label' => 'Pago Empleados',
-                'type' => 'number',
-                'decimals' => 2
+                'type' => 'closure',
+                'function' => function ($entry) {
+                    $pago_empleados = number_format($entry->pago_empleados,2,'.', ',');
+                    return '<a href="payment-report/'.$entry->id.'/empleado" target="_blank" title="Ver imagenes de pagos empleados">' . $pago_empleados . '</a>';
+                }
             ],
             [
                 'name' => 'total_egresos',
                 'label' => 'Total Egresos',
-                'type' => 'number',
-                'decimals' => 2
+                'type' => 'closure',
+                'function' => function ($entry) {
+                    $total_egresos = number_format($entry->total_egresos,2,'.', ',');
+                    return '<a href="payment-report/'.$entry->id.'/egreso" target="_blank" title="Ver imagenes de egresos">' . $total_egresos . '</a>';
+                }
             ],
             [
                 'name' => 'total_caja',

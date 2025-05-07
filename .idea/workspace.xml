@@ -4,18 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="feature: query by day qty times in reservations">
-      <change afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/PaymentReportController.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/js/Pages/Components/branchSelector.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/php.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/php.xml" afterDir="false" />
+    <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="feature: fondo final, fondo inicial, fecha en espanol dia y mes, logotipo, ventas online en corte">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/composer.json" beforeDir="false" afterPath="$PROJECT_DIR$/composer.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/CorteCrudController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/CorteCrudController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/PaymentReportController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/PaymentReportController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/public/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/public/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/packages/datatables.net-bs4/css/dataTables.bootstrap4.css" beforeDir="false" afterPath="$PROJECT_DIR$/public/packages/datatables.net-bs4/css/dataTables.bootstrap4.css" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resources/js/Pages/Reportes/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/resources/js/Pages/Reportes/index.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/vendor/backpack/base/inc/sidebar_content.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/vendor/backpack/base/inc/sidebar_content.blade.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/routes/backpack/custom.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/backpack/custom.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/webapi.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/webapi.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -338,23 +334,7 @@
       <workItem from="1746230897555" duration="4983000" />
       <workItem from="1746479531385" duration="2249000" />
       <workItem from="1746484282565" duration="7519000" />
-      <workItem from="1746587742408" duration="10690000" />
-    </task>
-    <task id="LOCAL-00159" summary="fix: &quot;Undefined index: descuento&quot;">
-      <option name="closed" value="true" />
-      <created>1734638029468</created>
-      <option name="number" value="00159" />
-      <option name="presentableId" value="LOCAL-00159" />
-      <option name="project" value="LOCAL" />
-      <updated>1734638029468</updated>
-    </task>
-    <task id="LOCAL-00160" summary="feature: poder eliminar cortes.">
-      <option name="closed" value="true" />
-      <created>1734639671596</created>
-      <option name="number" value="00160" />
-      <option name="presentableId" value="LOCAL-00160" />
-      <option name="project" value="LOCAL" />
-      <updated>1734639671596</updated>
+      <workItem from="1746587742408" duration="24253000" />
     </task>
     <task id="LOCAL-00161" summary="feature: poder eliminar cortes.">
       <option name="closed" value="true" />
@@ -732,7 +712,23 @@
       <option name="project" value="LOCAL" />
       <updated>1746497036602</updated>
     </task>
-    <option name="localTasksCounter" value="208" />
+    <task id="LOCAL-00208" summary="feature: reporte de pagos">
+      <option name="closed" value="true" />
+      <created>1746637876409</created>
+      <option name="number" value="00208" />
+      <option name="presentableId" value="LOCAL-00208" />
+      <option name="project" value="LOCAL" />
+      <updated>1746637876409</updated>
+    </task>
+    <task id="LOCAL-00209" summary="feature: fondo final, fondo inicial, fecha en espanol dia y mes, logotipo, ventas online en corte">
+      <option name="closed" value="true" />
+      <created>1746655009781</created>
+      <option name="number" value="00209" />
+      <option name="presentableId" value="LOCAL-00209" />
+      <option name="project" value="LOCAL" />
+      <updated>1746655009781</updated>
+    </task>
+    <option name="localTasksCounter" value="210" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -751,8 +747,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
-    <MESSAGE value="feature: dashboard" />
-    <MESSAGE value="change: se remueven opciones de menu que ya no se van a utilizar" />
     <MESSAGE value="feature:permissions" />
     <MESSAGE value="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto q" />
     <MESSAGE value="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto que sale en" />
@@ -776,7 +770,9 @@
     <MESSAGE value="feature: set sales by reservation and products online" />
     <MESSAGE value="feature: can find branches in public api" />
     <MESSAGE value="feature: query by day qty times in reservations" />
-    <option name="LAST_COMMIT_MESSAGE" value="feature: query by day qty times in reservations" />
+    <MESSAGE value="feature: reporte de pagos" />
+    <MESSAGE value="feature: fondo final, fondo inicial, fecha en espanol dia y mes, logotipo, ventas online en corte" />
+    <option name="LAST_COMMIT_MESSAGE" value="feature: fondo final, fondo inicial, fecha en espanol dia y mes, logotipo, ventas online en corte" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

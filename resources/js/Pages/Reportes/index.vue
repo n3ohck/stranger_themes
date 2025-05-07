@@ -40,7 +40,7 @@
                                 </div>
                             </div>
                             <div class="col-md-3 pull-right">
-                               <el-button type="info" class="mt-5" plain @click="handleGet">Buscar</el-button>
+                               <el-button type="info" class="mt-5 w-100" plain @click="handleGet">Buscar</el-button>
                             </div>
                         </div>
                     </div>
@@ -51,7 +51,11 @@
                 <el-row v-loading="loading" style="width: 117.9%;">
                     <el-col :span="5" v-for="payment in data" style="margin: 0 10px 10px 0;">
                         <el-card :body-style="{ padding: '0px' }">
-                            <img :src="payment.image" class="image">
+                            <el-image
+                                class="image"
+                                :src="payment.image"
+                                :preview-src-list="[payment.image]">
+                            </el-image>
                             <div style="padding: 14px;">
                                 <span>${{ payment.amount | moneyFormat }}</span>
                                 <div class="bottom clearfix">
@@ -74,9 +78,21 @@ export default {
     name: "PaymentReport",
     components: {BranchSelector},
     props: {
-        sucursales: {
-            type: Array,
-            required: true
+        branch: {
+            type: Number,
+            required: false
+        },
+        origin:{
+            type: String,
+            required: false
+        },
+        startDate:{
+            type: String,
+            required: false
+        },
+        endDate:{
+            type: String,
+            required: false
         },
         origins: {
             type: Array,
@@ -91,8 +107,8 @@ export default {
         loading: false,
         data:[],
         query: {
-            dates: null,
-            origins: null,
+            dates: [],
+            origins: [],
             branch: null
         }
     }),
@@ -140,7 +156,20 @@ export default {
         }
     },
     created() {
-
+        if(this.branch) {
+            this.query.branch = this.branch;
+        }
+        if(this.origin) {
+            if (this.origin === 'empleado'){
+                this.query.origins.push('pagoEmpleado');
+            }else{
+                this.query.origins.push('egreso');
+            }
+        }
+        if (this.startDate){
+            this.query.dates = [this.startDate, this.endDate];
+            this.handleGet()
+        }
     },
     watch: {
         'query.branch': function (newVal) {

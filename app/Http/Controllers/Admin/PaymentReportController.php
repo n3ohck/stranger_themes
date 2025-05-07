@@ -3,28 +3,55 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Corte;
 use App\Models\Egreso;
 use App\Models\EmpleadoPago;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Prologue\Alerts\Facades\Alert;
 
 class PaymentReportController extends Controller
 {
-    public function view()
+    public function view(Corte $corte)
     {
+        if ($corte->id){
+            $allowedOrigins = ['empleado', 'egreso'];
+            $ultimoSegmento = request()->segment(count(request()->segments()));
+
+            if (!in_array($ultimoSegmento, $allowedOrigins)) {
+                Alert::warning('El origen no es valido')->flash();
+                return redirect()->back();
+            }
+            if( is_null($ultimoSegmento) ){
+                Alert::warning('El origen no es valido')->flash();
+                return redirect()->back();
+            }
+            $startDate = Carbon::parse($corte->fecha_inicio);
+            $endDate = Carbon::parse($corte->fecha_fin);
+            return Inertia::render('Reportes/index', [
+                'corte' => $corte,
+                'origin' => $ultimoSegmento,
+                'startDate' => $startDate->format('Y-m-d'),
+                'endDate' => $endDate->format('Y-m-d'),
+                'branch' => $corte->sucursal_id,
+            ]);
+        }
         return Inertia::render('Reportes/index');
     }
 
-    public function egreso(Carbon $startDate, Carbon $endDate, int $branch)
+    public function egreso($startDate, $endDate, int $branch)
     {
         return Egreso::query()
+            ->select(['monto', 'fecha_pago', 'estatus', 'sucursal_id','imagen','user_id'])
             ->whereHas('user')
             ->with(['user:id,user', 'sucursal:id,razon_social'])
-            ->select(['monto', 'fecha_pago', 'estatus', 'sucursal_id','imagen'])
-            ->whereBetween('fecha_pago', [$startDate, $endDate])
-            ->where('sucursal_id', $branch)
-            ->where('estatus', 'activo')
+            ->where(function ($query) use ($startDate, $endDate, $branch) {
+                $query
+                    ->whereBetween('fecha_pago', [$startDate, $endDate])
+                    ->where('sucursal_id', $branch)
+                    ->where('estatus', 'activo');
+            })
             ->get()
             ->map(function ($item) {
                 return [
@@ -38,22 +65,25 @@ class PaymentReportController extends Controller
             });
     }
 
-    public function pagoEmpleado(Carbon $startDate, Carbon $endDate, int $branch)
+    public function pagoEmpleado($startDate, $endDate, int $branch)
     {
         return EmpleadoPago::query()
+            ->select(['monto', 'fecha_pago', 'estatus','imagen'])
             ->with(['empleado:id,nombres,apellidos', 'empleado.sucursal:id,razon_social'])
             ->whereHas('empleado', function ($q) use ($branch) {
                 $q->where('sucursal_id', $branch);
             })
-            ->select(['monto', 'fecha_pago', 'estatus','imagen'])
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->where('estatus', 'activo')
+            ->where(function ($query) use ($startDate, $endDate, $branch) {
+                $query
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->where('estatus', 'activo');
+            })
             ->get()
             ->map(function($employee){
                 return [
                     'type' => 'Pago Empleado',
                     'amount' => $employee->monto,
-                    'date' => $employee->fecha_pago->format('Y-m-d H:i:s'),
+                    'date' => Carbon::parse($employee->created_at)->format('Y-m-d H:i:s'),
                     'user' => ( !isset( $employee->empleado ) ) ? 'N/A' : $employee->empleado->nombres . ' ' . $employee->empleado->apellidos,
                     'branch' =>  ( !isset( $employee->empleado ) ) ? 'N/A' : $employee->empleado->sucursal->razon_social,
                     'image' => $employee->imagen
@@ -78,8 +108,8 @@ class PaymentReportController extends Controller
             $origins = $request->input('origins');
             $branch = $request->input('branch');
 
-            $startDate = Carbon::parse($dates[0]);
-            $endDate = Carbon::parse($dates[1]);
+            $startDate = Carbon::parse($dates[0])->startOfDay()->format('Y-m-d H:i:s');
+            $endDate = Carbon::parse($dates[1])->endOfDay()->format('Y-m-d H:i:s');
 
             $datas = collect();
             foreach ($origins as $origin) {
