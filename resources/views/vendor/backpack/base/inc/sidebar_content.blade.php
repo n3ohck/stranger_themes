@@ -40,6 +40,13 @@
         </a>
     </li>
 @endcan
+@can('reporte.pagos.ver')
+    <li class='nav-item'>
+        <a class='nav-link' href='{{ backpack_url('payment-report') }}'>
+            <i class='nav-icon la la-images'></i> Reporte pagos
+        </a>
+    </li>
+@endcan
 @can('configuraciones.ver')
 <li class="nav-item nav-dropdown">
     <a class="nav-link nav-dropdown-toggle" href="#"><i class="nav-icon la la-gear"></i> Configuracion</a>

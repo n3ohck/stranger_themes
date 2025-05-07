@@ -4,7 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="fix: descuento negativo y filtro de fecha de empleado pagos" />
+    <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="feature: query by day qty times in reservations">
+      <change afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/PaymentReportController.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/js/Pages/Components/branchSelector.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/php.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/php.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/composer.json" beforeDir="false" afterPath="$PROJECT_DIR$/composer.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/public/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/js/Pages/Reportes/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/resources/js/Pages/Reportes/index.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/vendor/backpack/base/inc/sidebar_content.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/vendor/backpack/base/inc/sidebar_content.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/routes/backpack/custom.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/backpack/custom.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/routes/webapi.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/webapi.php" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -19,10 +31,17 @@
     <pharConfigPath>$PROJECT_DIR$/composer.json</pharConfigPath>
     <execution />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Vue Composition API Component" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="feature/permissions" />
+        <entry key="$PROJECT_DIR$" value="feature/api/transferencias" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -200,28 +219,34 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/laragon/www/stranger_themes/public/images",
+    "last_opened_file_path": "C:/laragon/www/stranger_themes/resources/js/Pages/Reportes",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
     "node.js.selected.package.tslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
     "ts.external.directory.path": "C:\\Program Files\\JetBrains\\PhpStorm 2024.2.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
     "vue.rearranger.settings.migration": "true"
   },
   "keyToStringList": {
     "DatabaseDriversLRU": [
       "mysql"
+    ],
+    "vue.recent.templates": [
+      "Vue Composition API Component"
     ]
   }
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\laragon\www\stranger_themes\resources\js\Pages\Reportes" />
       <recent name="C:\laragon\www\stranger_themes\public\images" />
       <recent name="C:\laragon\www\stranger_themes\storage\app\public\uploads\logotipos" />
       <recent name="C:\laragon\www\stranger_themes" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\laragon\www\stranger_themes\resources\js\Pages" />
       <recent name="C:\laragon\www\stranger_themes\storage\app\public" />
       <recent name="C:\laragon\www\stranger_themes\app" />
     </key>
@@ -235,8 +260,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-deb605915726-JavaScript-PS-243.22562.164" />
-        <option value="bundled-php-predefined-a98d8de5180a-7980c7aaca61-com.jetbrains.php.sharedIndexes-PS-243.22562.164" />
+        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-PS-243.26053.13" />
+        <option value="bundled-php-predefined-a98d8de5180a-1ec7b7818973-com.jetbrains.php.sharedIndexes-PS-243.26053.13" />
       </set>
     </attachedChunks>
   </component>
@@ -290,400 +315,424 @@
       <workItem from="1733258370333" duration="4716000" />
       <workItem from="1733339603695" duration="2006000" />
       <workItem from="1734388821992" duration="2086000" />
+      <workItem from="1734624497470" duration="82000" />
+      <workItem from="1734635187637" duration="6463000" />
+      <workItem from="1734828865353" duration="2670000" />
+      <workItem from="1735585567980" duration="3384000" />
+      <workItem from="1736306910364" duration="2218000" />
+      <workItem from="1736387995447" duration="2740000" />
+      <workItem from="1738201740292" duration="126000" />
+      <workItem from="1739206400881" duration="2502000" />
+      <workItem from="1739985133399" duration="3062000" />
+      <workItem from="1741313319804" duration="1420000" />
+      <workItem from="1741745063135" duration="1719000" />
+      <workItem from="1742492844580" duration="3112000" />
+      <workItem from="1742929407846" duration="2736000" />
+      <workItem from="1742942232275" duration="3000" />
+      <workItem from="1743008944422" duration="23000" />
+      <workItem from="1743114727312" duration="1131000" />
+      <workItem from="1743527491625" duration="3628000" />
+      <workItem from="1743611729913" duration="4875000" />
+      <workItem from="1743628936135" duration="1407000" />
+      <workItem from="1744134582137" duration="5201000" />
+      <workItem from="1746230897555" duration="4983000" />
+      <workItem from="1746479531385" duration="2249000" />
+      <workItem from="1746484282565" duration="7519000" />
+      <workItem from="1746587742408" duration="10690000" />
     </task>
-    <task id="LOCAL-00102" summary="debugging">
+    <task id="LOCAL-00159" summary="fix: &quot;Undefined index: descuento&quot;">
       <option name="closed" value="true" />
-      <created>1731513583222</created>
-      <option name="number" value="00102" />
-      <option name="presentableId" value="LOCAL-00102" />
+      <created>1734638029468</created>
+      <option name="number" value="00159" />
+      <option name="presentableId" value="LOCAL-00159" />
       <option name="project" value="LOCAL" />
-      <updated>1731513583222</updated>
+      <updated>1734638029468</updated>
     </task>
-    <task id="LOCAL-00103" summary="debugging">
+    <task id="LOCAL-00160" summary="feature: poder eliminar cortes.">
       <option name="closed" value="true" />
-      <created>1731514266572</created>
-      <option name="number" value="00103" />
-      <option name="presentableId" value="LOCAL-00103" />
+      <created>1734639671596</created>
+      <option name="number" value="00160" />
+      <option name="presentableId" value="LOCAL-00160" />
       <option name="project" value="LOCAL" />
-      <updated>1731514266573</updated>
+      <updated>1734639671596</updated>
     </task>
-    <task id="LOCAL-00104" summary="debugging">
+    <task id="LOCAL-00161" summary="feature: poder eliminar cortes.">
       <option name="closed" value="true" />
-      <created>1731514334574</created>
-      <option name="number" value="00104" />
-      <option name="presentableId" value="LOCAL-00104" />
+      <created>1734639764484</created>
+      <option name="number" value="00161" />
+      <option name="presentableId" value="LOCAL-00161" />
       <option name="project" value="LOCAL" />
-      <updated>1731514334574</updated>
+      <updated>1734639764484</updated>
     </task>
-    <task id="LOCAL-00105" summary="debugging">
+    <task id="LOCAL-00162" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
       <option name="closed" value="true" />
-      <created>1731514373679</created>
-      <option name="number" value="00105" />
-      <option name="presentableId" value="LOCAL-00105" />
+      <created>1734641019801</created>
+      <option name="number" value="00162" />
+      <option name="presentableId" value="LOCAL-00162" />
       <option name="project" value="LOCAL" />
-      <updated>1731514373679</updated>
+      <updated>1734641019801</updated>
     </task>
-    <task id="LOCAL-00106" summary="debugging">
+    <task id="LOCAL-00163" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
       <option name="closed" value="true" />
-      <created>1731514450005</created>
-      <option name="number" value="00106" />
-      <option name="presentableId" value="LOCAL-00106" />
+      <created>1734641102660</created>
+      <option name="number" value="00163" />
+      <option name="presentableId" value="LOCAL-00163" />
       <option name="project" value="LOCAL" />
-      <updated>1731514450005</updated>
+      <updated>1734641102660</updated>
     </task>
-    <task id="LOCAL-00107" summary="debugging">
+    <task id="LOCAL-00164" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
       <option name="closed" value="true" />
-      <created>1731514809925</created>
-      <option name="number" value="00107" />
-      <option name="presentableId" value="LOCAL-00107" />
+      <created>1734641171682</created>
+      <option name="number" value="00164" />
+      <option name="presentableId" value="LOCAL-00164" />
       <option name="project" value="LOCAL" />
-      <updated>1731514809925</updated>
+      <updated>1734641171682</updated>
     </task>
-    <task id="LOCAL-00108" summary="debugging">
+    <task id="LOCAL-00165" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
       <option name="closed" value="true" />
-      <created>1731514996624</created>
-      <option name="number" value="00108" />
-      <option name="presentableId" value="LOCAL-00108" />
+      <created>1734641279210</created>
+      <option name="number" value="00165" />
+      <option name="presentableId" value="LOCAL-00165" />
       <option name="project" value="LOCAL" />
-      <updated>1731514996624</updated>
+      <updated>1734641279210</updated>
     </task>
-    <task id="LOCAL-00109" summary="feature:permissions">
+    <task id="LOCAL-00166" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
       <option name="closed" value="true" />
-      <created>1731518121493</created>
-      <option name="number" value="00109" />
-      <option name="presentableId" value="LOCAL-00109" />
+      <created>1734641340313</created>
+      <option name="number" value="00166" />
+      <option name="presentableId" value="LOCAL-00166" />
       <option name="project" value="LOCAL" />
-      <updated>1731518121493</updated>
+      <updated>1734641340313</updated>
     </task>
-    <task id="LOCAL-00110" summary="feature:permissions">
+    <task id="LOCAL-00167" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
       <option name="closed" value="true" />
-      <created>1731519632922</created>
-      <option name="number" value="00110" />
-      <option name="presentableId" value="LOCAL-00110" />
+      <created>1734641530752</created>
+      <option name="number" value="00167" />
+      <option name="presentableId" value="LOCAL-00167" />
       <option name="project" value="LOCAL" />
-      <updated>1731519632922</updated>
+      <updated>1734641530752</updated>
     </task>
-    <task id="LOCAL-00111" summary="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto q">
+    <task id="LOCAL-00168" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
       <option name="closed" value="true" />
-      <created>1732052434736</created>
-      <option name="number" value="00111" />
-      <option name="presentableId" value="LOCAL-00111" />
+      <created>1734641615298</created>
+      <option name="number" value="00168" />
+      <option name="presentableId" value="LOCAL-00168" />
       <option name="project" value="LOCAL" />
-      <updated>1732052434736</updated>
+      <updated>1734641615298</updated>
     </task>
-    <task id="LOCAL-00112" summary="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto que sale en">
+    <task id="LOCAL-00169" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
       <option name="closed" value="true" />
-      <created>1732204430177</created>
-      <option name="number" value="00112" />
-      <option name="presentableId" value="LOCAL-00112" />
+      <created>1734642877269</created>
+      <option name="number" value="00169" />
+      <option name="presentableId" value="LOCAL-00169" />
       <option name="project" value="LOCAL" />
-      <updated>1732204430177</updated>
+      <updated>1734642877269</updated>
     </task>
-    <task id="LOCAL-00113" summary="feature: se expone la ruta de consulta de reservas">
+    <task id="LOCAL-00170" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
       <option name="closed" value="true" />
-      <created>1732211538338</created>
-      <option name="number" value="00113" />
-      <option name="presentableId" value="LOCAL-00113" />
+      <created>1734830561167</created>
+      <option name="number" value="00170" />
+      <option name="presentableId" value="LOCAL-00170" />
       <option name="project" value="LOCAL" />
-      <updated>1732211538338</updated>
+      <updated>1734830561167</updated>
     </task>
-    <task id="LOCAL-00114" summary="feature: se expone la ruta de consulta de reservas">
+    <task id="LOCAL-00171" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
       <option name="closed" value="true" />
-      <created>1732211585903</created>
-      <option name="number" value="00114" />
-      <option name="presentableId" value="LOCAL-00114" />
+      <created>1734830923797</created>
+      <option name="number" value="00171" />
+      <option name="presentableId" value="LOCAL-00171" />
       <option name="project" value="LOCAL" />
-      <updated>1732211585903</updated>
+      <updated>1734830923797</updated>
     </task>
-    <task id="LOCAL-00115" summary="feature: se expone la ruta de consulta de reservas">
+    <task id="LOCAL-00172" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
       <option name="closed" value="true" />
-      <created>1732212640814</created>
-      <option name="number" value="00115" />
-      <option name="presentableId" value="LOCAL-00115" />
+      <created>1734831138765</created>
+      <option name="number" value="00172" />
+      <option name="presentableId" value="LOCAL-00172" />
       <option name="project" value="LOCAL" />
-      <updated>1732212640814</updated>
+      <updated>1734831138765</updated>
     </task>
-    <task id="LOCAL-00116" summary="feature: se expone la ruta de consulta de reservas">
+    <task id="LOCAL-00173" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
       <option name="closed" value="true" />
-      <created>1732213787415</created>
-      <option name="number" value="00116" />
-      <option name="presentableId" value="LOCAL-00116" />
+      <created>1734831187417</created>
+      <option name="number" value="00173" />
+      <option name="presentableId" value="LOCAL-00173" />
       <option name="project" value="LOCAL" />
-      <updated>1732213787415</updated>
+      <updated>1734831187417</updated>
     </task>
-    <task id="LOCAL-00117" summary="feature: se expone la ruta de consulta de reservas">
+    <task id="LOCAL-00174" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
       <option name="closed" value="true" />
-      <created>1732214048435</created>
-      <option name="number" value="00117" />
-      <option name="presentableId" value="LOCAL-00117" />
+      <created>1734831250078</created>
+      <option name="number" value="00174" />
+      <option name="presentableId" value="LOCAL-00174" />
       <option name="project" value="LOCAL" />
-      <updated>1732214048435</updated>
+      <updated>1734831250078</updated>
     </task>
-    <task id="LOCAL-00118" summary="feature: se expone la ruta de consulta de reservas">
+    <task id="LOCAL-00175" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
       <option name="closed" value="true" />
-      <created>1732214653363</created>
-      <option name="number" value="00118" />
-      <option name="presentableId" value="LOCAL-00118" />
+      <created>1734831323116</created>
+      <option name="number" value="00175" />
+      <option name="presentableId" value="LOCAL-00175" />
       <option name="project" value="LOCAL" />
-      <updated>1732214653363</updated>
+      <updated>1734831323116</updated>
     </task>
-    <task id="LOCAL-00119" summary="feature: se expone la ruta de consulta de reservas">
+    <task id="LOCAL-00176" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
       <option name="closed" value="true" />
-      <created>1732215469151</created>
-      <option name="number" value="00119" />
-      <option name="presentableId" value="LOCAL-00119" />
+      <created>1734831383638</created>
+      <option name="number" value="00176" />
+      <option name="presentableId" value="LOCAL-00176" />
       <option name="project" value="LOCAL" />
-      <updated>1732215469151</updated>
+      <updated>1734831383638</updated>
     </task>
-    <task id="LOCAL-00120" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+    <task id="LOCAL-00177" summary="debugging fechas corte">
       <option name="closed" value="true" />
-      <created>1732215947049</created>
-      <option name="number" value="00120" />
-      <option name="presentableId" value="LOCAL-00120" />
+      <created>1735589431402</created>
+      <option name="number" value="00177" />
+      <option name="presentableId" value="LOCAL-00177" />
       <option name="project" value="LOCAL" />
-      <updated>1732215947049</updated>
+      <updated>1735589431402</updated>
     </task>
-    <task id="LOCAL-00121" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+    <task id="LOCAL-00178" summary="debugging fechas corte">
       <option name="closed" value="true" />
-      <created>1732216604977</created>
-      <option name="number" value="00121" />
-      <option name="presentableId" value="LOCAL-00121" />
+      <created>1735589467978</created>
+      <option name="number" value="00178" />
+      <option name="presentableId" value="LOCAL-00178" />
       <option name="project" value="LOCAL" />
-      <updated>1732216604977</updated>
+      <updated>1735589467978</updated>
     </task>
-    <task id="LOCAL-00122" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+    <task id="LOCAL-00179" summary="debugging fechas corte">
       <option name="closed" value="true" />
-      <created>1732217421079</created>
-      <option name="number" value="00122" />
-      <option name="presentableId" value="LOCAL-00122" />
+      <created>1735589949928</created>
+      <option name="number" value="00179" />
+      <option name="presentableId" value="LOCAL-00179" />
       <option name="project" value="LOCAL" />
-      <updated>1732217421079</updated>
+      <updated>1735589949928</updated>
     </task>
-    <task id="LOCAL-00123" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+    <task id="LOCAL-00180" summary="debugging fechas corte">
       <option name="closed" value="true" />
-      <created>1732217770828</created>
-      <option name="number" value="00123" />
-      <option name="presentableId" value="LOCAL-00123" />
+      <created>1735590041123</created>
+      <option name="number" value="00180" />
+      <option name="presentableId" value="LOCAL-00180" />
       <option name="project" value="LOCAL" />
-      <updated>1732217770828</updated>
+      <updated>1735590041123</updated>
     </task>
-    <task id="LOCAL-00124" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+    <task id="LOCAL-00181" summary="feature: imagen opcional en pagos de egreso">
       <option name="closed" value="true" />
-      <created>1732217944983</created>
-      <option name="number" value="00124" />
-      <option name="presentableId" value="LOCAL-00124" />
+      <created>1741314016606</created>
+      <option name="number" value="00181" />
+      <option name="presentableId" value="LOCAL-00181" />
       <option name="project" value="LOCAL" />
-      <updated>1732217944983</updated>
+      <updated>1741314016606</updated>
     </task>
-    <task id="LOCAL-00125" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+    <task id="LOCAL-00182" summary="feature: referencia opcional en pagos de egreso">
       <option name="closed" value="true" />
-      <created>1732217989236</created>
-      <option name="number" value="00125" />
-      <option name="presentableId" value="LOCAL-00125" />
+      <created>1741314136344</created>
+      <option name="number" value="00182" />
+      <option name="presentableId" value="LOCAL-00182" />
       <option name="project" value="LOCAL" />
-      <updated>1732217989236</updated>
+      <updated>1741314136344</updated>
     </task>
-    <task id="LOCAL-00126" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+    <task id="LOCAL-00183" summary="debugging">
       <option name="closed" value="true" />
-      <created>1732218202579</created>
-      <option name="number" value="00126" />
-      <option name="presentableId" value="LOCAL-00126" />
+      <created>1741745853236</created>
+      <option name="number" value="00183" />
+      <option name="presentableId" value="LOCAL-00183" />
       <option name="project" value="LOCAL" />
-      <updated>1732218202579</updated>
+      <updated>1741745853236</updated>
     </task>
-    <task id="LOCAL-00127" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+    <task id="LOCAL-00184" summary="debugging">
       <option name="closed" value="true" />
-      <created>1732219522116</created>
-      <option name="number" value="00127" />
-      <option name="presentableId" value="LOCAL-00127" />
+      <created>1741746036300</created>
+      <option name="number" value="00184" />
+      <option name="presentableId" value="LOCAL-00184" />
       <option name="project" value="LOCAL" />
-      <updated>1732219522116</updated>
+      <updated>1741746036300</updated>
     </task>
-    <task id="LOCAL-00128" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+    <task id="LOCAL-00185" summary="hotfix: calculo de suma total de pagos empleados por periodo de fecha donde se aumento un dia y partiendo de la hora incial para la fecha final">
       <option name="closed" value="true" />
-      <created>1732219591013</created>
-      <option name="number" value="00128" />
-      <option name="presentableId" value="LOCAL-00128" />
+      <created>1741746119097</created>
+      <option name="number" value="00185" />
+      <option name="presentableId" value="LOCAL-00185" />
       <option name="project" value="LOCAL" />
-      <updated>1732219591013</updated>
+      <updated>1741746119097</updated>
     </task>
-    <task id="LOCAL-00129" summary="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete">
+    <task id="LOCAL-00186" summary="hotfix: calculo de suma total de pagos empleados por periodo de fecha donde se aumento un dia y partiendo de la hora incial para la fecha final">
       <option name="closed" value="true" />
-      <created>1732233320878</created>
-      <option name="number" value="00129" />
-      <option name="presentableId" value="LOCAL-00129" />
+      <created>1741746280611</created>
+      <option name="number" value="00186" />
+      <option name="presentableId" value="LOCAL-00186" />
       <option name="project" value="LOCAL" />
-      <updated>1732233320878</updated>
+      <updated>1741746280611</updated>
     </task>
-    <task id="LOCAL-00130" summary="feature: cambio de consulta de api de pago de empleados.">
+    <task id="LOCAL-00187" summary="hotfix: calculo de suma total de pagos empleados por periodo de fecha donde se aumento un dia y partiendo de la hora incial para la fecha final">
       <option name="closed" value="true" />
-      <created>1732301964953</created>
-      <option name="number" value="00130" />
-      <option name="presentableId" value="LOCAL-00130" />
+      <created>1741746326389</created>
+      <option name="number" value="00187" />
+      <option name="presentableId" value="LOCAL-00187" />
       <option name="project" value="LOCAL" />
-      <updated>1732301964953</updated>
+      <updated>1741746326389</updated>
     </task>
-    <task id="LOCAL-00131" summary="feature: cambio de consulta de api de pago de empleados.">
+    <task id="LOCAL-00188" summary="hotfix: calculo de suma total de pagos empleados por periodo de fecha donde se aumento un dia y partiendo de la hora incial para la fecha final">
       <option name="closed" value="true" />
-      <created>1732664978930</created>
-      <option name="number" value="00131" />
-      <option name="presentableId" value="LOCAL-00131" />
+      <created>1741746515293</created>
+      <option name="number" value="00188" />
+      <option name="presentableId" value="LOCAL-00188" />
       <option name="project" value="LOCAL" />
-      <updated>1732664978930</updated>
+      <updated>1741746515293</updated>
     </task>
-    <task id="LOCAL-00132" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00189" summary="hotfix: calculo de suma total de pagos empleados por periodo de fecha donde se aumento un dia y partiendo de la hora incial para la fecha final">
       <option name="closed" value="true" />
-      <created>1732667428587</created>
-      <option name="number" value="00132" />
-      <option name="presentableId" value="LOCAL-00132" />
+      <created>1741746687018</created>
+      <option name="number" value="00189" />
+      <option name="presentableId" value="LOCAL-00189" />
       <option name="project" value="LOCAL" />
-      <updated>1732667428587</updated>
+      <updated>1741746687018</updated>
     </task>
-    <task id="LOCAL-00133" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00190" summary="hotfix: calculo de suma total de pagos empleados por periodo de fecha donde se aumento un dia y partiendo de la hora incial para la fecha final">
       <option name="closed" value="true" />
-      <created>1732676098238</created>
-      <option name="number" value="00133" />
-      <option name="presentableId" value="LOCAL-00133" />
+      <created>1741746732359</created>
+      <option name="number" value="00190" />
+      <option name="presentableId" value="LOCAL-00190" />
       <option name="project" value="LOCAL" />
-      <updated>1732676098238</updated>
+      <updated>1741746732359</updated>
     </task>
-    <task id="LOCAL-00134" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00191" summary="hotfix: fecha de pago parsing en egresos">
       <option name="closed" value="true" />
-      <created>1732676150013</created>
-      <option name="number" value="00134" />
-      <option name="presentableId" value="LOCAL-00134" />
+      <created>1742493841623</created>
+      <option name="number" value="00191" />
+      <option name="presentableId" value="LOCAL-00191" />
       <option name="project" value="LOCAL" />
-      <updated>1732676150013</updated>
+      <updated>1742493841623</updated>
     </task>
-    <task id="LOCAL-00135" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00192" summary="hotfix: fecha de pago parsing en egresos">
       <option name="closed" value="true" />
-      <created>1733259153095</created>
-      <option name="number" value="00135" />
-      <option name="presentableId" value="LOCAL-00135" />
+      <created>1742494303899</created>
+      <option name="number" value="00192" />
+      <option name="presentableId" value="LOCAL-00192" />
       <option name="project" value="LOCAL" />
-      <updated>1733259153095</updated>
+      <updated>1742494303899</updated>
     </task>
-    <task id="LOCAL-00136" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00193" summary="hotfix: fecha de pago parsing en egresos">
       <option name="closed" value="true" />
-      <created>1733259432095</created>
-      <option name="number" value="00136" />
-      <option name="presentableId" value="LOCAL-00136" />
+      <created>1742929885869</created>
+      <option name="number" value="00193" />
+      <option name="presentableId" value="LOCAL-00193" />
       <option name="project" value="LOCAL" />
-      <updated>1733259432095</updated>
+      <updated>1742929885869</updated>
     </task>
-    <task id="LOCAL-00137" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00194" summary="hotfix: fecha de pago parsing en egresos">
       <option name="closed" value="true" />
-      <created>1733259492656</created>
-      <option name="number" value="00137" />
-      <option name="presentableId" value="LOCAL-00137" />
+      <created>1743115512933</created>
+      <option name="number" value="00194" />
+      <option name="presentableId" value="LOCAL-00194" />
       <option name="project" value="LOCAL" />
-      <updated>1733259492656</updated>
+      <updated>1743115512933</updated>
     </task>
-    <task id="LOCAL-00138" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00195" summary="hotfix: fecha de pago parsing en egresos">
       <option name="closed" value="true" />
-      <created>1733259566604</created>
-      <option name="number" value="00138" />
-      <option name="presentableId" value="LOCAL-00138" />
+      <created>1743115596984</created>
+      <option name="number" value="00195" />
+      <option name="presentableId" value="LOCAL-00195" />
       <option name="project" value="LOCAL" />
-      <updated>1733259566605</updated>
+      <updated>1743115596984</updated>
     </task>
-    <task id="LOCAL-00139" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00196" summary="hotfix: fecha de pago parsing en egresos">
       <option name="closed" value="true" />
-      <created>1733261326100</created>
-      <option name="number" value="00139" />
-      <option name="presentableId" value="LOCAL-00139" />
+      <created>1743115781632</created>
+      <option name="number" value="00196" />
+      <option name="presentableId" value="LOCAL-00196" />
       <option name="project" value="LOCAL" />
-      <updated>1733261326100</updated>
+      <updated>1743115781632</updated>
     </task>
-    <task id="LOCAL-00140" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00197" summary="feature: products moved to public api path; Auto sing in on case the request dosent have bearer token.">
       <option name="closed" value="true" />
-      <created>1733261396941</created>
-      <option name="number" value="00140" />
-      <option name="presentableId" value="LOCAL-00140" />
+      <created>1743528267135</created>
+      <option name="number" value="00197" />
+      <option name="presentableId" value="LOCAL-00197" />
       <option name="project" value="LOCAL" />
-      <updated>1733261396941</updated>
+      <updated>1743528267135</updated>
     </task>
-    <task id="LOCAL-00141" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00198" summary="feature: products, discounts and booking moved to public api path; Auto sing in on case the request dosent have bearer token.">
       <option name="closed" value="true" />
-      <created>1733261520887</created>
-      <option name="number" value="00141" />
-      <option name="presentableId" value="LOCAL-00141" />
+      <created>1743530102270</created>
+      <option name="number" value="00198" />
+      <option name="presentableId" value="LOCAL-00198" />
       <option name="project" value="LOCAL" />
-      <updated>1733261520887</updated>
+      <updated>1743530102271</updated>
     </task>
-    <task id="LOCAL-00142" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00199" summary="feature: set sales by reservation and products online">
       <option name="closed" value="true" />
-      <created>1733261736481</created>
-      <option name="number" value="00142" />
-      <option name="presentableId" value="LOCAL-00142" />
+      <created>1746236908372</created>
+      <option name="number" value="00199" />
+      <option name="presentableId" value="LOCAL-00199" />
       <option name="project" value="LOCAL" />
-      <updated>1733261736481</updated>
+      <updated>1746236908373</updated>
     </task>
-    <task id="LOCAL-00143" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00200" summary="feature: can find branches in public api">
       <option name="closed" value="true" />
-      <created>1733261800748</created>
-      <option name="number" value="00143" />
-      <option name="presentableId" value="LOCAL-00143" />
+      <created>1746484892453</created>
+      <option name="number" value="00200" />
+      <option name="presentableId" value="LOCAL-00200" />
       <option name="project" value="LOCAL" />
-      <updated>1733261800749</updated>
+      <updated>1746484892453</updated>
     </task>
-    <task id="LOCAL-00144" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00201" summary="feature: can find branches in public api">
       <option name="closed" value="true" />
-      <created>1733261929412</created>
-      <option name="number" value="00144" />
-      <option name="presentableId" value="LOCAL-00144" />
+      <created>1746484907466</created>
+      <option name="number" value="00201" />
+      <option name="presentableId" value="LOCAL-00201" />
       <option name="project" value="LOCAL" />
-      <updated>1733261929412</updated>
+      <updated>1746484907466</updated>
     </task>
-    <task id="LOCAL-00145" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00202" summary="feature: query by day qty times in reservations">
       <option name="closed" value="true" />
-      <created>1733261974186</created>
-      <option name="number" value="00145" />
-      <option name="presentableId" value="LOCAL-00145" />
+      <created>1746487284915</created>
+      <option name="number" value="00202" />
+      <option name="presentableId" value="LOCAL-00202" />
       <option name="project" value="LOCAL" />
-      <updated>1733261974186</updated>
+      <updated>1746487284915</updated>
     </task>
-    <task id="LOCAL-00146" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00203" summary="feature: query by day qty times in reservations">
       <option name="closed" value="true" />
-      <created>1733262045686</created>
-      <option name="number" value="00146" />
-      <option name="presentableId" value="LOCAL-00146" />
+      <created>1746487548428</created>
+      <option name="number" value="00203" />
+      <option name="presentableId" value="LOCAL-00203" />
       <option name="project" value="LOCAL" />
-      <updated>1733262045686</updated>
+      <updated>1746487548428</updated>
     </task>
-    <task id="LOCAL-00147" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00204" summary="feature: query by day qty times in reservations">
       <option name="closed" value="true" />
-      <created>1733262215249</created>
-      <option name="number" value="00147" />
-      <option name="presentableId" value="LOCAL-00147" />
+      <created>1746488095621</created>
+      <option name="number" value="00204" />
+      <option name="presentableId" value="LOCAL-00204" />
       <option name="project" value="LOCAL" />
-      <updated>1733262215249</updated>
+      <updated>1746488095621</updated>
     </task>
-    <task id="LOCAL-00148" summary="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum">
+    <task id="LOCAL-00205" summary="feature: query by day qty times in reservations">
       <option name="closed" value="true" />
-      <created>1733263450437</created>
-      <option name="number" value="00148" />
-      <option name="presentableId" value="LOCAL-00148" />
+      <created>1746488250715</created>
+      <option name="number" value="00205" />
+      <option name="presentableId" value="LOCAL-00205" />
       <option name="project" value="LOCAL" />
-      <updated>1733263450437</updated>
+      <updated>1746488250715</updated>
     </task>
-    <task id="LOCAL-00149" summary="fix: descuento negativo y filtro de fecha de empleado pagos">
+    <task id="LOCAL-00206" summary="feature: query by day qty times in reservations">
       <option name="closed" value="true" />
-      <created>1734390234023</created>
-      <option name="number" value="00149" />
-      <option name="presentableId" value="LOCAL-00149" />
+      <created>1746496910439</created>
+      <option name="number" value="00206" />
+      <option name="presentableId" value="LOCAL-00206" />
       <option name="project" value="LOCAL" />
-      <updated>1734390234023</updated>
+      <updated>1746496910439</updated>
     </task>
-    <task id="LOCAL-00150" summary="fix: descuento negativo y filtro de fecha de empleado pagos">
+    <task id="LOCAL-00207" summary="feature: query by day qty times in reservations">
       <option name="closed" value="true" />
-      <created>1734390660040</created>
-      <option name="number" value="00150" />
-      <option name="presentableId" value="LOCAL-00150" />
+      <created>1746497036601</created>
+      <option name="number" value="00207" />
+      <option name="presentableId" value="LOCAL-00207" />
       <option name="project" value="LOCAL" />
-      <updated>1734390660040</updated>
+      <updated>1746497036602</updated>
     </task>
-    <option name="localTasksCounter" value="151" />
+    <option name="localTasksCounter" value="208" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -702,23 +751,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
-    <MESSAGE value="feature: se agrego crud de empleados" />
-    <MESSAGE value="feature: se agrego crud de empleados pagos" />
-    <MESSAGE value="feature: se agrego columna de puesto a tabla de empleados" />
-    <MESSAGE value="feature: se agrego columna de puesto a tabla de empleados al crud y validaciones al form request" />
-    <MESSAGE value="feature: se acomodo el listado de cortes para mostrar la informacion requerida, asi como, se agregaron los appends en el modelo de corte para calcular los totales de egresos relacionados al corte." />
-    <MESSAGE value="feature: sidebar iconos de cortes y aperturas y remover menu de aperturas" />
-    <MESSAGE value="feature: filtro por usuario en consulta de ventas api" />
-    <MESSAGE value="feature: migracion descuentos tipo de producto" />
-    <MESSAGE value="feature: descuentos tipo de producto" />
-    <MESSAGE value="change: se agrego a sucursales la columna de horarios json que se maneja con array de lado de backpack y tambien se retiro la columna de hora de cierre y apertura." />
-    <MESSAGE value="change: cambio de pantalla de login y publish de vendor backpack views" />
-    <MESSAGE value="change: time zone" />
-    <MESSAGE value="fix: undefined descuento" />
-    <MESSAGE value="fix: dashboard" />
     <MESSAGE value="feature: dashboard" />
     <MESSAGE value="change: se remueven opciones de menu que ya no se van a utilizar" />
-    <MESSAGE value="debugging" />
     <MESSAGE value="feature:permissions" />
     <MESSAGE value="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto q" />
     <MESSAGE value="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto que sale en" />
@@ -727,7 +761,22 @@
     <MESSAGE value="feature: cambio de consulta de api de pago de empleados." />
     <MESSAGE value="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum" />
     <MESSAGE value="fix: descuento negativo y filtro de fecha de empleado pagos" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix: descuento negativo y filtro de fecha de empleado pagos" />
+    <MESSAGE value="fix: &quot;Undefined index: descuento&quot;" />
+    <MESSAGE value="feature: poder eliminar cortes." />
+    <MESSAGE value="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes" />
+    <MESSAGE value="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados" />
+    <MESSAGE value="debugging fechas corte" />
+    <MESSAGE value="feature: imagen opcional en pagos de egreso" />
+    <MESSAGE value="feature: referencia opcional en pagos de egreso" />
+    <MESSAGE value="debugging" />
+    <MESSAGE value="hotfix: calculo de suma total de pagos empleados por periodo de fecha donde se aumento un dia y partiendo de la hora incial para la fecha final" />
+    <MESSAGE value="hotfix: fecha de pago parsing en egresos" />
+    <MESSAGE value="feature: products moved to public api path; Auto sing in on case the request dosent have bearer token." />
+    <MESSAGE value="feature: products, discounts and booking moved to public api path; Auto sing in on case the request dosent have bearer token." />
+    <MESSAGE value="feature: set sales by reservation and products online" />
+    <MESSAGE value="feature: can find branches in public api" />
+    <MESSAGE value="feature: query by day qty times in reservations" />
+    <option name="LAST_COMMIT_MESSAGE" value="feature: query by day qty times in reservations" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
