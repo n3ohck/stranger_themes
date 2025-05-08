@@ -21,7 +21,7 @@
         @foreach($sale->reservaciones as $reservacion)
             <tr>
                 <td colspan="2" style="font-size: 14px; font-weight: bold;">
-                    {{$reservacion->producto->descripcion}} para {{$reservacion->cantidad_personas}} personas para el {{ \Carbon\Carbon::parse($reservacion->fecha)->translatedFormat('d \D\E F \D\E\L Y \a \l\a\s H:i') }} HRS
+                    {{$reservacion->producto->descripcion}} para {{$reservacion->cantidad_personas}} personas, el {{ \Carbon\Carbon::parse($reservacion->fecha)->translatedFormat('d \D\E F \D\E\L Y \a \l\a\s H:i') }} HRS
                 </td>
             </tr>
         @endforeach
@@ -37,6 +37,9 @@
     </table>
     <br>
     <br>
+    <p style="font-size: 11px; margin-top: 30px; text-align: center;">
+        Le recordamos llegar al menos 10 minutos antes. En caso de retraso, perderá su recorrido sin posibilidad de reembolso
+    </p>
     <p style="font-size: 14px; margin-top: 30px; text-align: center;">
         <a href="{{$sale->sucursal->ubicacion}}" target="_blank">{{$sale->sucursal->direccion}}</a>
     </p>

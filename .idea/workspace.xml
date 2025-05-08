@@ -5,11 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="feature: log de envios de correos por comprobante, disputa y recordatorio">
-      <change afterPath="$PROJECT_DIR$/app/Console/Commands/RememberCommand.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/Mail/RecordatorioMail.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/views/emails/recordatorio.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Console/Kernel.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Console/Kernel.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/LogNotificacionCrudController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/LogNotificacionCrudController.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -212,7 +208,7 @@
   "keyToString": {
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "feature/lognotifications",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/laragon/www/stranger_themes/resources/views/emails",
     "node.js.detected.package.eslint": "true",
