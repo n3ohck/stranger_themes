@@ -95,7 +95,33 @@ class LogNotificacionCrudController extends CrudController
     }
 
     public function resend(LogNotificacion $notificacion){
-        dd($notificacion);
+        try{
+            $notificacion->venta->load([
+                'sucursal',
+                'reservaciones' => function ($q) {
+                    $q->with('producto');
+                }
+            ]);
+            switch ($notificacion->motivo){
+                case 'comprobante':
+                    \Mail::to($notificacion->email)->send(new \App\Mail\ComprobanteMail($notificacion->venta));
+                    break;
+                case 'disputa':
+                    \Mail::to($notificacion->email)->send(new \App\Mail\DisputaMail($notificacion->venta));
+                    break;
+                case 'recordatorio':
+                    \Mail::to($notificacion->email)->send(new \App\Mail\RecordatorioMail($notificacion->venta));
+                    break;
+                default:
+                    \Alert::error('Motivo no valido.')->flash();
+                    return redirect()->back();
+            }
+            \Alert::success('Notificacion reenviada.')->flash();
+            return redirect()->back();
+        }catch (\Exception $e){
+            \Alert::error('Error al reenviar la notificacion.')->flash();
+            return redirect()->back();
+        }
     }
 
 }
