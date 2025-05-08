@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Mail\RecordatorioMail;
+use App\Models\LogNotificacion;
 use App\Models\Reserva;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -57,6 +58,13 @@ class RememberCommand extends Command
             ->get()
             ->each(function ($reserva) {
                 if ($reserva->venta && $reserva->venta->email) {
+                    $log = new LogNotificacion();
+                    $log->venta_id = $reserva->venta->id;
+                    $log->producto_id = $reserva->producto_id;
+                    $log->sucursal_id = $reserva->venta->sucursal_id;
+                    $log->email = $reserva->venta->email;
+                    $log->motivo = 'recordatorio';
+                    $log->save();
                     Mail::to($reserva->venta->email)
                         ->send(new RecordatorioMail($reserva->venta));
                 }
