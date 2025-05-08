@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\LogNotificacion;
 use App\Models\Venta;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
@@ -34,6 +35,13 @@ class ComprobanteDigitalJob implements ShouldQueue
      */
     public function handle()
     {
+        $log = new LogNotificacion();
+        $log->venta_id = $this->sale->id;
+        $log->producto_id = $this->sale->reservaciones[0]->producto_id;
+        $log->sucursal_id = $this->sale->sucursal_id;
+        $log->email = $this->sale->email;
+        $log->motivo = 'comprobante';
+        $log->save();
         $this->sale->load([
             'sucursal',
             'reservaciones' => function ($q) {

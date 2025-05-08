@@ -35,4 +35,6 @@ Route::group([
     Route::get('payment-report', 'PaymentReportController@view');
     Route::get('payment-report/{corte}/egreso', 'PaymentReportController@view');
     Route::get('payment-report/{corte}/empleado', 'PaymentReportController@view');
+    Route::crud('log-notificacion', 'LogNotificacionCrudController');
+    Route::get('notificacion/{notificacion}/reenviar', 'LogNotificacionCrudController@resend');
 }); // this should be the absolute last line of this file

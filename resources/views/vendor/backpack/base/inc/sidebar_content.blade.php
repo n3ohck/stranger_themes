@@ -47,6 +47,9 @@
         </a>
     </li>
 @endcan
+@can('log.envios.ver')
+<li class='nav-item'><a class='nav-link' href='{{ backpack_url('log-notificacion') }}'><i class='nav-icon la la-envelope'></i> Log notificaciones</a></li>
+@endcan
 @can('configuraciones.ver')
 <li class="nav-item nav-dropdown">
     <a class="nav-link nav-dropdown-toggle" href="#"><i class="nav-icon la la-gear"></i> Configuracion</a>
