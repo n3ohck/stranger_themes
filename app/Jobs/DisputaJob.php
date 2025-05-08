@@ -11,7 +11,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Mail;
 
-class ComprobanteDigitalJob implements ShouldQueue
+class DisputaJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -42,6 +42,6 @@ class ComprobanteDigitalJob implements ShouldQueue
         ]);
 
         // Send email
-        Mail::to($this->sale->email)->send(new \App\Mail\ComprobanteMail($this->sale));
+        Mail::to('brauliogiovannivisconti@gmail.com')->send(new \App\Mail\DisputaMail($this->sale));
     }
 }

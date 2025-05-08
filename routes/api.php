@@ -25,6 +25,7 @@ Route::get('public/descuentos', [\App\Http\Controllers\Admin\DescuentoCrudContro
 Route::get('public/reservas', [\App\Http\Controllers\ReservasController::class,'fetch']);
 Route::get('public/sucursal', [\App\Http\Controllers\SucursalController::class,'getByBranch']);
 Route::post('public/ventas/make', [\App\Http\Controllers\Admin\VentaCrudController::class,'publicMake']);
+Route::post('public/ventas/cancel', [\App\Http\Controllers\Admin\DisputasController::class,'set']);
 Route::group(['middleware' => ['jwt.verify']], function () {
     //Login
     Route::post('user', 'App\Http\Controllers\Admin\UserController@getAuthenticatedUser');
