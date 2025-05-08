@@ -176,6 +176,13 @@ class SucursalCrudController extends CrudController
                 'type' => 'image',
                 'crop' => true,
             ],
+            [
+                'name'  => 'ubicacion',
+                'label' => "Ubicacion",
+                'type'  => 'text',
+                'hint'       => 'Ubicacion de la sucursal.',
+                'placeholder' => 'Ubicacion de la sucursal'
+            ]
         ]);
 
         /**

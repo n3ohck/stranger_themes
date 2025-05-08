@@ -184,6 +184,7 @@ class VentaCrudController extends CrudController
             }
             $ventas = (new VentaAction())->saleOnline($request->ventas);
             DB::commit();
+            
             return response()->json(['ventas' => $ventas, 'qty' => count($ventas)], 200);
         }catch (\Exception $e){
             DB::rollBack();

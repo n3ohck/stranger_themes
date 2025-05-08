@@ -4,14 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="feature: fondo final, fondo inicial, fecha en espanol dia y mes, logotipo, ventas online en corte">
+    <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="feature: vista de egresos desde corte con imagenes y por separado">
+      <change afterPath="$PROJECT_DIR$/app/Jobs/ComprobanteDigitalJob.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/Mail/ComprobanteMail.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/database/migrations/2025_05_07_181622_sucursal_ubication_alter_table.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/views/emails/comprobante.blade.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/CorteCrudController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/CorteCrudController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/PaymentReportController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/PaymentReportController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/public/js/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/packages/datatables.net-bs4/css/dataTables.bootstrap4.css" beforeDir="false" afterPath="$PROJECT_DIR$/public/packages/datatables.net-bs4/css/dataTables.bootstrap4.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/js/Pages/Reportes/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/resources/js/Pages/Reportes/index.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/backpack/custom.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/backpack/custom.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Actions/VentaAction.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Actions/VentaAction.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/SucursalCrudController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/SucursalCrudController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/VentaCrudController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/VentaCrudController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/Sucursal.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Sucursal.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -210,30 +212,30 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "C:/laragon/www/stranger_themes/resources/js/Pages/Reportes",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
-    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\PhpStorm 2024.2.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/laragon/www/stranger_themes/resources/js/Pages/Reportes&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Program Files\\JetBrains\\PhpStorm 2024.2.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "mysql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql&quot;
     ],
-    "vue.recent.templates": [
-      "Vue Composition API Component"
+    &quot;vue.recent.templates&quot;: [
+      &quot;Vue Composition API Component&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\laragon\www\stranger_themes\resources\js\Pages\Reportes" />
@@ -242,6 +244,7 @@
       <recent name="C:\laragon\www\stranger_themes" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\laragon\www\stranger_themes\resources\views\emails" />
       <recent name="C:\laragon\www\stranger_themes\resources\js\Pages" />
       <recent name="C:\laragon\www\stranger_themes\storage\app\public" />
       <recent name="C:\laragon\www\stranger_themes\app" />
@@ -334,15 +337,8 @@
       <workItem from="1746230897555" duration="4983000" />
       <workItem from="1746479531385" duration="2249000" />
       <workItem from="1746484282565" duration="7519000" />
-      <workItem from="1746587742408" duration="24253000" />
-    </task>
-    <task id="LOCAL-00161" summary="feature: poder eliminar cortes.">
-      <option name="closed" value="true" />
-      <created>1734639764484</created>
-      <option name="number" value="00161" />
-      <option name="presentableId" value="LOCAL-00161" />
-      <option name="project" value="LOCAL" />
-      <updated>1734639764484</updated>
+      <workItem from="1746587742408" duration="29566000" />
+      <workItem from="1746674988771" duration="608000" />
     </task>
     <task id="LOCAL-00162" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
       <option name="closed" value="true" />
@@ -728,7 +724,15 @@
       <option name="project" value="LOCAL" />
       <updated>1746655009781</updated>
     </task>
-    <option name="localTasksCounter" value="210" />
+    <task id="LOCAL-00210" summary="feature: vista de egresos desde corte con imagenes y por separado">
+      <option name="closed" value="true" />
+      <created>1746660813693</created>
+      <option name="number" value="00210" />
+      <option name="presentableId" value="LOCAL-00210" />
+      <option name="project" value="LOCAL" />
+      <updated>1746660813694</updated>
+    </task>
+    <option name="localTasksCounter" value="211" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -747,7 +751,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
-    <MESSAGE value="feature:permissions" />
     <MESSAGE value="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto q" />
     <MESSAGE value="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto que sale en" />
     <MESSAGE value="feature: se expone la ruta de consulta de reservas" />
@@ -772,7 +775,8 @@
     <MESSAGE value="feature: query by day qty times in reservations" />
     <MESSAGE value="feature: reporte de pagos" />
     <MESSAGE value="feature: fondo final, fondo inicial, fecha en espanol dia y mes, logotipo, ventas online en corte" />
-    <option name="LAST_COMMIT_MESSAGE" value="feature: fondo final, fondo inicial, fecha en espanol dia y mes, logotipo, ventas online en corte" />
+    <MESSAGE value="feature: vista de egresos desde corte con imagenes y por separado" />
+    <option name="LAST_COMMIT_MESSAGE" value="feature: vista de egresos desde corte con imagenes y por separado" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

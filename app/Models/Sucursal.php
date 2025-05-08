@@ -34,6 +34,7 @@ class Sucursal extends Model
         'direccion',
         'logotipo',
         'horarios',
+        'ubicacion'
     ];
     // protected $hidden = [];
     protected $dates = [

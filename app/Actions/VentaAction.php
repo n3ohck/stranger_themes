@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Jobs\ComprobanteDigitalJob;
 use App\Models\Reserva;
 use App\Models\User;
 use App\Models\Venta;
@@ -114,7 +115,9 @@ class VentaAction
                 if (isset($venta['reservaciones'])) {
                     $reservations[] = $this->makeVentaReservacion($venta->id, $sale['reservaciones'], $sale['sucursal_id']);
                 }
-
+                if( isset($sale['email']) ){
+                    ComprobanteDigitalJob::dispatch($venta->id);
+                }
                 return [
                     'venta_id' => $venta->id,
                     'estatus' => $venta->estatus,
