@@ -4,16 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="feature: notificacion de comprobante digital">
-      <change afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/DisputasController.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/Jobs/DisputaJob.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/Mail/DisputaMail.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/Models/Disputa.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/database/migrations/2025_05_08_095617_disputa_create_table.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/views/emails/disputa.blade.php" afterDir="false" />
+    <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="feature: log de envios de correos por comprobante, disputa y recordatorio">
+      <change afterPath="$PROJECT_DIR$/app/Console/Commands/RememberCommand.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/Mail/RecordatorioMail.php" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/resources/views/emails/recordatorio.blade.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Jobs/ComprobanteDigitalJob.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Jobs/ComprobanteDigitalJob.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/routes/api.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/api.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Console/Kernel.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Console/Kernel.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -39,7 +35,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="main" />
+        <entry key="$PROJECT_DIR$" value="feature/lognotifications" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -216,7 +212,7 @@
   "keyToString": {
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "feature/disputas",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "last_opened_file_path": "C:/laragon/www/stranger_themes/resources/views/emails",
     "node.js.detected.package.eslint": "true",
@@ -342,14 +338,6 @@
       <workItem from="1746587742408" duration="29566000" />
       <workItem from="1746674988771" duration="681000" />
       <workItem from="1746719477970" duration="1795000" />
-    </task>
-    <task id="LOCAL-00163" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
-      <option name="closed" value="true" />
-      <created>1734641102660</created>
-      <option name="number" value="00163" />
-      <option name="presentableId" value="LOCAL-00163" />
-      <option name="project" value="LOCAL" />
-      <updated>1734641102660</updated>
     </task>
     <task id="LOCAL-00164" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
       <option name="closed" value="true" />
@@ -735,7 +723,15 @@
       <option name="project" value="LOCAL" />
       <updated>1746675645024</updated>
     </task>
-    <option name="localTasksCounter" value="212" />
+    <task id="LOCAL-00212" summary="feature: log de envios de correos por comprobante, disputa y recordatorio">
+      <option name="closed" value="true" />
+      <created>1746725715476</created>
+      <option name="number" value="00212" />
+      <option name="presentableId" value="LOCAL-00212" />
+      <option name="project" value="LOCAL" />
+      <updated>1746725715476</updated>
+    </task>
+    <option name="localTasksCounter" value="213" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -754,7 +750,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
-    <MESSAGE value="change: cambio de texto en hint de producto para dejar claro en la descripcion del producto que es el texto que sale en" />
     <MESSAGE value="feature: se expone la ruta de consulta de reservas" />
     <MESSAGE value="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete" />
     <MESSAGE value="feature: cambio de consulta de api de pago de empleados." />
@@ -779,7 +774,8 @@
     <MESSAGE value="feature: fondo final, fondo inicial, fecha en espanol dia y mes, logotipo, ventas online en corte" />
     <MESSAGE value="feature: vista de egresos desde corte con imagenes y por separado" />
     <MESSAGE value="feature: notificacion de comprobante digital" />
-    <option name="LAST_COMMIT_MESSAGE" value="feature: notificacion de comprobante digital" />
+    <MESSAGE value="feature: log de envios de correos por comprobante, disputa y recordatorio" />
+    <option name="LAST_COMMIT_MESSAGE" value="feature: log de envios de correos por comprobante, disputa y recordatorio" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
