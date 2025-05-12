@@ -185,4 +185,32 @@ class DescuentoCrudController extends CrudController
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
+
+    public function publicFetch(Request $request)
+    {
+        try {
+            $sucursalId = $request->get('sucursal_id');
+            $codigo = $request->get('codigo');
+
+            if (!$codigo) {
+                throw new \Exception("No se encontro el codigo");
+            }
+            if(!$sucursalId ){
+                throw new \Exception("No se encontro la sucursal");
+            }
+
+            $descuento = Descuento::query()
+                ->where(function($q)use($codigo,$sucursalId){
+                    $q->where('codigo', "$codigo")
+                        ->where('sucursal_id', $sucursalId);
+                })
+                ->first();
+
+            return response()->json(['descuentos' => $descuento, 'valid' => (isset($descuento->id))], 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
 }
