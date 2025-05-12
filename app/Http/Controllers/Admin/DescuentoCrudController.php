@@ -200,6 +200,14 @@ class DescuentoCrudController extends CrudController
             }
 
             $descuento = Descuento::query()
+                ->select([
+                    'id',
+                    'codigo',
+                    'porcentaje',
+                    'sucursal_id',
+                    'producto_tipo',
+                    'estatus'
+                ])
                 ->where(function($q)use($codigo,$sucursalId){
                     $q->where('codigo', "$codigo")
                         ->where('sucursal_id', $sucursalId);
