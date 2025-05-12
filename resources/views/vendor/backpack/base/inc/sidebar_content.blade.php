@@ -1,3 +1,6 @@
+@can('ventas.ver')
+    <li class='nav-item'><a class='nav-link' href='{{ backpack_url('venta') }}'><i class='nav-icon la la-list'></i> Ventas</a></li>
+@endcan
 @can('productos.ver')
     <li class='nav-item'>
         <a class='nav-link' href='{{ backpack_url('producto') }}'>

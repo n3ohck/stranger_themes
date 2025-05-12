@@ -48,40 +48,122 @@
 			</div>
 	    @endif
 	    <div class="card no-padding no-border">
-			<table class="table table-striped mb-0">
-		        <tbody>
-		        @foreach ($crud->columns() as $column)
-		            <tr>
-		                <td>
-		                    <strong>{!! $column['label'] !!}:</strong>
-		                </td>
-                        <td>
-							@if (!isset($column['type']))
-		                      @include('crud::columns.text')
-		                    @else
-		                      @if(view()->exists('vendor.backpack.crud.columns.'.$column['type']))
-		                        @include('vendor.backpack.crud.columns.'.$column['type'])
-		                      @else
-		                        @if(view()->exists('crud::columns.'.$column['type']))
-		                          @include('crud::columns.'.$column['type'])
-		                        @else
-		                          @include('crud::columns.text')
-		                        @endif
-		                      @endif
-		                    @endif
-                        </td>
-		            </tr>
-		        @endforeach
-				@if ($crud->buttons()->where('stack', 'line')->count())
-					<tr>
-						<td><strong>{{ trans('backpack::crud.actions') }}</strong></td>
-						<td>
-							@include('crud::inc.button_stack', ['stack' => 'line'])
-						</td>
-					</tr>
-				@endif
-		        </tbody>
-			</table>
+            <div class="col-md-12 p-3">
+                <h5>Generales</h5>
+                <table class="table table-striped mb-0">
+                    <tbody>
+                    @foreach ($crud->columns() as $column)
+                        <tr>
+                            <td>
+                                <strong>{!! $column['label'] !!}:</strong>
+                            </td>
+                            <td>
+                                @if (!isset($column['type']))
+                                    @include('crud::columns.text')
+                                @else
+                                    @if(view()->exists('vendor.backpack.crud.columns.'.$column['type']))
+                                        @include('vendor.backpack.crud.columns.'.$column['type'])
+                                    @else
+                                        @if(view()->exists('crud::columns.'.$column['type']))
+                                            @include('crud::columns.'.$column['type'])
+                                        @else
+                                            @include('crud::columns.text')
+                                        @endif
+                                    @endif
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+
+                    @if ($crud->buttons()->where('stack', 'line')->count())
+                        <tr>
+                            <td><strong>{{ trans('backpack::crud.actions') }}</strong></td>
+                            <td>
+                                @include('crud::inc.button_stack', ['stack' => 'line'])
+                            </td>
+                        </tr>
+                    @endif
+                    </tbody>
+                </table>
+            </div>
+            @if ($entry->reservaciones->count())
+                <div class="col-md-12 p-3">
+                    <h5>Reservaciones</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Recorrido</th>
+                            <th class="text-right">Cantidad Personas</th>
+                            <th>Fecha</th>
+                            <th>Estado</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($entry->reservaciones as $reservacion)
+                            <tr>
+                                <td>{{ $reservacion->nombre_cliente }}</td>
+                                <td>{{ $reservacion->producto->descripcion }}</td>
+                                <td class="text-right">{{ $reservacion->cantidad_personas }}</td>
+                                <td>{{ $reservacion->fecha }}</td>
+                                <td>{{ $reservacion->estado }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+            @if ($entry->pagos->count())
+                <div class="col-md-12 p-3">
+                    <h5>Pagos</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>Tipo</th>
+                            <th>Referencia</th>
+                            <th class="text-right">Monto</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($entry->pagos as $pago)
+                            <tr>
+                                <td>{{ $pago->tipo }}</td>
+                                <td>{{ $pago->referencia ?? 'N/A' }}</td>
+                                <td class="text-right">{{ number_format($pago->monto,2,'.',',') }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+            @if ($entry->productos->count())
+                <div class="col-md-12 p-3">
+                    <h5>Productos</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th class="text-right">Cantidad</th>
+                            <th class="text-right">Precio</th>
+                            <th class="text-right">Total</th>
+                            <th class="text-right">Descuento</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach($entry->productos as $producto)
+                            <tr>
+                                <td>{{ $producto->producto->descripcion }}</td>
+                                <td class="text-right">{{ $producto->cantidad }}</td>
+                                <td class="text-right">{{ number_format($producto->precio ,2,'.',',') }}</td>
+                                <td class="text-right">{{ number_format($producto->total ,2,'.',',') }}</td>
+                                <td class="text-right">{{ number_format($producto->descuento ,2,'.',',') }}</td>
+                            </tr>
+                        @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+
 	    </div><!-- /.box-body -->
 	  </div><!-- /.box -->
 

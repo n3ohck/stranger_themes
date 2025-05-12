@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\VentaRequest;
+use App\Models\Sucursal;
+use App\Models\User;
 use App\Models\Venta;
 use App\Models\VentaProducto;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
@@ -20,9 +22,6 @@ use Illuminate\Support\Facades\DB;
 class VentaCrudController extends CrudController
 {
     use \Backpack\CRUD\app\Http\Controllers\Operations\ListOperation;
-    use \Backpack\CRUD\app\Http\Controllers\Operations\CreateOperation;
-    use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
-    use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
     use \App\Traits\DateTrait;
 
@@ -46,28 +45,115 @@ class VentaCrudController extends CrudController
      */
     protected function setupListOperation()
     {
-        CRUD::column('codigo_descuento');
-        CRUD::column('comentario_cancelacion');
-        CRUD::column('created_at');
-        CRUD::column('deleted_at');
-        CRUD::column('descuento');
-        CRUD::column('descuento_id');
-        CRUD::column('estatus');
-        CRUD::column('fecha_cancelacion');
-        CRUD::column('folio');
-        CRUD::column('id');
-        CRUD::column('porcentaje_descuento');
-        CRUD::column('sucursal_id');
-        CRUD::column('total');
-        CRUD::column('updated_at');
-        CRUD::column('user_id');
-        CRUD::column('user_id_cancelacion');
+        $this->crud->addColumns([
+            [
+                'name' => 'folio',
+                'label' => 'Folio',
+                'type' => 'text'
+            ],
+            [
+                'name' => 'nombre',
+                'label' => 'Nombre',
+                'type' => 'text'
+            ],
+            [
+                'name' => 'email',
+                'label' => 'Email',
+                'type' => 'text'
+            ],
+            [
+                'name' => 'telefono',
+                'label' => 'Telefono',
+                'type' => 'text'
+            ],
+            [
+                'name' => 'created_at',
+                'label' => 'Fecha',
+                'type' => 'datetime'
+            ],
+            [
+                'name' => 'total',
+                'label' => 'Total',
+                'type' => 'number',
+                'decimals' => 2,
+                'prefix' => '$',
+            ],
+            [
+                // 1-n relationship
+                'label'     => 'Sucursal', // Table column heading
+                'type'      => 'select',
+                'name'      => 'sucursal_id', // the column that contains the ID of that connected entity;
+                'entity'    => 'sucursal', // the method that defines the relationship in your Model
+                'attribute' => 'razon_social', // foreign key attribute that is shown to user
+                'model'     => Sucursal::class, // foreign key model
+            ],
+            [
+                // 1-n relationship
+                'label'     => 'Usuario', // Table column heading
+                'type'      => 'select',
+                'name'      => 'user_id', // the column that contains the ID of that connected entity;
+                'entity'    => 'user', // the method that defines the relationship in your Model
+                'attribute' => 'name', // foreign key attribute that is shown to user
+                'model'     => User::class, // foreign key model
+            ],
+            [
+                'name' => 'codigo_descuento',
+                'label' => 'Codigo Descuento',
+                'type' => 'text'
+            ],
+            [
+                'name' => 'porcentaje_descuento',
+                'label' => 'Porcentaje Descuento',
+                'type' => 'number',
+                'decimals' => 2,
+            ],
+            [
+                'name' => 'estatus',
+                'label' => 'Estatus',
+                'type' => 'text'
+            ],
+        ]);
+        $this->crud->removeColumn('user_id_cancelacion');
+        $this->crud->orderBy('created_at','desc');
+        $this->crud->enableExportButtons();
+        $this->crud->addFilter([
+            'name' => 'sucursal_id',
+            'type' => 'select2',
+            'label' => 'Sucursal'
+        ], function() {
+            return Sucursal::all()->pluck('razon_social', 'id');
+        }, function($query, $value) {
+            $query->where('sucursal_id', $value);
+        });
 
-        /**
-         * Columns can be defined using the fluent syntax or array syntax:
-         * - CRUD::column('price')->type('number');
-         * - CRUD::addColumn(['name' => 'price', 'type' => 'number']);
-         */
+        $this->crud->addFilter([
+            'name' => 'user_id',
+            'type' => 'select2',
+            'label' => 'Usuario'
+        ], function() {
+            return User::all()->pluck('name', 'id');
+        }, function($query, $value) {
+            $query->where('user_id', $value);
+        });
+
+        $this->crud->addFilter([
+            'name' => 'estatus',
+            'type' => 'dropdown',
+            'label' => 'Estatus'
+        ], [
+            'activo' => 'Activo',
+            'cancelado' => 'Cancelado'
+        ], function($query, $value) {
+            $query->where('estatus', $value);
+        });
+
+        $this->crud->addFilter([
+            'name' => 'fecha',
+            'type' => 'date_range',
+            'label' => 'Fecha'
+        ], false, function($query) {
+            $query->whereBetween('created_at', [request('fecha_from'), request('fecha_to')]);
+        });
     }
 
     /**
@@ -184,7 +270,7 @@ class VentaCrudController extends CrudController
             }
             $ventas = (new VentaAction())->saleOnline($request->ventas);
             DB::commit();
-            
+
             return response()->json(['ventas' => $ventas, 'qty' => count($ventas)], 200);
         }catch (\Exception $e){
             DB::rollBack();
