@@ -210,7 +210,8 @@ class DescuentoCrudController extends CrudController
                 ])
                 ->where(function($q)use($codigo,$sucursalId){
                     $q->where('codigo', "$codigo")
-                        ->where('sucursal_id', $sucursalId);
+                        ->where('sucursal_id', $sucursalId)
+                        ->where('estatus', 'activo');
                 })
                 ->first();
 
