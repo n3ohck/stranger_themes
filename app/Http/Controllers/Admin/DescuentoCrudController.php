@@ -215,7 +215,7 @@ class DescuentoCrudController extends CrudController
                 })
                 ->first();
 
-            return response()->json(['descuentos' => $descuento, 'valid' => (isset($descuento->id))], 200);
+            return response()->json(['descuento' => $descuento, 'valid' => (isset($descuento->id))], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
