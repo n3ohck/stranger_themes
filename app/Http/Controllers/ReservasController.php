@@ -52,7 +52,7 @@ class ReservasController extends Controller
             return response()->json([
                 'message' => 'Consulta realizada con exito',
                 'reservas' => $reservas,
-                'qty' => $reservas->count()
+                'qty' => $reservas->pluck('qty')->sum()
             ], 200);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
