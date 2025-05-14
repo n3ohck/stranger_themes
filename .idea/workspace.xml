@@ -4,8 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="feature: log de envios de correos por comprobante, disputa y recordatorio">
-      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/LogNotificacionCrudController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/LogNotificacionCrudController.php" afterDir="false" />
+    <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="feature: descuentos publicos cambio de logica">
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/DashboardController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/DashboardController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/PaymentReportController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/PaymentReportController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/public/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/js/Pages/Dashboard/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/resources/js/Pages/Dashboard/index.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/js/Pages/Reportes/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/resources/js/Pages/Reportes/index.vue" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,7 +37,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="feature/lognotifications" />
+        <entry key="$PROJECT_DIR$" value="feature/ventas-historial" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -204,31 +210,31 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "feature/lognotifications",
-    "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/laragon/www/stranger_themes/resources/views/emails",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
-    "ts.external.directory.path": "C:\\Program Files\\JetBrains\\PhpStorm 2024.2.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/laragon/www/stranger_themes/resources/views/emails&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;ts.external.directory.path&quot;: &quot;C:\\Program Files\\JetBrains\\PhpStorm 2024.2.1\\plugins\\javascript-plugin\\jsLanguageServicesImpl\\external&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "mysql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql&quot;
     ],
-    "vue.recent.templates": [
-      "Vue Composition API Component"
+    &quot;vue.recent.templates&quot;: [
+      &quot;Vue Composition API Component&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\laragon\www\stranger_themes\resources\views\emails" />
@@ -253,8 +259,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-PS-243.26053.13" />
-        <option value="bundled-php-predefined-a98d8de5180a-1ec7b7818973-com.jetbrains.php.sharedIndexes-PS-243.26053.13" />
+        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-PS-251.25410.148" />
+        <option value="bundled-php-predefined-a98d8de5180a-c5828cf854d9-com.jetbrains.php.sharedIndexes-PS-251.25410.148" />
       </set>
     </attachedChunks>
   </component>
@@ -334,70 +340,11 @@
       <workItem from="1746587742408" duration="29566000" />
       <workItem from="1746674988771" duration="681000" />
       <workItem from="1746719477970" duration="1795000" />
-    </task>
-    <task id="LOCAL-00164" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
-      <option name="closed" value="true" />
-      <created>1734641171682</created>
-      <option name="number" value="00164" />
-      <option name="presentableId" value="LOCAL-00164" />
-      <option name="project" value="LOCAL" />
-      <updated>1734641171682</updated>
-    </task>
-    <task id="LOCAL-00165" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
-      <option name="closed" value="true" />
-      <created>1734641279210</created>
-      <option name="number" value="00165" />
-      <option name="presentableId" value="LOCAL-00165" />
-      <option name="project" value="LOCAL" />
-      <updated>1734641279210</updated>
-    </task>
-    <task id="LOCAL-00166" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
-      <option name="closed" value="true" />
-      <created>1734641340313</created>
-      <option name="number" value="00166" />
-      <option name="presentableId" value="LOCAL-00166" />
-      <option name="project" value="LOCAL" />
-      <updated>1734641340313</updated>
-    </task>
-    <task id="LOCAL-00167" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
-      <option name="closed" value="true" />
-      <created>1734641530752</created>
-      <option name="number" value="00167" />
-      <option name="presentableId" value="LOCAL-00167" />
-      <option name="project" value="LOCAL" />
-      <updated>1734641530752</updated>
-    </task>
-    <task id="LOCAL-00168" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
-      <option name="closed" value="true" />
-      <created>1734641615298</created>
-      <option name="number" value="00168" />
-      <option name="presentableId" value="LOCAL-00168" />
-      <option name="project" value="LOCAL" />
-      <updated>1734641615298</updated>
-    </task>
-    <task id="LOCAL-00169" summary="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes">
-      <option name="closed" value="true" />
-      <created>1734642877269</created>
-      <option name="number" value="00169" />
-      <option name="presentableId" value="LOCAL-00169" />
-      <option name="project" value="LOCAL" />
-      <updated>1734642877269</updated>
-    </task>
-    <task id="LOCAL-00170" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
-      <option name="closed" value="true" />
-      <created>1734830561167</created>
-      <option name="number" value="00170" />
-      <option name="presentableId" value="LOCAL-00170" />
-      <option name="project" value="LOCAL" />
-      <updated>1734830561167</updated>
-    </task>
-    <task id="LOCAL-00171" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
-      <option name="closed" value="true" />
-      <created>1734830923797</created>
-      <option name="number" value="00171" />
-      <option name="presentableId" value="LOCAL-00171" />
-      <option name="project" value="LOCAL" />
-      <updated>1734830923797</updated>
+      <workItem from="1746747071983" duration="3338000" />
+      <workItem from="1746823974812" duration="186000" />
+      <workItem from="1747065056836" duration="5614000" />
+      <workItem from="1747233225562" duration="592000" />
+      <workItem from="1747234430806" duration="2006000" />
     </task>
     <task id="LOCAL-00172" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
       <option name="closed" value="true" />
@@ -727,7 +674,71 @@
       <option name="project" value="LOCAL" />
       <updated>1746725715476</updated>
     </task>
-    <option name="localTasksCounter" value="213" />
+    <task id="LOCAL-00213" summary="feature: log con reenvio">
+      <option name="closed" value="true" />
+      <created>1746726955115</created>
+      <option name="number" value="00213" />
+      <option name="presentableId" value="LOCAL-00213" />
+      <option name="project" value="LOCAL" />
+      <updated>1746726955115</updated>
+    </task>
+    <task id="LOCAL-00214" summary="feature: leyenda de cancelacion">
+      <option name="closed" value="true" />
+      <created>1746727084826</created>
+      <option name="number" value="00214" />
+      <option name="presentableId" value="LOCAL-00214" />
+      <option name="project" value="LOCAL" />
+      <updated>1746727084826</updated>
+    </task>
+    <task id="LOCAL-00215" summary="hotfix: qty en reservaciones publicas suma correcta">
+      <option name="closed" value="true" />
+      <created>1747065598371</created>
+      <option name="number" value="00215" />
+      <option name="presentableId" value="LOCAL-00215" />
+      <option name="project" value="LOCAL" />
+      <updated>1747065598371</updated>
+    </task>
+    <task id="LOCAL-00216" summary="feature: listado de ventas">
+      <option name="closed" value="true" />
+      <created>1747069673385</created>
+      <option name="number" value="00216" />
+      <option name="presentableId" value="LOCAL-00216" />
+      <option name="project" value="LOCAL" />
+      <updated>1747069673385</updated>
+    </task>
+    <task id="LOCAL-00217" summary="feature: descuentos publicos cambio de logica">
+      <option name="closed" value="true" />
+      <created>1747070211204</created>
+      <option name="number" value="00217" />
+      <option name="presentableId" value="LOCAL-00217" />
+      <option name="project" value="LOCAL" />
+      <updated>1747070211204</updated>
+    </task>
+    <task id="LOCAL-00218" summary="feature: descuentos publicos cambio de logica">
+      <option name="closed" value="true" />
+      <created>1747070259694</created>
+      <option name="number" value="00218" />
+      <option name="presentableId" value="LOCAL-00218" />
+      <option name="project" value="LOCAL" />
+      <updated>1747070259694</updated>
+    </task>
+    <task id="LOCAL-00219" summary="feature: descuentos publicos cambio de logica">
+      <option name="closed" value="true" />
+      <created>1747070295912</created>
+      <option name="number" value="00219" />
+      <option name="presentableId" value="LOCAL-00219" />
+      <option name="project" value="LOCAL" />
+      <updated>1747070295912</updated>
+    </task>
+    <task id="LOCAL-00220" summary="feature: descuentos publicos cambio de logica">
+      <option name="closed" value="true" />
+      <created>1747070307277</created>
+      <option name="number" value="00220" />
+      <option name="presentableId" value="LOCAL-00220" />
+      <option name="project" value="LOCAL" />
+      <updated>1747070307277</updated>
+    </task>
+    <option name="localTasksCounter" value="221" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -746,11 +757,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
-    <MESSAGE value="feature: se expone la ruta de consulta de reservas" />
-    <MESSAGE value="feature: se retira el descuento y suma de existencia sobre productos tour y tour_paquete" />
-    <MESSAGE value="feature: cambio de consulta de api de pago de empleados." />
-    <MESSAGE value="change: se cambio el campo enum tipo agregando &quot;diferencias&quot; al enum" />
-    <MESSAGE value="fix: descuento negativo y filtro de fecha de empleado pagos" />
     <MESSAGE value="fix: &quot;Undefined index: descuento&quot;" />
     <MESSAGE value="feature: poder eliminar cortes." />
     <MESSAGE value="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes" />
@@ -771,7 +777,12 @@
     <MESSAGE value="feature: vista de egresos desde corte con imagenes y por separado" />
     <MESSAGE value="feature: notificacion de comprobante digital" />
     <MESSAGE value="feature: log de envios de correos por comprobante, disputa y recordatorio" />
-    <option name="LAST_COMMIT_MESSAGE" value="feature: log de envios de correos por comprobante, disputa y recordatorio" />
+    <MESSAGE value="feature: log con reenvio" />
+    <MESSAGE value="feature: leyenda de cancelacion" />
+    <MESSAGE value="hotfix: qty en reservaciones publicas suma correcta" />
+    <MESSAGE value="feature: listado de ventas" />
+    <MESSAGE value="feature: descuentos publicos cambio de logica" />
+    <option name="LAST_COMMIT_MESSAGE" value="feature: descuentos publicos cambio de logica" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

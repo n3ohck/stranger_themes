@@ -67,6 +67,26 @@
                     </el-col>
                 </el-row>
             </div>
+            <div class="col-md-12 pull-right">
+                <div class="card p-0">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h5>Total Egresos</h5>
+                                <h5>${{ totals.egreso | moneyFormat }}</h5>
+                            </div>
+                            <div class="col-md-4">
+                                <h5>Total Empleados</h5>
+                                <h5>${{ totals.pagoEmpleado | moneyFormat }}</h5>
+                            </div>
+                            <div class="col-md-4">
+                                <h5>Total General</h5>
+                                <h5>${{ (totals.egreso + totals.pagoEmpleado) | moneyFormat }}</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -106,6 +126,10 @@ export default {
     data: () => ({
         loading: false,
         data:[],
+        totals:{
+            egreso: 0,
+            pagoEmpleado: 0
+        },
         query: {
             dates: [],
             origins: [],
@@ -147,6 +171,7 @@ export default {
             axios.get('/webapi/reports/payments', {params: this.query})
                 .then(response => {
                     this.data = response.data.data;
+                    this.totals = response.data.totals;
                     this.loading = false;
                 })
                 .catch(error => {

@@ -315,7 +315,9 @@ class VentaCrudController extends CrudController
                     'sucursal',
                     'pagos',
                     'reservaciones' => function($query){
-                        $query->with(['producto']);
+                        $query
+                            ->where('estado','confirmada')
+                            ->with(['producto']);
                     }
                 ])
                 ->Filters($params)

@@ -91,7 +91,6 @@ class PaymentReportController extends Controller
             });
     }
 
-
     public function fetch(Request $request)
     {
         try {
@@ -111,6 +110,10 @@ class PaymentReportController extends Controller
             $startDate = Carbon::parse($dates[0])->startOfDay()->format('Y-m-d H:i:s');
             $endDate = Carbon::parse($dates[1])->endOfDay()->format('Y-m-d H:i:s');
 
+            $totals = [
+                'pagoEmpleado' => 0,
+                'egreso' => 0,
+            ];
             $datas = collect();
             foreach ($origins as $origin) {
                 if (!method_exists($this, $origin)) {
@@ -121,12 +124,14 @@ class PaymentReportController extends Controller
                     $endDate,
                     $branch
                 );
+                $totals[$origin] = $data->pluck('amount')->sum();
                 $datas->push($data);
             }
 
             return response()->json([
                 'status' => true,
-                'data' => $datas->flatten(1)->sortByDesc('date')
+                'data' => $datas->flatten(1)->sortByDesc('date'),
+                'totals' => $totals,
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {

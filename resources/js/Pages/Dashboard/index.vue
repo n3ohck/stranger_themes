@@ -59,6 +59,9 @@
             </div>
             <div class="col-md-12">
                 <div class="card" style="background: transparent !important; border: none !important; box-shadow: none !important; ">
+                    <div class="col-md-12 p-0">
+                        <div class="alert alert-warning font-weight-bold text-dark" role="alert" v-if="disputas > 0">Tienes ({{ disputas }}) posibles disputas en el mes en curso.</div>
+                    </div>
                     <div class="card-header with-border">
                         <div class="row">
                             <div class="col-sm-2">
@@ -307,6 +310,11 @@ export default {
     name: "Dashboard",
     components: {},
     props: {
+        disputas:{
+            type: Number,
+            required: true,
+            default: 0
+        },
         sucursales: {
             type: Array,
             required: true
