@@ -8,6 +8,7 @@ use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Class ReservaCrudController
@@ -187,6 +188,31 @@ class ReservaCrudController extends CrudController
                 ]
             ], 200);
         } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function updateReservation(Request $request, Reserva $reserva)
+    {
+        try{
+            if(!$reserva){
+                throw new \Exception('Reserva no encontrado', 404);
+            }
+
+            if (!$request->input('fecha')) throw new \Exception('Falta fecha');
+            if (!$request->input('hora')) throw new \Exception('Falta hora');
+
+            DB::beginTransaction();
+            $reserva->update([
+                'fecha' => Carbon::parse($request->fecha . ' ' . $request->hora),
+            ]);
+            DB::commit();
+            return response()->json([
+                'message' => 'Reserva actualizada',
+                'reserva' => $reserva
+            ], 200);
+        }catch (\Exception $e){
+            DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }

@@ -35,6 +35,7 @@ Route::group(['middleware' => ['jwt.verify']], function () {
     Route::get('productos', [\App\Http\Controllers\Admin\ProductoCrudController::class,'fetch']);
     //Reservas
     Route::get('reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'fetch']);
+    Route::put('reservas/{reserva}', [\App\Http\Controllers\Admin\ReservaCrudController::class,'updateReservation']);
     Route::post('reservas', [\App\Http\Controllers\Admin\ReservaCrudController::class,'createReserva']);
 
     //Ventas
