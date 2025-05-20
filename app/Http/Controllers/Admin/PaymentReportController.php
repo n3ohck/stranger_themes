@@ -86,7 +86,7 @@ class PaymentReportController extends Controller
                     'date' => Carbon::parse($employee->created_at)->format('Y-m-d H:i:s'),
                     'user' => ( !isset( $employee->empleado ) ) ? 'N/A' : $employee->empleado->nombres . ' ' . $employee->empleado->apellidos,
                     'branch' =>  ( !isset( $employee->empleado ) ) ? 'N/A' : $employee->empleado->sucursal->razon_social,
-                    'image' => $employee->imagen
+                    'image' => asset('storage/pagos/' . $employee->imagen)
                 ];
             });
     }
