@@ -57,7 +57,7 @@
                                 :preview-src-list="[payment.image]">
                             </el-image>
                             <div style="padding: 14px;">
-                                <span>${{ payment.amount | moneyFormat }}</span>
+                                <span>{{ this.$options.filters.moneyFormat(payment.amount) }}</span>
                                 <div class="bottom clearfix">
                                     <time class="time">{{ payment.date }}</time>
                                     <el-button type="text" class="button">{{ payment.type }}</el-button>
@@ -73,15 +73,15 @@
                         <div class="row">
                             <div class="col-md-4">
                                 <h5>Total Egresos</h5>
-                                <h5>${{ totals.egreso | moneyFormat }}</h5>
+                                <h5>{{ this.$options.filters.moneyFormat(totals.egreso) }}</h5>
                             </div>
                             <div class="col-md-4">
                                 <h5>Total Empleados</h5>
-                                <h5>${{ totals.pagoEmpleado | moneyFormat }}</h5>
+                                <h5>{{ this.$options.filters.moneyFormat(totals.pagoEmpleado) }}</h5>
                             </div>
                             <div class="col-md-4">
                                 <h5>Total General</h5>
-                                <h5>${{ (totals.egreso + totals.pagoEmpleado) | moneyFormat }}</h5>
+                                <h5>{{ this.$options.filters.moneyFormat((totals.egreso + totals.pagoEmpleado)) }}</h5>
                             </div>
                         </div>
                     </div>
