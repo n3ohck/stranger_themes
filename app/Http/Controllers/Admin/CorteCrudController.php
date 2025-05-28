@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Requests\CorteRequest;
 use App\Models\Apertura;
 use App\Models\Corte;
+use App\Models\Egreso;
+use App\Models\EmpleadoPago;
 use App\Models\Reserva;
 use App\Models\Sucursal;
 use App\Models\User;
@@ -380,6 +382,12 @@ class CorteCrudController extends CrudController
                         $venta->delete();
                     }
                 });
+
+            EmpleadoPago::whereBetween('created_at', [$fecha_inicio, $fecha_final])
+                ->delete();
+
+            Egreso::whereBetween('fecha_pago', [$fecha_inicio, $fecha_final])
+                ->delete();
             DB::commit();
             return true;
         } catch (\Exception $e) {
