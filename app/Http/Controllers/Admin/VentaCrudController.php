@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\VentaRequest;
+use App\Models\Reserva;
 use App\Models\Sucursal;
 use App\Models\User;
 use App\Models\Venta;
@@ -80,21 +81,21 @@ class VentaCrudController extends CrudController
             ],
             [
                 // 1-n relationship
-                'label'     => 'Sucursal', // Table column heading
-                'type'      => 'select',
-                'name'      => 'sucursal_id', // the column that contains the ID of that connected entity;
-                'entity'    => 'sucursal', // the method that defines the relationship in your Model
+                'label' => 'Sucursal', // Table column heading
+                'type' => 'select',
+                'name' => 'sucursal_id', // the column that contains the ID of that connected entity;
+                'entity' => 'sucursal', // the method that defines the relationship in your Model
                 'attribute' => 'razon_social', // foreign key attribute that is shown to user
-                'model'     => Sucursal::class, // foreign key model
+                'model' => Sucursal::class, // foreign key model
             ],
             [
                 // 1-n relationship
-                'label'     => 'Usuario', // Table column heading
-                'type'      => 'select',
-                'name'      => 'user_id', // the column that contains the ID of that connected entity;
-                'entity'    => 'user', // the method that defines the relationship in your Model
+                'label' => 'Usuario', // Table column heading
+                'type' => 'select',
+                'name' => 'user_id', // the column that contains the ID of that connected entity;
+                'entity' => 'user', // the method that defines the relationship in your Model
                 'attribute' => 'name', // foreign key attribute that is shown to user
-                'model'     => User::class, // foreign key model
+                'model' => User::class, // foreign key model
             ],
             [
                 'name' => 'codigo_descuento',
@@ -114,15 +115,15 @@ class VentaCrudController extends CrudController
             ],
         ]);
         $this->crud->removeColumn('user_id_cancelacion');
-        $this->crud->orderBy('created_at','desc');
+        $this->crud->orderBy('created_at', 'desc');
         $this->crud->enableExportButtons();
         $this->crud->addFilter([
             'name' => 'sucursal_id',
             'type' => 'select2',
             'label' => 'Sucursal'
-        ], function() {
+        ], function () {
             return Sucursal::all()->pluck('razon_social', 'id');
-        }, function($query, $value) {
+        }, function ($query, $value) {
             $query->where('sucursal_id', $value);
         });
 
@@ -130,9 +131,9 @@ class VentaCrudController extends CrudController
             'name' => 'user_id',
             'type' => 'select2',
             'label' => 'Usuario'
-        ], function() {
+        ], function () {
             return User::all()->pluck('name', 'id');
-        }, function($query, $value) {
+        }, function ($query, $value) {
             $query->where('user_id', $value);
         });
 
@@ -143,7 +144,7 @@ class VentaCrudController extends CrudController
         ], [
             'activo' => 'Activo',
             'cancelado' => 'Cancelado'
-        ], function($query, $value) {
+        ], function ($query, $value) {
             $query->where('estatus', $value);
         });
 
@@ -151,7 +152,7 @@ class VentaCrudController extends CrudController
             'name' => 'fecha',
             'type' => 'date_range',
             'label' => 'Fecha'
-        ], false, function($query) {
+        ], false, function ($query) {
             $query->whereBetween('created_at', [request('fecha_from'), request('fecha_to')]);
         });
     }
@@ -203,7 +204,7 @@ class VentaCrudController extends CrudController
 
     public function fetch(Request $request)
     {
-        try{
+        try {
             $search = (object)[
                 'folio' => $request->get('folio'),
                 'start_date' => $this->makeDate($request->get('start_date')),
@@ -215,22 +216,22 @@ class VentaCrudController extends CrudController
             $ventas = Venta::query()
                 ->search($search)
                 ->with([
-                    'productos' => function($query){
+                    'productos' => function ($query) {
                         $query->with(['producto']);
                     },
                     'pagos',
-                    'reservaciones' => function($query){
+                    'reservaciones' => function ($query) {
                         $query->with(['producto']);
                     }
                 ])
-                ->orderBy('created_at','desc')
+                ->orderBy('created_at', 'desc')
                 ->get();
             return response()->json([
                 'message' => 'Consulta realizada con exito',
                 'ventas' => $ventas,
                 'qty' => $ventas->count()
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()
                 ->json([
                     'error' => $e->getMessage(),
@@ -242,54 +243,53 @@ class VentaCrudController extends CrudController
     public function make(Request $request)
     {
         try {
-            if( !$request->has('ventas') ) throw new \Exception('No se han enviado ventas');
+            if (!$request->has('ventas')) throw new \Exception('No se han enviado ventas');
             $ventas = $request->input('ventas');
             DB::beginTransaction();
-            foreach ($ventas as $venta){
-                if( !isset($venta['productos']) ) throw new \Exception('No se han enviado productos');
-                if( !isset($venta['pagos']) ) throw new \Exception('No se han enviado pagos');
+            foreach ($ventas as $venta) {
+                if (!isset($venta['productos'])) throw new \Exception('No se han enviado productos');
+                if (!isset($venta['pagos'])) throw new \Exception('No se han enviado pagos');
             }
             $ventas = (new VentaAction())->do($request->ventas);
             DB::commit();
             return response()->json(['ventas' => $ventas, 'qty' => count($ventas)], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage(),'trace' => $e->getTrace()], 400);
+            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 400);
         }
     }
 
     public function publicMake(Request $request)
     {
         try {
-            if( !$request->has('ventas') ) throw new \Exception('No se han enviado ventas');
+            if (!$request->has('ventas')) throw new \Exception('No se han enviado ventas');
             $ventas = $request->input('ventas');
             DB::beginTransaction();
-            foreach ($ventas as $venta){
-                if( !isset($venta['productos']) ) throw new \Exception('No se han enviado productos');
-                if( !isset($venta['pagos']) ) throw new \Exception('No se han enviado pagos');
+            foreach ($ventas as $venta) {
+                if (!isset($venta['productos'])) throw new \Exception('No se han enviado productos');
+                if (!isset($venta['pagos'])) throw new \Exception('No se han enviado pagos');
             }
             $ventas = (new VentaAction())->saleOnline($request->ventas);
             DB::commit();
 
             return response()->json(['ventas' => $ventas, 'qty' => count($ventas)], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage(),'trace' => $e->getTrace()], 400);
+            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 400);
         }
     }
-
 
 
     public function cancel(Request $request)
     {
         try {
-            if( !$request->has('ventas') ) throw new \Exception('No se ha enviado las ventas a cancelar');
+            if (!$request->has('ventas')) throw new \Exception('No se ha enviado las ventas a cancelar');
             $ventasCancelar = $request->input('ventas');
             DB::beginTransaction();
             $ventas = (new VentaAction())->cancelVentas($ventasCancelar);
             DB::commit();
             return response()->json(['ventas' => $ventas, 'qty' => count($ventas)], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['error' => $e->getMessage()], 400);
         }
@@ -297,13 +297,16 @@ class VentaCrudController extends CrudController
 
     public function resumen(Request $request)
     {
-        try{
+        try {
             $params = $request->all();
-            if( !isset( $params['dates'] ) ){
+            if (!isset($params['dates'])) {
                 $params['dates'] = [
-                    Carbon::now()->startOfDay()->format('Y-m-d'),
-                    Carbon::now()->endOfDay()->format('Y-m-d')
+                    Carbon::now()->startOfDay()->format('Y-m-d h:i:s'),
+                    Carbon::now()->endOfDay()->format('Y-m-d h:i:s')
                 ];
+            } else {
+                $params['dates'][0] = Carbon::parse($params['dates'][0])->startOfDay()->format('Y-m-d H:i:s');
+                $params['dates'][1] = Carbon::parse($params['dates'][1])->endOfDay()->format('Y-m-d H:i:s');
             }
             $totalVentas = 0;
             $cantidadReservaciones = 0;
@@ -313,25 +316,19 @@ class VentaCrudController extends CrudController
                 ->with([
                     'user',
                     'sucursal',
-                    'pagos',
-                    'reservaciones' => function($query){
-                        $query
-                            ->where('estado','confirmada')
-                            ->with(['producto']);
-                    }
+                    'pagos'
                 ])
                 ->Filters($params)
                 ->get()
-                ->map(function($venta)use(&$totalVentas,&$cantidadReservaciones){
-                    if( $venta->estatus === 'activo' ){
-                        $totalVentas+= $venta->total;
-                        $cantidadReservaciones+= $venta->reservaciones->count();
+                ->map(function ($venta) use (&$totalVentas) {
+                    if ($venta->estatus === 'activo') {
+                        $totalVentas += $venta->total;
                     }
                     return [
                         'folio' => $venta->folio,
                         'created_at' => $venta->created_at->format('Y-m-d H:i:s'),
-                        'tarjeta' => $venta->pagos->where('tipo','tarjeta')->sum('monto'),
-                        'efectivo' => $venta->pagos->where('tipo','efectivo')->sum('monto'),
+                        'tarjeta' => $venta->pagos->where('tipo', 'tarjeta')->sum('monto'),
+                        'efectivo' => $venta->pagos->where('tipo', 'efectivo')->sum('monto'),
                         'descuento' => $venta->descuento ?? 0,
                         'total' => $venta->total,
                         'cambio' => $venta->pagos->sum('cambio'),
@@ -340,27 +337,36 @@ class VentaCrudController extends CrudController
                         'codigo_descuento' => $venta->codigo_descuento ?? 'N/A',
                     ];
                 });
+
+            $cantidadReservaciones = Reserva::query()
+                ->where(function ($q) use ($params) {
+                    $q
+                        ->where('estado', 'confirmada')
+                        ->whereBetween('fecha', [$params['dates'][0], $params['dates'][1]]);
+                })
+                ->count();
+
             $utilidad_operativa = $totalVentas - ($totaEgresos + $salarios);
             return response()->json([
                 'message' => 'Consulta realizada con exito',
                 'ventas' => $ventas,
                 'cantidad_ventas' => $ventas->count(),
                 'cantidad_reservaciones' => $cantidadReservaciones,
-                'total_ventas' => number_format($totalVentas,2,'.',','),
-                'total_egresos' => number_format($totaEgresos,2,'.',','),
-                'total_salarios' => number_format($salarios,2,'.',','),
-                'utilidad_operativa' => number_format($utilidad_operativa,2,'.',',')
+                'total_ventas' => number_format($totalVentas, 2, '.', ','),
+                'total_egresos' => number_format($totaEgresos, 2, '.', ','),
+                'total_salarios' => number_format($salarios, 2, '.', ','),
+                'utilidad_operativa' => number_format($utilidad_operativa, 2, '.', ',')
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
     public function resumenProductos(Request $request)
     {
-        try{
+        try {
             $params = $request->all();
-            if( !isset( $params['dates'] ) ){
+            if (!isset($params['dates'])) {
                 $params['dates'] = [
                     Carbon::now()->startOfDay()->format('Y-m-d'),
                     Carbon::now()->endOfDay()->format('Y-m-d')
@@ -368,7 +374,7 @@ class VentaCrudController extends CrudController
             }
 
             $productos = VentaProducto::query()
-                ->whereHas('venta',function($query)use($params){
+                ->whereHas('venta', function ($query) use ($params) {
                     $query->Filters($params);
                 })
                 ->with([
@@ -376,7 +382,7 @@ class VentaCrudController extends CrudController
                 ])
                 ->get()
                 ->groupBy('producto_id')
-                ->map(function($productosAgrupados){
+                ->map(function ($productosAgrupados) {
                     return [
                         'producto' => $productosAgrupados->first()->producto->descripcion,
                         'cantidad' => $productosAgrupados->sum('cantidad'),
@@ -388,16 +394,16 @@ class VentaCrudController extends CrudController
                 'productos' => $productos
 
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
     public function resumenProductosDescuentos(Request $request)
     {
-        try{
+        try {
             $params = $request->all();
-            if( !isset( $params['dates'] ) ){
+            if (!isset($params['dates'])) {
                 $params['dates'] = [
                     Carbon::now()->startOfDay()->format('Y-m-d'),
                     Carbon::now()->endOfDay()->format('Y-m-d')
@@ -405,16 +411,16 @@ class VentaCrudController extends CrudController
             }
 
             $productos = VentaProducto::query()
-                ->whereHas('venta',function($query)use($params){
+                ->whereHas('venta', function ($query) use ($params) {
                     $query->Filters($params);
                 })
                 ->with([
                     'producto',
                     'descuento'
                 ])
-                ->where('descuento','>',0)
+                ->where('descuento', '>', 0)
                 ->get()
-                ->map(function($producto){
+                ->map(function ($producto) {
                     return [
                         'fecha' => $producto->created_at->format('Y-m-d H:i:s'),
                         'producto' => $producto->producto->descripcion,
@@ -430,7 +436,7 @@ class VentaCrudController extends CrudController
                 'productos' => $productos
 
             ], 200);
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
