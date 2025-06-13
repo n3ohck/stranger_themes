@@ -92,10 +92,6 @@ class VentaAction
             $booking = collect($sale['reservaciones']);
             $newSales = $products->each(function ($product) use ($booking, $sale, &$newSales) {
                 $product = (object) $product;
-                $reservation = $booking->where('producto_id', $product->producto_id)->first();
-                if( !$reservation ){
-                    throw new \Exception('No se han encontrado reservaciones para el producto', 400);
-                }
                 $venta = Venta::create([
                     'user_id' => 1,
                     'descuento_id' => $product->descuento_id ?? null,
@@ -105,7 +101,7 @@ class VentaAction
                     'codigo_descuento' => $product->codigo_descuento ?? null,
                     'descuento' => $product->descuento ?? null,
                     'porcentaje_descuento' => $product->porcentaje_descuento ?? null,
-                    'created_at' => $this->makeDate($reservation['datetime']),
+                    'created_at' => $this->makeDate($booking->first()['datetime']),
                     'nombre' => $sale['nombre'] ?? null,
                     'telefono' => $sale['telefono'] ?? null,
                     'email' => $sale['email'] ?? null,
