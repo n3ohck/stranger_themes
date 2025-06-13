@@ -108,8 +108,8 @@ class CorteCrudController extends CrudController
                 'label' => 'Pago Empleados',
                 'type' => 'closure',
                 'function' => function ($entry) {
-                    $pago_empleados = number_format($entry->pago_empleados,2,'.', ',');
-                    return '<a href="payment-report/'.$entry->id.'/empleado" target="_blank" title="Ver imagenes de pagos empleados">' . $pago_empleados . '</a>';
+                    $pago_empleados = number_format($entry->pago_empleados, 2, '.', ',');
+                    return '<a href="payment-report/' . $entry->id . '/empleado" target="_blank" title="Ver imagenes de pagos empleados">' . $pago_empleados . '</a>';
                 }
             ],
             [
@@ -117,8 +117,8 @@ class CorteCrudController extends CrudController
                 'label' => 'Total Egresos',
                 'type' => 'closure',
                 'function' => function ($entry) {
-                    $total_egresos = number_format($entry->total_egresos,2,'.', ',');
-                    return '<a href="payment-report/'.$entry->id.'/egreso" target="_blank" title="Ver imagenes de egresos">' . $total_egresos . '</a>';
+                    $total_egresos = number_format($entry->total_egresos, 2, '.', ',');
+                    return '<a href="payment-report/' . $entry->id . '/egreso" target="_blank" title="Ver imagenes de egresos">' . $total_egresos . '</a>';
                 }
             ],
             [
@@ -138,14 +138,16 @@ class CorteCrudController extends CrudController
                 'label' => 'Fecha Inicio',
                 'type' => 'closure',
                 'function' => function ($entry) {
-                    return $entry->fecha_inicio ? Carbon::parse($entry->fecha_inicio)->locale('es')->translatedFormat('l, d \d\e F H:i:s') : '';                }
+                    return $entry->fecha_inicio ? Carbon::parse($entry->fecha_inicio)->locale('es')->translatedFormat('l, d \d\e F H:i:s') : '';
+                }
             ],
             [
                 'name' => 'fecha_final',
                 'label' => 'Fecha Final',
                 'type' => 'closure',
                 'function' => function ($entry) {
-                    return $entry->fecha_final ? Carbon::parse($entry->fecha_final)->locale('es')->translatedFormat('l, d \d\e F H:i:s') : '';                 }
+                    return $entry->fecha_final ? Carbon::parse($entry->fecha_final)->locale('es')->translatedFormat('l, d \d\e F H:i:s') : '';
+                }
             ],
             [
                 'name' => 'user_id',
@@ -370,15 +372,17 @@ class CorteCrudController extends CrudController
                 ->where('sucursal_id', $corte->sucursal_id)
                 ->chunk(100, function ($ventas) {
                     foreach ($ventas as $venta) {
-                        $venta->productos->each(function ($producto) {
-                            $producto->delete();
-                        });
-                        $venta->pagos->each(function ($pago) {
-                            $pago->delete();
-                        });
-                        $venta->reservaciones->each(function ($reserva) {
-                            $reserva->delete();
-                        });
+                        if ($venta->productos) {
+                            $venta->productos()->delete();
+                        }
+                        $venta->pagos()->delete();
+                        if ($venta->reservaciones) {
+                            $venta->reservaciones->each(function ($reserva) {
+                                $reserva->estado = 'cancelada';
+                                $reserva->save();
+                            });
+                            $venta->reservaciones()->delete();
+                        }
                         $venta->delete();
                     }
                 });
