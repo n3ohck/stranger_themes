@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -112,6 +113,10 @@ class EmpleadoPago extends Model
         $destination_path = "egresos";
 
         $this->uploadFileToDisk($value, $attribute_name, $disk, $destination_path);
+    }
+
+    public function getCreatedAtAttribute($value){
+        return Carbon::parse($this->created_at)->format('Y-m-d H:i:s');
     }
     /*
     |--------------------------------------------------------------------------
