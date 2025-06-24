@@ -80,6 +80,7 @@ class PaymentReportController extends Controller
             ->get()
             ->map(function($employee){
                 return [
+                    'id' => $employee->id,
                     'type' => 'Pago Empleado',
                     'amount' => $employee->monto,
                     'date' => Carbon::parse($employee->created_at)->format('Y-m-d H:i:s'),
