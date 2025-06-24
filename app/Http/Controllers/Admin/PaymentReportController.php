@@ -68,7 +68,7 @@ class PaymentReportController extends Controller
     public function pagoEmpleado($startDate, $endDate, int $branch)
     {
         return EmpleadoPago::query()
-            ->select(['monto', 'fecha_pago', 'estatus','imagen'])
+            ->select(['id','empleado_id','monto', 'fecha_pago', 'estatus','imagen','created_at'])
             ->with(['empleado:id,nombres,apellidos', 'empleado.sucursal:id,razon_social'])
             ->whereHas('empleado', function ($q) use ($branch) {
                 $q->where('sucursal_id', $branch);
