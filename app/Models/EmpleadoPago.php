@@ -114,13 +114,13 @@ class EmpleadoPago extends Model
 
         $this->uploadFileToDisk($value, $attribute_name, $disk, $destination_path);
     }
-
-    public function getCreatedAtAttribute($value){
-        return Carbon::parse($this->created_at)->format('Y-m-d H:i:s');
-    }
     /*
     |--------------------------------------------------------------------------
     | MUTATORS
     |--------------------------------------------------------------------------
     */
+    public function getCreatedAtAttribute($value)
+    {
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
+    }
 }
