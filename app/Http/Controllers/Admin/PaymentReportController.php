@@ -78,15 +78,14 @@ class PaymentReportController extends Controller
                     ->where('estatus', 'activo');
             })
             ->get()
-            ->map(function($payment){
+            ->map(function($employee){
                 return [
-                    'id' => $payment->id,
                     'type' => 'Pago Empleado',
-                    'amount' => $payment->monto,
-                    'date' => Carbon::parse($payment->created_at)->format('Y-m-d H:i:s'),
-                    'user' => ( !isset( $employee->empleado ) ) ? 'N/A' : $payment->empleado->nombres . ' ' . $payment->empleado->apellidos,
-                    'branch' =>  ( !isset( $payment->empleado ) ) ? 'N/A' : $payment->empleado->sucursal->razon_social,
-                    'image' => asset('storage/pagos/' . $payment->imagen)
+                    'amount' => $employee->monto,
+                    'date' => Carbon::parse($employee->created_at)->format('Y-m-d H:i:s'),
+                    'user' => ( !isset( $employee->empleado ) ) ? 'N/A' : $employee->empleado->nombres . ' ' . $employee->empleado->apellidos,
+                    'branch' =>  ( !isset( $employee->empleado ) ) ? 'N/A' : $employee->empleado->sucursal->razon_social,
+                    'image' => asset('storage/pagos/' . $employee->imagen)
                 ];
             });
     }
