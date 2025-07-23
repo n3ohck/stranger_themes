@@ -27,6 +27,7 @@ class EmpleadoPago extends Model
     // public $timestamps = false;
     protected $guarded = ['id'];
     protected $fillable = [
+        'user_id',
         'empleado_id',
         'fecha_pago',
         'imagen',
@@ -70,6 +71,11 @@ class EmpleadoPago extends Model
     public function empleado(): BelongsTo
     {
         return $this->belongsTo(Empleado::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /*

@@ -355,17 +355,20 @@ class CorteCrudController extends CrudController
     public function destroy($id)
     {
         try {
-            $corte = Corte::find($id);
-            if (!$corte) {
-                throw new \Exception('Corte no encontrado');
+            $corte = Corte::where('id',$id)
+                ->where('user_id', backpack_user()->id);
+            if (!$corte->exists()) {
+                throw new \Exception('Corte no encontrado o no tienes permisos para eliminarlo');
             }
+            $corte = $corte->first();
             $fecha_inicio = Carbon::parse($corte->fecha_inicio)->startOfDay();
             $fecha_final = Carbon::parse($corte->fecha_final) ?? Carbon::now();
             $fecha_final = $fecha_final->endOfDay();
             DB::beginTransaction();
             $corte->delete();
 
-            Venta::whereBetween('created_at', [$fecha_inicio, $fecha_final])
+            Venta::where('user_id', backpack_user()->id)
+                ->whereBetween('created_at', [$fecha_inicio, $fecha_final])
                 ->with([
                     'productos', 'pagos', 'reservaciones'
                 ])
@@ -387,10 +390,12 @@ class CorteCrudController extends CrudController
                     }
                 });
 
-            EmpleadoPago::whereBetween('created_at', [$fecha_inicio, $fecha_final])
+            EmpleadoPago::where('user_id', backpack_user()->id)
+                ->whereBetween('created_at', [$fecha_inicio, $fecha_final])
                 ->delete();
 
-            Egreso::whereBetween('fecha_pago', [$fecha_inicio, $fecha_final])
+            Egreso::where('user_id', backpack_user()->id)
+                ->whereBetween('fecha_pago', [$fecha_inicio, $fecha_final])
                 ->delete();
             DB::commit();
             return true;
