@@ -11,6 +11,7 @@ use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Prologue\Alerts\Facades\Alert;
 
@@ -181,6 +182,7 @@ class EmpleadoPagoCrudController extends CrudController
         try{
             DB::beginTransaction();
             $pago = EmpleadoPago::create([
+                'user_id' => backpack_user()->id ?? Auth::user()->id,
                 'empleado_id' => $request->empleado_id,
                 'fecha_pago' => $this->makeDate($request->fecha_pago),
                 'imagen' => $request->file('imagen')->store('egresos', 'pagos'),
