@@ -122,7 +122,7 @@ class VentaCrudController extends CrudController
             'type' => 'select2',
             'label' => 'Sucursal'
         ], function () {
-            return Sucursal::all()->pluck('razon_social', 'id');
+            return Sucursal::pluck('razon_social', 'id')->toArray();
         }, function ($query, $value) {
             $query->where('sucursal_id', $value);
         });
@@ -132,9 +132,9 @@ class VentaCrudController extends CrudController
             'type' => 'select2',
             'label' => 'Usuario'
         ], function () {
-            return User::all()->pluck('name', 'id');
-        }, function ($query, $value) {
-            $query->where('user_id', $value);
+            return User::all()->pluck('user', 'id')->toArray();
+        }, function ($value) {
+            $this->crud->addClause('where','user_id', $value);
         });
 
         $this->crud->addFilter([
@@ -144,17 +144,22 @@ class VentaCrudController extends CrudController
         ], [
             'activo' => 'Activo',
             'cancelado' => 'Cancelado'
-        ], function ($query, $value) {
-            $query->where('estatus', $value);
+        ], function ($value) {
+            $this->crud->addClause('where','estatus', $value);
         });
 
         $this->crud->addFilter([
-            'name' => 'fecha',
             'type' => 'date_range',
-            'label' => 'Fecha'
-        ], false, function ($query) {
-            $query->whereBetween('created_at', [request('fecha_from'), request('fecha_to')]);
-        });
+            'name' => 'created_at',
+            'label'=> 'Fecha'
+        ],
+            false,
+            function ($value) { // <-- este $value contiene el JSON con 'from' y 'to'
+                if ($value) {
+                    $dates = json_decode($value, true); // decodificamos el JSON del rango
+                    $this->crud->addClause('whereBetween', 'created_at', [$dates['from'], $dates['to']]);
+                }
+            });
     }
 
     /**
