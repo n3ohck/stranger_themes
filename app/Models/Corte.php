@@ -124,7 +124,6 @@ class Corte extends Model
         $fechaInicio = Carbon::parse($this->attributes['fecha_inicio'])->startOfDay();
         $fechaFinal = Carbon::parse($this->attributes['fecha_final'])->endOfDay();
         return Egreso::query()
-            ->where('user_id', backpack_user()->id)
             ->select(['monto','fecha_pago','estatus','sucursal_id'])
             ->whereBetween('fecha_pago', [$fechaInicio, $fechaFinal])
             ->where('estatus','activo')
@@ -138,7 +137,6 @@ class Corte extends Model
         $fechaInicio = Carbon::parse($this->attributes['fecha_inicio'])->startOfDay();
         $fechaFinal = Carbon::parse($this->attributes['fecha_final'])->endOfDay();
         return Egreso::query()
-            ->where('user_id', backpack_user()->id)
             ->select(['monto','fecha_pago','estatus','sucursal_id'])
             ->whereBetween('fecha_pago', [$fechaInicio, $fechaFinal])
             ->where('estatus','activo')
@@ -151,7 +149,6 @@ class Corte extends Model
         $fechaInicio = Carbon::parse($this->apertura->created_at)->startOfDay();
         $fechaFinal = Carbon::parse($this->attributes['fecha_final'])->endOfDay();
         return EmpleadoPago::query()
-            ->where('user_id', backpack_user()->id)
             ->select(['monto','fecha_pago','estatus'])
             ->whereBetween('created_at', [$fechaInicio, $fechaFinal])
             ->where('estatus','activo')
@@ -178,7 +175,7 @@ class Corte extends Model
     {
         return VentaPago::query()->where('tipo','online')
             ->whereHas('venta',function($q){
-                $q->where('user_id', backpack_user()->id)->where('sucursal_id', $this->attributes['sucursal_id']);
+                $q->where('sucursal_id', $this->attributes['sucursal_id']);
             })
             ->whereBetween('created_at', [$this->attributes['fecha_inicio'], $this->attributes['fecha_final']])
             ->sum('monto') ?? 0;
