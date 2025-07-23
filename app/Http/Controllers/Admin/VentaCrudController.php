@@ -334,6 +334,7 @@ class VentaCrudController extends CrudController
                         'created_at' => $venta->created_at->format('Y-m-d H:i:s'),
                         'tarjeta' => $venta->pagos->where('tipo', 'tarjeta')->sum('monto'),
                         'efectivo' => $venta->pagos->where('tipo', 'efectivo')->sum('monto'),
+                        'online' => $venta->pagos->where('tipo', 'online')->sum('monto'),
                         'descuento' => $venta->descuento ?? 0,
                         'total' => $venta->total,
                         'cambio' => $venta->pagos->sum('cambio'),

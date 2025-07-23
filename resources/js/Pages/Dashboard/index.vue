@@ -152,6 +152,14 @@
                                             <el-table-column
                                                 sortable
                                                 width="130"
+                                                label="T. Online"
+                                                align="right"
+                                                :formatter="moneyFormat"
+                                                prop="online">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                width="130"
                                                 label="T. Efectivo"
                                                 align="right"
                                                 :formatter="moneyFormat"
@@ -420,6 +428,7 @@ export default {
                 codigo_descuento: item.codigo_descuento,
                 tarjeta: item.tarjeta,
                 efectivo: item.efectivo,
+                online: item.online,
                 descuento: item.descuento,
                 total: item.total,
                 cambio: item.cambio,
