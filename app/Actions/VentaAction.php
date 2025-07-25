@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Jobs\ComprobanteDigitalJob;
+use App\Models\Descuento;
 use App\Models\Reserva;
 use App\Models\User;
 use App\Models\Venta;
@@ -90,38 +91,39 @@ class VentaAction
 
             $products = collect($sale['productos']);
             $booking = collect($sale['reservaciones']);
-            $newSales = $products->each(function ($product) use ($booking, $sale, &$newSales) {
-                $product = (object) $product;
-                $venta = Venta::create([
-                    'user_id' => 1,
-                    'descuento_id' => $product->descuento_id ?? null,
-                    'sucursal_id' => $sale['sucursal_id'],
-                    'folio' => $this->makeFolio(),
-                    'total' => $product->total,
-                    'codigo_descuento' => $product->codigo_descuento ?? null,
-                    'descuento' => $product->descuento ?? null,
-                    'porcentaje_descuento' => $product->porcentaje_descuento ?? null,
-                    'created_at' => $this->makeDate($booking->first()['datetime']),
-                    'nombre' => $sale['nombre'] ?? null,
-                    'telefono' => $sale['telefono'] ?? null,
-                    'email' => $sale['email'] ?? null,
-                ]);
-                $this->makeVentaProductos($venta->id, $sale['productos']);
-                $this->makeVentaPagos($venta->id, $sale['pagos']);
-                if (isset($venta['reservaciones'])) {
-                    $reservations[] = $this->makeVentaReservacion($venta->id, $sale['reservaciones'], $sale['sucursal_id']);
-                }
-                if( isset($sale['email']) ){
-                    ComprobanteDigitalJob::dispatch($venta->id);
-                }
-                return [
-                    'venta_id' => $venta->id,
-                    'estatus' => $venta->estatus,
-                    'folio' => $venta->folio,
-                    'total' => $venta->total,
-                    'reservaciones' => $reservations ?? []
-                ];
-            });
+            $newSales = $products
+                ->each(function ($product) use ($booking, $sale, &$newSales) {
+                    $product = (object)$product;
+                    $venta = Venta::create([
+                        'user_id' => 1,
+                        'descuento_id' => $product->descuento_id ?? null,
+                        'sucursal_id' => $sale['sucursal_id'],
+                        'folio' => $this->makeFolio(),
+                        'total' => $product->total,
+                        'codigo_descuento' => $sale['codigo_descuento'] ?? null,
+                        'descuento' => $sale['descuento'] ?? null,
+                        'porcentaje_descuento' => $sale['porcentaje_descuento'] ?? null,
+                        'created_at' => $this->makeDate($booking->first()['datetime']),
+                        'nombre' => $sale['nombre'] ?? null,
+                        'telefono' => $sale['telefono'] ?? null,
+                        'email' => $sale['email'] ?? null,
+                    ]);
+                    $this->makeVentaProductosOnline($venta->id, $sale['productos']);
+                    $this->makeVentaPagos($venta->id, $sale['pagos']);
+                    if (isset($venta['reservaciones'])) {
+                        $reservations[] = $this->makeVentaReservacion($venta->id, $sale['reservaciones'], $sale['sucursal_id']);
+                    }
+                    if (isset($sale['email'])) {
+                        ComprobanteDigitalJob::dispatch($venta->id);
+                    }
+                    return [
+                        'venta_id' => $venta->id,
+                        'estatus' => $venta->estatus,
+                        'folio' => $venta->folio,
+                        'total' => $venta->total,
+                        'reservaciones' => $reservations ?? []
+                    ];
+                });
         }
         return $newSales->toArray();
     }
@@ -145,8 +147,7 @@ class VentaAction
         return $reservasNuevas;
     }
 
-    public
-    function makeVentaProductos(int $ventaId, array $productos): void
+    public function makeVentaProductos(int $ventaId, array $productos): void
     {
         $totalDescuento = 0;
         $subtotal = 0;
@@ -188,8 +189,37 @@ class VentaAction
         ]);
     }
 
-    public
-    function makeVentaPagos(int $ventaId, array $pagos): void
+    public function makeVentaProductosOnline(int $ventaId, array $productos): void
+    {
+        $totalDescuento = 0;
+        $subtotal = 0;
+        foreach ($productos as $producto) {
+            $subtotal += $producto['precio'];
+            $totalDescuento+=  $producto['descuento'] ?? 0;
+            $codigoDescuento = Descuento::query()
+                ->where('id', $producto['descuento_id'])
+                ->value('codigo');
+            VentaProducto::create([
+                'venta_id' => $ventaId,
+                'producto_id' => $producto['producto_id'],
+                'precio' => $producto['precio'],
+                'cantidad' => $producto['cantidad'],
+                'total' => $producto['total'],
+                'descuento_id' => $producto['descuento_id'] ?? null,
+                'codigo_descuento' => $codigoDescuento ?? null,
+                'descuento' => number_format( $producto['descuento'] ?? 0, 2, '.', ''),
+                'porcentaje_descuento' => $producto['porcentaje_descuento'] ?? 0
+            ]);
+            (new ExistenciaAction())::salidarPorVenta($producto['producto_id'], $producto['cantidad']);
+        }
+        $venta = Venta::find($ventaId);
+        $venta->update([
+            'descuento' => $totalDescuento,
+            'porcentaje_descuento' => ($subtotal) ? number_format(($totalDescuento / $subtotal) * 100, 2, '.', '') : 0
+        ]);
+    }
+
+    public function makeVentaPagos(int $ventaId, array $pagos): void
     {
         foreach ($pagos as $pago) {
             VentaPago::create([
