@@ -194,11 +194,15 @@ class VentaAction
         $totalDescuento = 0;
         $subtotal = 0;
         foreach ($productos as $producto) {
-            $subtotal += $producto['precio'];
+            $subtotal += $producto['precio'] * $producto['cantidad'];
             $totalDescuento+=  $producto['descuento'] ?? 0;
-            $codigoDescuento = Descuento::query()
-                ->where('id', $producto['descuento_id'])
-                ->value('codigo');
+            $codigoDescuento = null;
+            if (isset($producto['descuento_id'])) {
+                $codigoDescuento = Descuento::query()
+                    ->where('id', $producto['descuento_id'])
+                    ->value('codigo');
+            }
+
             VentaProducto::create([
                 'venta_id' => $ventaId,
                 'producto_id' => $producto['producto_id'],
