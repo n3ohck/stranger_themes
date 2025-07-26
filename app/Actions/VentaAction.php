@@ -75,6 +75,7 @@ class VentaAction
 
     public function saleOnline(array $sales): array
     {
+        $newSales = collect();
         foreach ($sales as $sale) {
             $venta['datetime'] = $this->makeDate($sale['datetime']);
             $existe = Venta::query()
