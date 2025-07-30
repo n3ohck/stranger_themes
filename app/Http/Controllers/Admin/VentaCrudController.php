@@ -429,7 +429,10 @@ class VentaCrudController extends CrudController
                 ->get()
                 ->map(function ($producto) {
                     $paymentsOnline = $producto->venta->pagos->where('tipo', 'online')->count();
-                    dd($paymentsOnline,$producto->precio, $producto->descuento, $producto->porcentaje_descuento,$producto->total);
+                    if ($paymentsOnline){
+                        $producto->descuento = $producto->total - $producto->descuento;
+                    }
+                    //dd($paymentsOnline,$producto->precio, $producto->descuento, $producto->porcentaje_descuento,$producto->total);
                     return [
                         'fecha' => $producto->created_at->format('Y-m-d H:i:s'),
                         'producto' => $producto->producto->descripcion,
