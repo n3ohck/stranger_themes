@@ -421,12 +421,15 @@ class VentaCrudController extends CrudController
                     $query->Filters($params);
                 })
                 ->with([
+                    'venta.pagos',
                     'producto',
                     'descuento'
                 ])
                 ->where('descuento', '>', 0)
                 ->get()
                 ->map(function ($producto) {
+                    $paymentsOnline = $producto->venta->pagos->where('tipo', 'online')->count();
+                    dd($paymentsOnline);
                     return [
                         'fecha' => $producto->created_at->format('Y-m-d H:i:s'),
                         'producto' => $producto->producto->descripcion,
