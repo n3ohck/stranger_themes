@@ -11,6 +11,7 @@ use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Prologue\Alerts\Facades\Alert;
 
@@ -299,6 +300,7 @@ class EgresoCrudController extends CrudController
             ];
 
             $egresos = Egreso::query()
+                ->where('user_id', Auth::user()->id)
                 ->Search($search)
                 ->orderBy('fecha_pago', 'desc')
                 ->get();
