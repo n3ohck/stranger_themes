@@ -49,6 +49,7 @@ class ComprobanteDigitalJob implements ShouldQueue
             }
         ]);
 
+        $this->sale->total = ($this->sale->total - $this->sale->descuento);
         // Send email
         Mail::to($this->sale->email)->send(new \App\Mail\ComprobanteMail($this->sale));
     }
