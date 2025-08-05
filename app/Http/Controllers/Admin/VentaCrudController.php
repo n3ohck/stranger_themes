@@ -319,7 +319,6 @@ class VentaCrudController extends CrudController
             $totaEgresos = (new EgresoCrudController)->getTotal($params['dates']);
             $salarios = (new EmpleadoPagoCrudController)->getTotal($params['dates']);
             $ventas = Venta::query()
-                ->withoutGlobalScopes([SucursalFilterScope::class])
                 ->with([
                     'user',
                     'sucursal',
