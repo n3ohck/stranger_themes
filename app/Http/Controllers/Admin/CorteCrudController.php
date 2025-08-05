@@ -355,8 +355,7 @@ class CorteCrudController extends CrudController
     public function destroy($id)
     {
         try {
-            $corte = Corte::where('id',$id)
-                ->where('user_id', backpack_user()->id);
+            $corte = Corte::where('id',$id);
             if (!$corte->exists()) {
                 throw new \Exception('Corte no encontrado o no tienes permisos para eliminarlo');
             }
@@ -367,7 +366,7 @@ class CorteCrudController extends CrudController
             DB::beginTransaction();
             $corte->delete();
 
-            Venta::where('user_id', backpack_user()->id)
+            Venta::where('user_id', $corte->user_id)
                 ->whereBetween('created_at', [$fecha_inicio, $fecha_final])
                 ->with([
                     'productos', 'pagos', 'reservaciones'
@@ -390,11 +389,11 @@ class CorteCrudController extends CrudController
                     }
                 });
 
-            EmpleadoPago::where('user_id', backpack_user()->id)
+            EmpleadoPago::where('user_id', $corte->user_id)
                 ->whereBetween('created_at', [$fecha_inicio, $fecha_final])
                 ->delete();
 
-            Egreso::where('user_id', backpack_user()->id)
+            Egreso::where('user_id', $corte->user_id)
                 ->whereBetween('fecha_pago', [$fecha_inicio, $fecha_final])
                 ->delete();
             DB::commit();
