@@ -65,7 +65,7 @@ class Venta extends Model
     */
     protected static function booted()
     {
-        static::addGlobalScope(new SucursalFilterScope);
+        //static::addGlobalScope(new SucursalFilterScope);
     }
 
     /*
