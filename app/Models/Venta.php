@@ -124,11 +124,7 @@ class Venta extends Model
                 $query->where('created_at', '>=', $this->search->start_date);
             })
             ->when($this->search->end_date, function ($query) {
-                $query->where(function ($query) {
-                    $query
-                        ->where('created_at', '>=', $this->search->start_date)
-                        ->where('created_at', '<=', $this->search->end_date);
-                });
+                $query->whereBetween('created_at',[ $this->search->start_date, $this->search->end_date] );
             })
             ->when($this->search->status, function ($query) {
                 $query->where('estatus', $this->search->status);
