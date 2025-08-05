@@ -157,6 +157,8 @@ class DescuentoCrudController extends CrudController
                 'allows_null' => false
             ]
         ]);
+        // Permitir crear aunque exista un registro softdeleted
+        $this->crud->setOperationSetting('uniqueCreate', false);
     }
 
     /**

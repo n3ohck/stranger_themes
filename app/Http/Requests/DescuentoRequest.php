@@ -25,7 +25,7 @@ class DescuentoRequest extends FormRequest
     public function rules()
     {
         return [
-            'codigo' => 'required|unique:descuentos,codigo,'.$this->route('id'),
+            'codigo' => 'required|unique:descuentos,codigo,'.$this->route('id').',id,deleted_at,NULL',
             'porcentaje' => 'required|numeric',
             'sucursal_id' => 'required|exists:sucursales,id',
             'estatus' => 'required|in:activo,inactivo',
