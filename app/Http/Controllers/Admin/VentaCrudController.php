@@ -8,6 +8,7 @@ use App\Models\Sucursal;
 use App\Models\User;
 use App\Models\Venta;
 use App\Models\VentaProducto;
+use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
@@ -318,6 +319,7 @@ class VentaCrudController extends CrudController
             $totaEgresos = (new EgresoCrudController)->getTotal($params['dates']);
             $salarios = (new EmpleadoPagoCrudController)->getTotal($params['dates']);
             $ventas = Venta::query()
+                ->withoutGlobalScopes([SucursalFilterScope::class])
                 ->with([
                     'user',
                     'sucursal',
