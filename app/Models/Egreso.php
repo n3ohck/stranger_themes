@@ -123,18 +123,7 @@ class Egreso extends Model
     | ACCESSORS
     |--------------------------------------------------------------------------
     */
-    public function setFechaPagoAttribute($value)
-    {
-        if (!$value) { $this->attributes['fecha_pago'] = null; return; }
 
-        // 1) Si viene con offset ISO8601 (ej: "2025-09-10T13:45:00-06:00"), Carbon lo respeta.
-        // 2) Si viene "naive" (sin TZ), asumimos que es hora local de Chihuahua.
-        $dt = $value instanceof Carbon
-            ? $value
-            : Carbon::parse($value, config('app.display_timezone', 'America/Chihuahua'));
-
-        $this->attributes['fecha_pago'] = $dt->clone()->utc(); // guardamos en UTC
-    }
     /*
     |--------------------------------------------------------------------------
     | MUTATORS
@@ -142,9 +131,6 @@ class Egreso extends Model
     */
     public function getFechaPagoAttribute($value)
     {
-        if (!$value) return null;
-        $c = $this->asDateTime($value);           // -> instancia UTC
-        return $c->clone()
-            ->setTimezone(config('app.display_timezone', 'America/Chihuahua'));
+        return Carbon::parse($this->attributes['fecha_pago'])->format('Y-m-d H:i:s');
     }
 }
