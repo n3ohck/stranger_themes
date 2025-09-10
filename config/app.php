@@ -67,7 +67,8 @@ return [
     |
     */
 
-    'timezone' => 'America/Chihuahua',
+    'timezone' => 'UTC',
+    'display_timezone' => 'America/Chihuahua',
 
     /*
     |--------------------------------------------------------------------------
