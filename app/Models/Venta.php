@@ -164,4 +164,8 @@ class Venta extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
+    public function getCreatedAtAttribute($value)
+    {
+        return Carbon::parse($value)->format('d-m-Y H:i:s');
+    }
 }
