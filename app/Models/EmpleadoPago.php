@@ -43,7 +43,11 @@ class EmpleadoPago extends Model
     ];
 
     protected $casts = [
-        'monto' => 'double'
+        'monto' => 'double',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
+        'fecha_pago' => 'datetime',
     ];
 
     /*
@@ -120,6 +124,19 @@ class EmpleadoPago extends Model
 
         $this->uploadFileToDisk($value, $attribute_name, $disk, $destination_path);
     }
+
+    public function setCreatedAtAttribute($value)
+    {
+        if (!$value) { $this->attributes['created_at'] = null; return; }
+
+        // 1) Si viene con offset ISO8601 (ej: "2025-09-10T13:45:00-06:00"), Carbon lo respeta.
+        // 2) Si viene "naive" (sin TZ), asumimos que es hora local de Chihuahua.
+        $dt = $value instanceof Carbon
+            ? $value
+            : Carbon::parse($value, config('app.display_timezone', 'America/Chihuahua'));
+
+        $this->attributes['created_at'] = $dt->clone()->utc(); // guardamos en UTC
+    }
     /*
     |--------------------------------------------------------------------------
     | MUTATORS
@@ -127,6 +144,9 @@ class EmpleadoPago extends Model
     */
     public function getCreatedAtAttribute($value)
     {
-        return Carbon::parse($value)->format('Y-m-d H:i:s');
+        if (!$value) return null;
+        $c = $this->asDateTime($value);           // -> instancia UTC
+        return $c->clone()
+            ->setTimezone(config('app.display_timezone', 'America/Chihuahua'));
     }
 }

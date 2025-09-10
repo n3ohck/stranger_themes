@@ -186,5 +186,4 @@ class Venta extends Model
         return $c->clone()
             ->setTimezone(config('app.display_timezone', 'America/Chihuahua'));
     }
-
 }
