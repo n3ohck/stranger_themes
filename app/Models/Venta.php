@@ -166,6 +166,6 @@ class Venta extends Model
     */
     public function getCreatedAtAttribute()
     {
-        return Carbon::parse($this->attributes['created_at'])->format('d-m-Y H:i:s');
+        return Carbon::parse($this->attributes['created_at'])->format('Y-m-d H:i:s');
     }
 }
