@@ -184,8 +184,7 @@ class Venta extends Model
         if (!$value) return null;
         $c = $this->asDateTime($value);           // -> instancia UTC
         return $c->clone()
-            ->setTimezone(config('app.display_timezone', 'America/Chihuahua'))
-            ->format('Y-m-d H:i:s');
+            ->setTimezone(config('app.display_timezone', 'America/Chihuahua'));
     }
 
 }
