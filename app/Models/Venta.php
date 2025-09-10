@@ -55,7 +55,10 @@ class Venta extends Model
     protected $casts = [
         'total' => 'float',
         'descuento' => 'float',
-        'porcentaje_descuento' => 'float'
+        'porcentaje_descuento' => 'float',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     /*
@@ -158,14 +161,29 @@ class Venta extends Model
     | ACCESSORS
     |--------------------------------------------------------------------------
     */
+    public function setCreatedAtAttribute($value)
+    {
+        if (!$value) { $this->attributes['created_at'] = null; return; }
+
+        // 1) Si viene con offset ISO8601 (ej: "2025-09-10T13:45:00-06:00"), Carbon lo respeta.
+        // 2) Si viene "naive" (sin TZ), asumimos que es hora local de Chihuahua.
+        $dt = $value instanceof Carbon
+            ? $value
+            : Carbon::parse($value, config('app.display_timezone', 'America/Chihuahua'));
+
+        $this->attributes['created_at'] = $dt->clone()->utc(); // guardamos en UTC
+    }
 
     /*
     |--------------------------------------------------------------------------
     | MUTATORS
     |--------------------------------------------------------------------------
     */
-    public function getCreatedAtAttribute()
+    public function getCreatedAtAttribute($value)
     {
-        return Carbon::parse($this->attributes['created_at'])->format('Y-m-d H:i:s');
+        if (!$value) return null;
+        $c = $this->asDateTime($value);           // -> instancia UTC
+        return $c->clone()->setTimezone(config('app.display_timezone', 'America/Chihuahua'));
     }
+
 }
