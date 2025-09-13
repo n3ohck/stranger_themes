@@ -122,18 +122,17 @@ class Venta extends Model
 
         if ($this->search->start_date) {
             $this->search->start_date = $this->toUtcForQuery($this->search->start_date, false);
+            dd($this->search->start_date->copy()->setTimezone(config('app.display_timezone'))->format('Y-m-d H:i:s')); // Para ver cómo queda en tu hora local
         }
 
         if ($this->search->end_date) {
             $this->search->end_date = $this->toUtcForQuery($this->search->end_date, true);
         }
 
-        dd(Carbon::parse($this->search->start_date, config('app.display_timezone', 'America/Chihuahua')));
-
         return $query
             ->when($this->search->folio, fn ($q) => $q->where('folio', $this->search->folio))
-            ->when($this->search->start_date, fn ($q) => $q->where('created_at', '>=', $this->search->start_date->setTimezone('America/Chihuahua')))
-            ->when($this->search->end_date, fn ($q) => $q->where('created_at', '<=', $this->search->end_date->setTimezone('America/Chihuahua')))
+            ->when($this->search->start_date, fn ($q) => $q->where('created_at', '>=', $this->search->start_date))
+            ->when($this->search->end_date, fn ($q) => $q->where('created_at', '<=', $this->search->end_date))
             ->when($this->search->status, fn ($q) => $q->where('estatus', $this->search->status))
             ->when($this->search->venta_id, fn ($q) => $q->where('id', $this->search->venta_id))
             ->when($this->search->user_id, fn ($q) => $q->where('user_id', $this->search->user_id));
