@@ -122,7 +122,7 @@ class Venta extends Model
 
         if ($this->search->start_date) {
             $this->search->start_date = $this->toUtcForQuery($this->search->start_date, false);
-            // dd($this->search->start_date->copy()->setTimezone(config('app.display_timezone'))); // Para ver cómo queda en tu hora local
+            dd($this->search->start_date); // Para ver cómo queda en tu hora local
         }
 
         if ($this->search->end_date) {
