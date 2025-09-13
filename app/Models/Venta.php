@@ -121,7 +121,6 @@ class Venta extends Model
         $this->search = $search;
         if( $this->search->start_date ){
             $this->search->start_date = $this->dateUtc($this->search->start_date);
-            dd($this->search->start_date);
         }
         if ($this->search->end_date){
             $this->search->end_date = $this->dateUtc($this->search->end_date);
