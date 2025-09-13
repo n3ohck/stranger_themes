@@ -119,6 +119,12 @@ class Venta extends Model
     public function scopeSearch($query, $search)
     {
         $this->search = $search;
+        if( $this->search->start_date ){
+            $this->search->start_date = $this->dateUtc($this->search->start_date);
+        }
+        if ($this->search->end_date){
+            $this->search->end_date = $this->dateUtc($this->search->end_date);
+        }
         return $query
             ->when($this->search->folio, function ($query) {
                 return $query->where('folio', $this->search->folio);
