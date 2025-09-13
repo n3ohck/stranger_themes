@@ -128,7 +128,7 @@ class Venta extends Model
             $this->search->end_date = $this->toUtcForQuery($this->search->end_date, true);
         }
 
-        dd($this->search->start_date->setTimezone('America/Chihuahua')->format('Y-m-d H:i:s'));
+        dd(Carbon::parse($this->search->start_date, config('app.display_timezone', 'America/Chihuahua')));
 
         return $query
             ->when($this->search->folio, fn ($q) => $q->where('folio', $this->search->folio))
