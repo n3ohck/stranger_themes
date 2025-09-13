@@ -21,12 +21,8 @@ trait CrudTrait
     protected function toUtcForQuery(string $input, bool $isEnd = false): Carbon
     {
         $displayTz = config('app.display_timezone', 'America/Chihuahua');
-
-        // Si el input NO trae TZ (ej. "2025-09-13" o "2025-09-13 09:00"),
-        // interprétalo como hora local:
         $dt = Carbon::parse($input, $displayTz);
 
-        // Si te pasan solo la fecha (sin hora), normaliza a inicio/fin del día local
         $onlyDate = preg_match('/^\d{4}-\d{2}-\d{2}$/', trim($input)) === 1;
         if ($onlyDate) {
             $dt = $isEnd ? $dt->endOfDay() : $dt->startOfDay();
