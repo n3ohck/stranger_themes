@@ -18,8 +18,21 @@ trait CrudTrait
         return true;
     }
 
-    public function dateUtc($date): Carbon
+    protected function toUtcForQuery(string $input, bool $isEnd = false): Carbon
     {
-        return Carbon::parse($date, config('app.display_timezone', 'America/Chihuahua'));
+        $displayTz = config('app.display_timezone', 'America/Chihuahua');
+
+        // Si el input NO trae TZ (ej. "2025-09-13" o "2025-09-13 09:00"),
+        // interprétalo como hora local:
+        $dt = Carbon::parse($input, $displayTz);
+
+        // Si te pasan solo la fecha (sin hora), normaliza a inicio/fin del día local
+        $onlyDate = preg_match('/^\d{4}-\d{2}-\d{2}$/', trim($input)) === 1;
+        if ($onlyDate) {
+            $dt = $isEnd ? $dt->endOfDay() : $dt->startOfDay();
+        }
+
+        // Devuelve en UTC para usar en la query
+        return $dt->clone()->setTimezone('UTC');
     }
 }

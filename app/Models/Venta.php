@@ -119,32 +119,23 @@ class Venta extends Model
     public function scopeSearch($query, $search)
     {
         $this->search = $search;
-        if( $this->search->start_date ){
-            $this->search->start_date = $this->dateUtc($this->search->start_date);
-            dd($this->search->start_date);
+
+        if ($this->search->start_date) {
+            $this->search->start_date = $this->toUtcForQuery($this->search->start_date, false);
+            // dd($this->search->start_date->copy()->setTimezone(config('app.display_timezone'))); // Para ver cómo queda en tu hora local
         }
-        if ($this->search->end_date){
-            $this->search->end_date = $this->dateUtc($this->search->end_date);
+
+        if ($this->search->end_date) {
+            $this->search->end_date = $this->toUtcForQuery($this->search->end_date, true);
         }
+
         return $query
-            ->when($this->search->folio, function ($query) {
-                return $query->where('folio', $this->search->folio);
-            })
-            ->when($this->search->start_date, function ($query) {
-                return $query->where('created_at', '>=', $this->search->start_date);
-            })
-            ->when($this->search->end_date, function ($query) {
-                return $query->where('created_at', '<=', $this->search->end_date);
-            })
-            ->when($this->search->status, function ($query) {
-                return $query->where('estatus', $this->search->status);
-            })
-            ->when($this->search->venta_id, function ($query) {
-                return $query->where('id', $this->search->venta_id);
-            })
-            ->when($this->search->user_id, function ($query) {
-                return $query->where('user_id', $this->search->user_id);
-            });
+            ->when($this->search->folio, fn ($q) => $q->where('folio', $this->search->folio))
+            ->when($this->search->start_date, fn ($q) => $q->where('created_at', '>=', $this->search->start_date))
+            ->when($this->search->end_date, fn ($q) => $q->where('created_at', '<=', $this->search->end_date))
+            ->when($this->search->status, fn ($q) => $q->where('estatus', $this->search->status))
+            ->when($this->search->venta_id, fn ($q) => $q->where('id', $this->search->venta_id))
+            ->when($this->search->user_id, fn ($q) => $q->where('user_id', $this->search->user_id));
     }
 
     public function scopeFilters($query, $search)
