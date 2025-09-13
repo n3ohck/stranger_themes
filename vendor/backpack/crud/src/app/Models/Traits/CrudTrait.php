@@ -20,8 +20,6 @@ trait CrudTrait
 
     public function dateUtc($date): Carbon
     {
-        $dt = Carbon::parse($date, config('app.display_timezone', 'America/Chihuahua'));
-        $date = $dt->clone()->utc();
-        return $date;
+        return Carbon::parse($date, config('app.display_timezone', 'America/Chihuahua'));
     }
 }
