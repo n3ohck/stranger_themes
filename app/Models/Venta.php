@@ -92,6 +92,7 @@ class Venta extends Model
             $dt = $dt->setTimezone($displayTz);
             $dt = $isEnd ? $dt->endOfDay() : $dt->startOfDay();
         }
+
         // 4) Devuelve en UTC para consultar en DB
         return $dt->clone()->setTimezone('UTC');
     }
