@@ -150,7 +150,7 @@ class Venta extends Model
             dd($this->search->start_date
                 ->copy()
                 ->setTimezone(config('app.display_timezone'))
-                ->format('Y-m-d H:i:s P T'));
+                ->format('Y-m-d H:i:s'));
         }
 
         if ($this->search->end_date) {
