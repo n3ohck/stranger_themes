@@ -147,15 +147,20 @@ class Venta extends Model
 
         if ($this->search->start_date) {
             $this->search->start_date = $this->toUtcForQuery($this->search->start_date, false);
-            dd($this->search->start_date
+            $this->search->start_date = $this->search->start_date
                 ->copy()
                 ->setTimezone(config('app.display_timezone'))
-                ->format('Y-m-d H:i:s'));
+                ->format('Y-m-d H:i:s');
         }
 
         if ($this->search->end_date) {
             $this->search->end_date = $this->toUtcForQuery($this->search->end_date, true);
+            $this->search->end_date = $this->search->end_date->copy()
+                ->setTimezone(config('app.display_timezone'))
+                ->format('Y-m-d H:i:s');
         }
+
+        dd($this->search->start_date);
 
         return $query
             ->when($this->search->folio, fn ($q) => $q->where('folio', $this->search->folio))
