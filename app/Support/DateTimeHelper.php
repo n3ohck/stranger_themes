@@ -10,7 +10,7 @@ class DateTimeHelper
      * - Si el input es naive (sin TZ), asume config('app.input_naive_timezone', 'UTC').
      * - Si es solo fecha (YYYY-MM-DD), normaliza inicio/fin de día en la TZ de display.
      */
-    public function toUtcForQuery(string $input, bool $isEnd = false): Carbon
+    protected function toUtcForQuery(string $input, bool $isEnd = false): Carbon
     {
         $displayTz = config('app.display_timezone', 'America/Chihuahua');
         $inputNaiveTz = config('app.input_naive_timezone', 'UTC'); // <— define esto
