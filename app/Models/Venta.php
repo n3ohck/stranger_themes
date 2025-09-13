@@ -147,7 +147,7 @@ class Venta extends Model
 
         if ($this->search->start_date) {
             $this->search->start_date = $this->toUtcForQuery($this->search->start_date, false);
-
+            dd($this->search->start_date);
         }
 
         if ($this->search->end_date) {
