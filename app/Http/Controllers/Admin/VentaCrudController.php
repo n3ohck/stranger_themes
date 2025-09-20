@@ -221,12 +221,12 @@ class VentaCrudController extends CrudController
                 'user_id' => $request->get('user_id')
             ];
 
-            if( $search['start_date'] ){
-                $search['start_date'] = $search['start_date']->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s');
+            if( $search->start_date ){
+                $search->start_date = $search->start_date->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s');
             }
 
-            if( $search['end_date'] ){
-                $search['end_date'] = $search['end_date']->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s');
+            if( $search->end_date ){
+                $search->end_date = $search->end_date->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s');
             }
 
             $ventas = Venta::query()
