@@ -305,16 +305,21 @@ class VentaCrudController extends CrudController
     public function resumen(Request $request)
     {
         try {
+            $tz = config('app.display_timezone', 'America/Chihuahua');
             $params = $request->all();
             if (!isset($params['dates'])) {
-                $params['dates'] = [
-                    Carbon::now()->startOfDay()->format('Y-m-d H:i:s'),
-                    Carbon::now()->endOfDay()->format('Y-m-d H:i:s')
-                ];
+                $startLocal = Carbon::now($tz)->startOfDay();
+                $endLocal   = Carbon::now($tz)->endOfDay();
             } else {
-                $params['dates'][0] = Carbon::parse($params['dates'][0])->startOfDay()->format('Y-m-d H:i:s');
-                $params['dates'][1] = Carbon::parse($params['dates'][1])->endOfDay()->format('Y-m-d H:i:s');
+                $startLocal = Carbon::parse($params['dates'][0], $tz)->startOfDay();
+                $endLocal   = Carbon::parse($params['dates'][1], $tz)->endOfDay();
             }
+            // Pasa a UTC para consultar en DB (que guarda UTC)
+            $params['dates'] = [
+                $startLocal->clone()->timezone('UTC'),
+                $endLocal->clone()->timezone('UTC'),
+            ];
+
             $totalVentas = 0;
             $cantidadReservaciones = 0;
             $totaEgresos = (new EgresoCrudController)->getTotal($params['dates']);
@@ -347,12 +352,13 @@ class VentaCrudController extends CrudController
                 });
 
             $cantidadReservaciones = Reserva::query()
-                ->where(function ($q) use ($params) {
-                    $q
-                        ->where('estado', 'confirmada')
-                        ->whereBetween('fecha', [$params['dates'][0], $params['dates'][1]]);
-                })
+                ->where('estado', 'confirmada')
+                ->whereBetween('fecha', [
+                    $startLocal->toDateString(),
+                    $endLocal->toDateString(),
+                ])
                 ->count();
+
 
             $utilidad_operativa = $totalVentas - ($totaEgresos + $salarios);
             return response()->json([
