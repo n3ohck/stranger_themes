@@ -40,7 +40,6 @@ class VentaAction
         $nuevasVentas = [];
         foreach ($ventas as $venta) {
             $venta['datetime'] = $this->makeDate($venta['datetime'])->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s');
-            dd($venta);
             $existe = Venta::query()
                 ->where('created_at', $venta['datetime'])
                 ->where('total', $venta['total'])
