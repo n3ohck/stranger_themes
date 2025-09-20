@@ -248,7 +248,7 @@ class VentaAction
                 $ventaActualizar->update([
                     'estatus' => 'cancelado',
                     'user_id_cancelacion' => backpack_user()->id,
-                    'fecha_cancelacion' => now(),
+                    'fecha_cancelacion' => Carbon::now()->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s'),
                     'comentario_cancelacion' => $venta['comentario_cancelacion'] ?? 'N/A'
                 ]);
                 $ventaActualizar->reservaciones()->update(['estado' => 'cancelada']);
