@@ -186,7 +186,8 @@ class EmpleadoPagoCrudController extends CrudController
                 'empleado_id' => $request->empleado_id,
                 'fecha_pago' => $this->makeDate($request->fecha_pago),
                 'imagen' => $request->file('imagen')->store('egresos', 'pagos'),
-                'monto' => $request->monto
+                'monto' => $request->monto,
+                'created_at' => Carbon::now()->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s')
             ]);
             DB::commit();
             return response()->json([

@@ -30,7 +30,8 @@ class EmpleadoPago extends Model
         'fecha_pago',
         'imagen',
         'monto',
-        'estatus'
+        'estatus',
+        'created_at'
     ];
     // protected $hidden = [];
     protected $dates = [
@@ -41,7 +42,8 @@ class EmpleadoPago extends Model
     ];
 
     protected $casts = [
-        'monto' => 'double'
+        'monto' => 'double',
+        'created_at' => 'datetime',
     ];
 
     /*
