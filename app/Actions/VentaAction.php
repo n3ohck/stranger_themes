@@ -39,8 +39,7 @@ class VentaAction
     {
         $nuevasVentas = [];
         foreach ($ventas as $venta) {
-            $venta['datetime'] = $this->toUtcForQuery($venta['datetime']);
-            dd($venta['datetime']);
+            $venta['datetime'] = $this->makeDate($venta['datetime'])->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s');
             $existe = Venta::query()
                 ->where('created_at', $venta['datetime'])
                 ->where('total', $venta['total'])
@@ -57,7 +56,6 @@ class VentaAction
                 'porcentaje_descuento' => $venta['porcentaje_descuento'] ?? null,
                 'created_at' => $venta['datetime']
             ]);
-            dd($venta);
             $this->makeVentaProductos($nuevaVenta->id, $venta['productos']);
             $this->makeVentaPagos($nuevaVenta->id, $venta['pagos']);
 
