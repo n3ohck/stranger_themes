@@ -56,6 +56,7 @@ class VentaAction
                 'porcentaje_descuento' => $venta['porcentaje_descuento'] ?? null,
                 'created_at' => $venta['datetime']
             ]);
+            dd($venta);
             $this->makeVentaProductos($nuevaVenta->id, $venta['productos']);
             $this->makeVentaPagos($nuevaVenta->id, $venta['pagos']);
 

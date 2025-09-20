@@ -159,7 +159,6 @@ class Venta extends Model
                 ->setTimezone(config('app.display_timezone'))
                 ->format('Y-m-d H:i:s');
         }
-        dd($this->search->start_date, $this->search->end_date);
         return $query
             ->when($this->search->folio, fn ($q) => $q->where('folio', $this->search->folio))
             ->when($this->search->start_date, fn ($q) => $q->where('created_at', '>=', $this->search->start_date))
