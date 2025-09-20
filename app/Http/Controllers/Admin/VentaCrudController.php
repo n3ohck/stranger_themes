@@ -391,11 +391,17 @@ class VentaCrudController extends CrudController
             $tz = config('app.display_timezone', 'America/Chihuahua');
             $params = $request->all();
             if (!isset($params['dates'])) {
-                $params['dates'] = [
-                    Carbon::parse($params['dates'][0], $tz)->startOfDay(),
-                    Carbon::parse($params['dates'][1], $tz)->endOfDay()
-                ];
+                $startLocal = Carbon::now($tz)->startOfDay();
+                $endLocal = Carbon::now($tz)->endOfDay();
+            } else {
+                $startLocal = Carbon::parse($params['dates'][0], $tz)->startOfDay();
+                $endLocal = Carbon::parse($params['dates'][1], $tz)->endOfDay();
             }
+            // Pasa a UTC para consultar en DB (que guarda UTC)
+            $params['dates'] = [
+                $startLocal->clone()->timezone('UTC'),
+                $endLocal->clone()->timezone('UTC'),
+            ];
 
             $productos = VentaProducto::query()
                 ->whereHas('venta', function ($query) use ($params) {
