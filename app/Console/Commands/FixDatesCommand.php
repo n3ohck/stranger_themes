@@ -48,7 +48,8 @@ class FixDatesCommand extends Command
                     ->setTimezone(config('app.display_timezone', 'America/Chihuahua'))
                     ->format('Y-m-d H:i:s');
                 if ($venta->created_at->format('Y-m-d H:i:s') !== $toZone) {
-                    dd($venta->created_at, $toZone);
+                   $venta->created_at = $toZone;
+                   $venta->save();
                 }
             });
     }
