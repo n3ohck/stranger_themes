@@ -139,6 +139,9 @@ class AperturaCrudController extends CrudController
             $apertura->sucursal_id = backpack_user()->sucursal_id;
             $apertura->monto_apertura = $monto;
             $apertura->estado = 'abierto';
+            $apertura->created_at = Carbon::now()
+                ->setTimezone( config('app.display_timezone', 'America/Chihuahua') )
+                ->format('Y-m-d H:i:s');
             $apertura->save();
             return response()->json([
                 'message' => 'Apertura exitosa',

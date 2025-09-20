@@ -32,7 +32,8 @@ class Apertura extends Model
         'monto_cierre',
         'estado',
         'billetes',
-        'sucursal_id'
+        'sucursal_id',
+        'created_at'
     ];
     // protected $hidden = [];
     protected $dates = [
@@ -44,7 +45,8 @@ class Apertura extends Model
     protected $casts = [
         'billetes' => 'array',
         'monto_apertura' => 'double',
-        'monto_cierre' => 'double'
+        'monto_cierre' => 'double',
+        'created_at' => 'datetime',
     ];
 
     /*
