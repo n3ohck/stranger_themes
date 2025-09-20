@@ -315,6 +315,7 @@ class VentaCrudController extends CrudController
                 $params['dates'][0] = Carbon::parse($params['dates'][0])->startOfDay()->format('Y-m-d H:i:s');
                 $params['dates'][1] = Carbon::parse($params['dates'][1])->endOfDay()->format('Y-m-d H:i:s');
             }
+            dd($params['dates']);
             $totalVentas = 0;
             $cantidadReservaciones = 0;
             $totaEgresos = (new EgresoCrudController)->getTotal($params['dates']);
