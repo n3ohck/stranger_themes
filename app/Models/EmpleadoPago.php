@@ -54,7 +54,11 @@ class EmpleadoPago extends Model
     protected static function booted()
     {
         parent::boot();
-        static::addGlobalScope(new SucursalFilterScope);
+        static::addGlobalScope(function ($query) {
+            $query->whereHas('empleado', function ($query) {
+                $query->where('sucursal_id', backpack_user()->sucursal_id);
+            });
+        });
         static::deleting(function ($obj) {
             Storage::disk('pagos')->delete($obj->imagen);
         });
