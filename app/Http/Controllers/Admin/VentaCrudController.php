@@ -214,12 +214,20 @@ class VentaCrudController extends CrudController
         try {
             $search = (object)[
                 'folio' => $request->get('folio'),
-                'start_date' => $this->makeDate($request->get('start_date'))->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s'),
-                'end_date' => $this->makeDate($request->get('end_date'))->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s'),
+                'start_date' => $this->makeDate($request->get('start_date')),
+                'end_date' => $this->makeDate($request->get('end_date')),
                 'status' => $request->get('status'),
                 'venta_id' => $request->get('venta_id'),
                 'user_id' => $request->get('user_id')
             ];
+
+            if( $search['start_date'] ){
+                $search['start_date'] = $search['start_date']->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s');
+            }
+
+            if( $search['end_date'] ){
+                $search['end_date'] = $search['end_date']->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s');
+            }
 
             $ventas = Venta::query()
                 ->search($search)
