@@ -66,7 +66,6 @@ return [
     | ahead and set this to a sensible default for you out of the box.
     |
     */
-
     'timezone' => 'UTC',
     'display_timezone' => 'America/Chihuahua',
 

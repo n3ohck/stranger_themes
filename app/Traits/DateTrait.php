@@ -17,9 +17,7 @@ trait DateTrait
         $hasTz = (bool) preg_match('/(Z|[+\-]\d{2}:\d{2})$/', $s);
 
         // 2) Parse con la TZ correcta
-        $dt = $hasTz
-            ? Carbon::parse($s)                      // respeta el offset del string
-            : Carbon::parse($s, $inputNaiveTz);      // asume UTC (o la que configures)
+        $dt =  Carbon::parse($s, $inputNaiveTz);
 
         // 3) Si viene solo la fecha (YYYY-MM-DD), normaliza a inicio/fin de día LOCAL
         $onlyDate = (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $s);
