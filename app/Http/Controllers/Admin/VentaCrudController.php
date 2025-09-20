@@ -308,8 +308,8 @@ class VentaCrudController extends CrudController
             $params = $request->all();
             if (!isset($params['dates'])) {
                 $params['dates'] = [
-                    Carbon::now()->startOfDay()->format('Y-m-d h:i:s'),
-                    Carbon::now()->endOfDay()->format('Y-m-d h:i:s')
+                    Carbon::now()->startOfDay()->format('Y-m-d H:i:s'),
+                    Carbon::now()->endOfDay()->format('Y-m-d H:i:s')
                 ];
             } else {
                 $params['dates'][0] = Carbon::parse($params['dates'][0])->startOfDay()->format('Y-m-d H:i:s');
