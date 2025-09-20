@@ -135,7 +135,7 @@ class VentaCrudController extends CrudController
         ], function () {
             return User::all()->pluck('user', 'id')->toArray();
         }, function ($value) {
-            $this->crud->addClause('where','user_id', $value);
+            $this->crud->addClause('where', 'user_id', $value);
         });
 
         $this->crud->addFilter([
@@ -146,13 +146,13 @@ class VentaCrudController extends CrudController
             'activo' => 'Activo',
             'cancelado' => 'Cancelado'
         ], function ($value) {
-            $this->crud->addClause('where','estatus', $value);
+            $this->crud->addClause('where', 'estatus', $value);
         });
 
         $this->crud->addFilter([
             'type' => 'date_range',
             'name' => 'created_at',
-            'label'=> 'Fecha'
+            'label' => 'Fecha'
         ],
             false,
             function ($value) { // <-- este $value contiene el JSON con 'from' y 'to'
@@ -221,12 +221,12 @@ class VentaCrudController extends CrudController
                 'user_id' => $request->get('user_id')
             ];
 
-            if( $search->start_date ){
-                $search->start_date = $search->start_date->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s');
+            if ($search->start_date) {
+                $search->start_date = $search->start_date->setTimezone(config('app.display_timezone', 'America/Chihuahua'))->format('Y-m-d H:i:s');
             }
 
-            if( $search->end_date ){
-                $search->end_date = $search->end_date->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s');
+            if ($search->end_date) {
+                $search->end_date = $search->end_date->setTimezone(config('app.display_timezone', 'America/Chihuahua'))->format('Y-m-d H:i:s');
             }
 
             $ventas = Venta::query()
@@ -318,10 +318,10 @@ class VentaCrudController extends CrudController
             $params = $request->all();
             if (!isset($params['dates'])) {
                 $startLocal = Carbon::now($tz)->startOfDay();
-                $endLocal   = Carbon::now($tz)->endOfDay();
+                $endLocal = Carbon::now($tz)->endOfDay();
             } else {
                 $startLocal = Carbon::parse($params['dates'][0], $tz)->startOfDay();
-                $endLocal   = Carbon::parse($params['dates'][1], $tz)->endOfDay();
+                $endLocal = Carbon::parse($params['dates'][1], $tz)->endOfDay();
             }
             // Pasa a UTC para consultar en DB (que guarda UTC)
             $params['dates'] = [
@@ -388,11 +388,12 @@ class VentaCrudController extends CrudController
     public function resumenProductos(Request $request)
     {
         try {
+            $tz = config('app.display_timezone', 'America/Chihuahua');
             $params = $request->all();
             if (!isset($params['dates'])) {
                 $params['dates'] = [
-                    Carbon::now()->startOfDay()->format('Y-m-d'),
-                    Carbon::now()->endOfDay()->format('Y-m-d')
+                    Carbon::parse($params['dates'][0], $tz)->startOfDay(),
+                    Carbon::parse($params['dates'][1], $tz)->endOfDay()
                 ];
             }
 
@@ -446,7 +447,7 @@ class VentaCrudController extends CrudController
                 ->get()
                 ->map(function ($producto) {
                     $paymentsOnline = $producto->venta->pagos->where('tipo', 'online')->count();
-                    if ($paymentsOnline){
+                    if ($paymentsOnline) {
                         $totalOrginal = $producto->total;
                         $producto->total = $producto->descuento;
                         $producto->descuento = $totalOrginal - $producto->descuento;
