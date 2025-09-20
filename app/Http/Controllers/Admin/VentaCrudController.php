@@ -388,8 +388,8 @@ class VentaCrudController extends CrudController
     public function resumenProductos(Request $request)
     {
         try {
-            $tz = config('app.display_timezone', 'America/Chihuahua');
             $params = $request->all();
+            $tz = config('app.display_timezone', 'America/Chihuahua');
             if (!isset($params['dates'])) {
                 $startLocal = Carbon::now($tz)->startOfDay();
                 $endLocal = Carbon::now($tz)->endOfDay();
@@ -435,16 +435,25 @@ class VentaCrudController extends CrudController
     {
         try {
             $params = $request->all();
+            $tz = config('app.display_timezone', 'America/Chihuahua');
             if (!isset($params['dates'])) {
-                $params['dates'] = [
-                    Carbon::now()->startOfDay()->format('Y-m-d'),
-                    Carbon::now()->endOfDay()->format('Y-m-d')
-                ];
+                $startLocal = Carbon::now($tz)->startOfDay();
+                $endLocal = Carbon::now($tz)->endOfDay();
+            } else {
+                $startLocal = Carbon::parse($params['dates'][0], $tz)->startOfDay();
+                $endLocal = Carbon::parse($params['dates'][1], $tz)->endOfDay();
             }
+            // Pasa a UTC para consultar en DB (que guarda UTC)
+            $params['dates'] = [
+                $startLocal->clone()->timezone('UTC'),
+                $endLocal->clone()->timezone('UTC'),
+            ];
 
             $productos = VentaProducto::query()
                 ->whereHas('venta', function ($query) use ($params) {
-                    $query->Filters($params);
+                    $query
+                        ->where('estatus', 'activo')
+                        ->Filters($params);
                 })
                 ->with([
                     'venta.pagos',
