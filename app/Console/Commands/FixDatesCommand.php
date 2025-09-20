@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\EmpleadoPago;
 use App\Models\Venta;
 use App\Scopes\SucursalFilterScope;
 use Carbon\Carbon;
@@ -41,7 +42,7 @@ class FixDatesCommand extends Command
 
     public function handle()
     {
-        Venta::withOutGlobalScope(new SucursalFilterScope)
+        /*Venta::withOutGlobalScope(new SucursalFilterScope)
             ->get()
             ->each(function (Venta $venta) {
                 $toZone = Carbon::parse($venta->created_at)
@@ -50,6 +51,18 @@ class FixDatesCommand extends Command
                 if ($venta->created_at->format('Y-m-d H:i:s') !== $toZone) {
                    $venta->created_at = $toZone;
                    $venta->save();
+                }
+            });*/
+
+        EmpleadoPago::withOutGlobalScope(new SucursalFilterScope)
+            ->get()
+            ->each(function (EmpleadoPago $pago) {
+                $toZone = Carbon::parse($pago->created_at)
+                    ->setTimezone(config('app.display_timezone', 'America/Chihuahua'))
+                    ->format('Y-m-d H:i:s');
+                if ($pago->created_at->format('Y-m-d H:i:s') !== $toZone) {
+                    $pago->created_at = $toZone;
+                    $pago->save();
                 }
             });
     }
