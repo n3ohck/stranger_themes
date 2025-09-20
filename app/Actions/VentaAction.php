@@ -77,7 +77,7 @@ class VentaAction
     {
         $newSales = collect();
         foreach ($sales as $sale) {
-            $venta['datetime'] = $this->makeDate($sale['datetime']);
+            $venta['datetime'] = $this->makeDate($sale['datetime'])->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s');
             $existe = Venta::query()
                 ->where('created_at', $sale['datetime'])
                 ->where('total', $sale['total'])
