@@ -39,7 +39,8 @@ class VentaAction
     {
         $nuevasVentas = [];
         foreach ($ventas as $venta) {
-            $venta['datetime'] = $this->toUtcForQuery($venta['datetime'])->format('Y-m-d H:i:s');
+            $venta['datetime'] = $this->toUtcForQuery($venta['datetime']);
+            dd($venta['datetime']);
             $existe = Venta::query()
                 ->where('created_at', $venta['datetime'])
                 ->where('total', $venta['total'])
