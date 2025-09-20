@@ -71,7 +71,7 @@ class Venta extends Model
         static::addGlobalScope(new SucursalFilterScope);
     }
 
-    protected function toUtcForQuery(string $input, bool $isEnd = false): Carbon
+    public function toUtcForQuery(string $input, bool $isEnd = false): Carbon
     {
         $displayTz = config('app.display_timezone', 'America/Chihuahua');
         $inputNaiveTz = config('app.input_naive_timezone', 'UTC'); // <— define esto
@@ -159,7 +159,7 @@ class Venta extends Model
                 ->setTimezone(config('app.display_timezone'))
                 ->format('Y-m-d H:i:s');
         }
-
+        dd($this->search->start_date, $this->search->end_date);
         return $query
             ->when($this->search->folio, fn ($q) => $q->where('folio', $this->search->folio))
             ->when($this->search->start_date, fn ($q) => $q->where('created_at', '>=', $this->search->start_date))

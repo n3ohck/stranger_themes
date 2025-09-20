@@ -208,6 +208,7 @@ class VentaCrudController extends CrudController
         $this->setupCreateOperation();
     }
 
+
     public function fetch(Request $request)
     {
         try {
