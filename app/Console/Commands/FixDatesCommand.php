@@ -45,7 +45,7 @@ class FixDatesCommand extends Command
                 $toZone = Carbon::parse($venta->created_at)
                     ->setTimezone( config('app.display_timezone', 'America/Chihuahua') )
                     ->format('Y-m-d H:i:s');
-                if ($venta->created_at !== $toZone) {
+                if ($venta->created_at->format('Y-m-d H:i:s') !== $toZone) {
                     dd($venta->created_at, $toZone);
                 }
             });
