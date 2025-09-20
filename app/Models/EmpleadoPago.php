@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -27,7 +26,6 @@ class EmpleadoPago extends Model
     // public $timestamps = false;
     protected $guarded = ['id'];
     protected $fillable = [
-        'user_id',
         'empleado_id',
         'fecha_pago',
         'imagen',
@@ -43,11 +41,7 @@ class EmpleadoPago extends Model
     ];
 
     protected $casts = [
-        'monto' => 'double',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
-        'fecha_pago' => 'datetime',
+        'monto' => 'double'
     ];
 
     /*
@@ -58,6 +52,7 @@ class EmpleadoPago extends Model
     protected static function booted()
     {
         parent::boot();
+        static::addGlobalScope(new SucursalFilterScope);
         static::deleting(function ($obj) {
             Storage::disk('pagos')->delete($obj->imagen);
         });
@@ -75,11 +70,6 @@ class EmpleadoPago extends Model
     public function empleado(): BelongsTo
     {
         return $this->belongsTo(Empleado::class);
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
     }
 
     /*
@@ -104,7 +94,7 @@ class EmpleadoPago extends Model
                 $query->where('empleado_id', $this->search->empleado_id);
             })
             ->when($this->search->fecha_pago, function ($query) {
-                $query->where('fecha_pago', '>=', $this->search->fecha_pago);
+                $query->where('fecha_pago', $this->search->fecha_pago);
             })
             ->when($this->search->estatus, function ($query) {
                 $query->where('estatus', $this->search->estatus);
@@ -124,29 +114,9 @@ class EmpleadoPago extends Model
 
         $this->uploadFileToDisk($value, $attribute_name, $disk, $destination_path);
     }
-
-    public function setCreatedAtAttribute($value)
-    {
-        if (!$value) { $this->attributes['created_at'] = null; return; }
-
-        // 1) Si viene con offset ISO8601 (ej: "2025-09-10T13:45:00-06:00"), Carbon lo respeta.
-        // 2) Si viene "naive" (sin TZ), asumimos que es hora local de Chihuahua.
-        $dt = $value instanceof Carbon
-            ? $value
-            : Carbon::parse($value, config('app.display_timezone', 'America/Chihuahua'));
-
-        $this->attributes['created_at'] = $dt->clone()->utc(); // guardamos en UTC
-    }
     /*
     |--------------------------------------------------------------------------
     | MUTATORS
     |--------------------------------------------------------------------------
     */
-    public function getCreatedAtAttribute($value)
-    {
-        if (!$value) return null;
-        $c = $this->asDateTime($value);           // -> instancia UTC
-        return $c->clone()
-            ->setTimezone(config('app.display_timezone', 'America/Chihuahua'));
-    }
 }
