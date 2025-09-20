@@ -35,6 +35,6 @@ trait DateTrait
     public function makeDate($date)
     {
         $date = $this->toUtcForQuery($date);
-        return $date;
+        return $date->format('Y-m-d H:i:s');
     }
 }
