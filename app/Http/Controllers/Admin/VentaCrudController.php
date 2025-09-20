@@ -405,7 +405,9 @@ class VentaCrudController extends CrudController
 
             $productos = VentaProducto::query()
                 ->whereHas('venta', function ($query) use ($params) {
-                    $query->Filters($params);
+                    $query
+                        ->where('estatus', 'activo')
+                        ->Filters($params);
                 })
                 ->with([
                     'producto'
