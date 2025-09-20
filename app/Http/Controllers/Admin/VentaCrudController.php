@@ -363,8 +363,8 @@ class VentaCrudController extends CrudController
             $cantidadReservaciones = Reserva::query()
                 ->where('estado', 'confirmada')
                 ->whereBetween('fecha', [
-                    $startLocal->toDateString(),
-                    $endLocal->toDateString(),
+                    $startLocal,
+                    $endLocal,
                 ])
                 ->count();
 
