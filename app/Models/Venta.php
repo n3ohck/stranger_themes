@@ -55,10 +55,7 @@ class Venta extends Model
     protected $casts = [
         'total' => 'float',
         'descuento' => 'float',
-        'porcentaje_descuento' => 'float',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
+        'porcentaje_descuento' => 'float'
     ];
 
     /*
@@ -71,31 +68,6 @@ class Venta extends Model
         static::addGlobalScope(new SucursalFilterScope);
     }
 
-    public function toUtcForQuery(string $input, bool $isEnd = false): Carbon
-    {
-        $displayTz = config('app.display_timezone', 'America/Chihuahua');
-        $inputNaiveTz = config('app.input_naive_timezone', 'UTC'); // <— define esto
-
-        $s = trim($input);
-
-        // 1) ¿Trae zona horaria explícita? (Z o ±HH:MM)
-        $hasTz = (bool) preg_match('/(Z|[+\-]\d{2}:\d{2})$/', $s);
-
-        // 2) Parse con la TZ correcta
-        $dt = $hasTz
-            ? Carbon::parse($s)                      // respeta el offset del string
-            : Carbon::parse($s, $inputNaiveTz);      // asume UTC (o la que configures)
-
-        // 3) Si viene solo la fecha (YYYY-MM-DD), normaliza a inicio/fin de día LOCAL
-        $onlyDate = (bool) preg_match('/^\d{4}-\d{2}-\d{2}$/', $s);
-        if ($onlyDate) {
-            $dt = $dt->setTimezone($displayTz);
-            $dt = $isEnd ? $dt->endOfDay() : $dt->startOfDay();
-        }
-
-        // 4) Devuelve en UTC para consultar en DB
-        return $dt->clone()->setTimezone('UTC');
-    }
     /*
     |--------------------------------------------------------------------------
     | RELATIONS
@@ -144,28 +116,25 @@ class Venta extends Model
     public function scopeSearch($query, $search)
     {
         $this->search = $search;
-
-        if ($this->search->start_date) {
-            $this->search->start_date = $this->toUtcForQuery($this->search->start_date, false);
-            $this->search->start_date = $this->search->start_date
-                ->copy()
-                ->setTimezone(config('app.display_timezone'))
-                ->format('Y-m-d H:i:s');
-        }
-
-        if ($this->search->end_date) {
-            $this->search->end_date = $this->toUtcForQuery($this->search->end_date, true);
-            $this->search->end_date = $this->search->end_date->copy()
-                ->setTimezone(config('app.display_timezone'))
-                ->format('Y-m-d H:i:s');
-        }
         return $query
-            ->when($this->search->folio, fn ($q) => $q->where('folio', $this->search->folio))
-            ->when($this->search->start_date, fn ($q) => $q->where('created_at', '>=', $this->search->start_date))
-            ->when($this->search->end_date, fn ($q) => $q->where('created_at', '<=', $this->search->end_date))
-            ->when($this->search->status, fn ($q) => $q->where('estatus', $this->search->status))
-            ->when($this->search->venta_id, fn ($q) => $q->where('id', $this->search->venta_id))
-            ->when($this->search->user_id, fn ($q) => $q->where('user_id', $this->search->user_id));
+            ->when($this->search->folio, function ($query) {
+                return $query->where('folio', $this->search->folio);
+            })
+            ->when($this->search->start_date, function ($query) {
+                return $query->where('created_at', '>=', $this->search->start_date);
+            })
+            ->when($this->search->end_date, function ($query) {
+                return $query->where('created_at', '<=', $this->search->end_date);
+            })
+            ->when($this->search->status, function ($query) {
+                return $query->where('estatus', $this->search->status);
+            })
+            ->when($this->search->venta_id, function ($query) {
+                return $query->where('id', $this->search->venta_id);
+            })
+            ->when($this->search->user_id, function ($query) {
+                return $query->where('user_id', $this->search->user_id);
+            });
     }
 
     public function scopeFilters($query, $search)
@@ -189,29 +158,10 @@ class Venta extends Model
     | ACCESSORS
     |--------------------------------------------------------------------------
     */
-    public function setCreatedAtAttribute($value)
-    {
-        if (!$value) { $this->attributes['created_at'] = null; return; }
-
-        // 1) Si viene con offset ISO8601 (ej: "2025-09-10T13:45:00-06:00"), Carbon lo respeta.
-        // 2) Si viene "naive" (sin TZ), asumimos que es hora local de Chihuahua.
-        $dt = $value instanceof Carbon
-            ? $value
-            : Carbon::parse($value, config('app.display_timezone', 'America/Chihuahua'));
-
-        $this->attributes['created_at'] = $dt->clone()->utc(); // guardamos en UTC
-    }
 
     /*
     |--------------------------------------------------------------------------
     | MUTATORS
     |--------------------------------------------------------------------------
     */
-    public function getCreatedAtAttribute($value)
-    {
-        if (!$value) return null;
-        $c = $this->asDateTime($value);           // -> instancia UTC
-        return $c->clone()
-            ->setTimezone(config('app.display_timezone', 'America/Chihuahua'));
-    }
 }
