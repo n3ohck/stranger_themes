@@ -132,7 +132,7 @@ class EmpleadoPago extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
-    public function getFechaPagottribute($value)
+    public function getFechaPagoAttribute($value)
     {
         return Carbon::parse($value)->timezone('America/Chihuahua')->toIso8601String();
     }
