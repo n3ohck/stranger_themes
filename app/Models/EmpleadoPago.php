@@ -103,10 +103,8 @@ class EmpleadoPago extends Model
                 $q->where('empleado_id', $empleadoId);
             })
             ->when(data_get($search, 'fecha_pago'), function ($q, $fecha) {
-                $tz = config('app.user_timezone', 'America/Chihuahua');
-
-                $start = Carbon::parse($fecha, $tz)->startOfDay()->utc();
-                $end   = Carbon::parse($fecha, $tz)->endOfDay()->utc();
+                $start = Carbon::parse($fecha)->startOfDay();
+                $end   = Carbon::parse($fecha)->endOfDay();
 
                 $q->whereBetween('fecha_pago', [$start, $end]);
             })
