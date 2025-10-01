@@ -214,6 +214,7 @@ class EmpleadoPagoCrudController extends CrudController
                 'estatus' => $request->get('estatus')
             ];
             $pagos = EmpleadoPago::query()
+                ->where('user_id', Auth::user()->id)
                 ->Search($search)
                 ->orderBy('fecha_pago', 'desc')
                 ->get();

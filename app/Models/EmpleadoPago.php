@@ -32,7 +32,8 @@ class EmpleadoPago extends Model
         'imagen',
         'monto',
         'estatus',
-        'created_at'
+        'created_at',
+        'user_id'
     ];
     // protected $hidden = [];
     protected $dates = [
