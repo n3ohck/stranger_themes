@@ -243,8 +243,7 @@ class VentaCrudController extends CrudController
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($venta) {
-                    dd($venta);
-                    return $venta;
+                    return $venta->toArray();
                 });
             return response()->json([
                 'message' => 'Consulta realizada con exito',
