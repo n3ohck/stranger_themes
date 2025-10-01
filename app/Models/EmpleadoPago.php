@@ -94,6 +94,7 @@ class EmpleadoPago extends Model
 
     public function scopeSearch($query, $search)
     {
+        dd($search);
         return $query
             ->when(data_get($search, 'empleado_id'), fn ($q, $v) => $q->where('empleado_id', $v))
             ->when(data_get($search, 'fecha_pago'), fn ($q, $v) => $q->whereDate('fecha_pago', $v))
