@@ -131,4 +131,14 @@ class EmpleadoPago extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
+    public function getFechaPagoAttribute($value)
+    {
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
+    }
+
+    public function getCreatedAtAttribute($value)
+    {
+        return Carbon::parse($value)->format('Y-m-d H:i:s');
+    }
+
 }
