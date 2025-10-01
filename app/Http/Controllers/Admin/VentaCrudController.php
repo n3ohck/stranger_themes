@@ -243,7 +243,7 @@ class VentaCrudController extends CrudController
                 ->orderBy('created_at', 'desc')
                 ->get()
                 ->map(function ($venta) {
-                    $venta->created_at = $venta->format('Y-m-d H:i:s');
+                    dd($venta);
                     return $venta;
                 });
             return response()->json([
