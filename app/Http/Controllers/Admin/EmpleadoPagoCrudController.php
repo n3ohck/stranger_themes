@@ -181,6 +181,9 @@ class EmpleadoPagoCrudController extends CrudController
     {
         try{
             DB::beginTransaction();
+            if( !$request->hasFile('imagen') ){
+                throw new \Exception('No hay imagen del pago, es requerida.');
+            }
             $pago = EmpleadoPago::create([
                 'user_id' => backpack_user()->id ?? Auth::user()->id,
                 'empleado_id' => $request->empleado_id,
