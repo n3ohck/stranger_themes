@@ -243,14 +243,10 @@ class VentaCrudController extends CrudController
                 ->orderBy('created_at', 'desc')
                 ->get();
 
-            $ventasArray = $ventas->each(function ($venta) {
-                $venta->created_at = Carbon::parse($venta->created_at)->format('Y-m-d H:i:s');
-                return $venta;
-            });
             return response()->json([
                 'message' => 'Consulta realizada con exito',
-                'ventas' => $ventasArray,
-                'qty' => $ventasArray->count()
+                'ventas' => $ventas,
+                'qty' => $ventas->count()
             ], 200);
         } catch (\Exception $e) {
             return response()
