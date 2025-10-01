@@ -244,7 +244,7 @@ class VentaCrudController extends CrudController
                 ->get();
 
             $ventasArray = $ventas->each(function ($venta) {
-                $venta->created_at = $venta->created_at->format('Y-m-d H:i:s');
+                $venta->created_at = Carbon::parse($venta->created_at)->format('Y-m-d H:i:s');
                 return $venta;
             });
             return response()->json([
