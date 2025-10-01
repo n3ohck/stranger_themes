@@ -55,7 +55,8 @@ class Venta extends Model
     protected $casts = [
         'total' => 'float',
         'descuento' => 'float',
-        'porcentaje_descuento' => 'float'
+        'porcentaje_descuento' => 'float',
+        'created_at' => 'datetime',
     ];
 
     /*
