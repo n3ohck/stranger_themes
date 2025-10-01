@@ -47,6 +47,7 @@ class EmpleadoPago extends Model
     protected $casts = [
         'monto' => 'double',
         'created_at' => 'datetime',
+        'fecha_pago' => 'datetime',
     ];
 
     /*
@@ -134,12 +135,12 @@ class EmpleadoPago extends Model
     */
     public function getFechaPagoAttribute($value)
     {
-        return Carbon::parse($value)->timezone('America/Chihuahua')->toIso8601String();
+        return Carbon::parse($value)->toIso8601String();
     }
 
     public function getCreatedAtAttribute($value)
     {
-        return Carbon::parse($value)->timezone('America/Chihuahua')->toIso8601String();
+        return Carbon::parse($value)->toIso8601String();
     }
 
 }
