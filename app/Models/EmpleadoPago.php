@@ -4,7 +4,6 @@ namespace App\Models;
 
 use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -95,13 +94,21 @@ class EmpleadoPago extends Model
 
     public function scopeSearch($query, $search)
     {
-        $date = Carbon::parse(data_get($search, 'fecha_pago'))
-            ->startOfDay();
-        $dateEnd = $date->copy()->endOfDay();
         return $query
-            ->when(data_get($search, 'empleado_id'), fn ($q, $v) => $q->where('empleado_id', $v))
-            ->when(data_get($search, 'fecha_pago'), fn ($q, $v) => $q->whereBetween('fecha_pago', [$date, $dateEnd]))
-            ->when(data_get($search, 'estatus'), fn ($q, $v) => $q->where('estatus', $v));
+            ->when(data_get($search, 'empleado_id'), function ($q, $empleadoId) {
+                $q->where('empleado_id', $empleadoId);
+            })
+            ->when(data_get($search, 'fecha_pago'), function ($q, $fecha) {
+                $tz = config('app.user_timezone', 'America/Chihuahua');
+
+                $start = Carbon::parse($fecha, $tz)->startOfDay()->utc();
+                $end   = Carbon::parse($fecha, $tz)->endOfDay()->utc();
+
+                $q->whereBetween('fecha_pago', [$start, $end]);
+            })
+            ->when(data_get($search, 'estatus'), function ($q, $estatus) {
+                $q->where('estatus', $estatus);
+            });
     }
 
     /*
