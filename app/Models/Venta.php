@@ -55,8 +55,7 @@ class Venta extends Model
     protected $casts = [
         'total' => 'float',
         'descuento' => 'float',
-        'porcentaje_descuento' => 'float',
-        'created_at' => 'datetime',
+        'porcentaje_descuento' => 'float'
     ];
 
     /*
@@ -165,8 +164,4 @@ class Venta extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
-    public function getCreatedAtAttribute($value)
-    {
-        return \Illuminate\Support\Carbon::parse($value)->format('Y-m-d H:i:s');
-    }
 }
