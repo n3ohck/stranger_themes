@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -131,4 +132,9 @@ class EmpleadoPago extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
+    public function getCreatedAtAttribute($value)
+    {
+        return Carbon::parse($value)->timezone('America/Chihuahua')->toIso8601String();
+    }
+
 }
