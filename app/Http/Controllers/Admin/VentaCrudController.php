@@ -390,48 +390,44 @@ class VentaCrudController extends CrudController
     {
         try {
             $params = $request->all();
-
-            // 1) Define TZ de trabajo (presentación / filtros)
             $tz = config('app.display_timezone', 'America/Chihuahua');
-
-            // 2) Determina rango LOCAL y aplica bordes del día SOLO aquí
-            if (empty($params['dates'])) {
-                $startLocal = now($tz)->startOfDay();
-                $endLocal   = now($tz)->endOfDay();
+            if (!isset($params['dates'])) {
+                $startLocal = Carbon::now($tz)->startOfDay();
+                $endLocal = Carbon::now($tz)->endOfDay();
             } else {
-                $startLocal = \Carbon\Carbon::parse($params['dates'][0], $tz)->startOfDay();
-                $endLocal   = \Carbon\Carbon::parse($params['dates'][1], $tz)->endOfDay();
+                $startLocal = Carbon::parse($params['dates'][0], $tz)->startOfDay();
+                $endLocal = Carbon::parse($params['dates'][1], $tz)->endOfDay();
             }
-
-            // 3) Si tu DB guarda en UTC, convierte local → UTC para consultar
+            // Pasa a UTC para consultar en DB (que guarda UTC)
             $params['dates'] = [
                 $startLocal->clone()->timezone('UTC'),
                 $endLocal->clone()->timezone('UTC'),
             ];
 
-            // 4) Aplica filtros (el scope YA NO toca fechas)
             $productos = VentaProducto::query()
-                ->whereHas('venta', function ($q) use ($params) {
-                    $q->where('estatus', 'activo')
-                        ->filters($params);
+                ->whereHas('venta', function ($query) use ($params) {
+                    $query
+                        ->where('estatus', 'activo')
+                        ->Filters($params);
                 })
-                ->with('producto')
+                ->with([
+                    'producto'
+                ])
                 ->get()
                 ->groupBy('producto_id')
-                ->map(function ($grupo) {
+                ->map(function ($productosAgrupados) {
                     return [
-                        'producto' => $grupo->first()->producto->descripcion,
-                        'cantidad' => $grupo->sum('cantidad'),
-                        'total'    => $grupo->sum('total'),
+                        'producto' => $productosAgrupados->first()->producto->descripcion,
+                        'cantidad' => $productosAgrupados->sum('cantidad'),
+                        'total' => $productosAgrupados->sum('total')
                     ];
                 });
-
             return response()->json([
-                'message'   => 'Consulta realizada con exito',
-                'productos' => $productos,
-            ], 200);
+                'message' => 'Consulta realizada con exito',
+                'productos' => $productos
 
-        } catch (\Throwable $e) {
+            ], 200);
+        } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
