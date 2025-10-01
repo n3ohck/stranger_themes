@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -94,10 +95,12 @@ class EmpleadoPago extends Model
 
     public function scopeSearch($query, $search)
     {
-        dd($search);
+        $date = Carbon::parse(data_get($search, 'fecha_pago'))
+            ->startOfDay();
+        $dateEnd = $date->copy()->endOfDay();
         return $query
             ->when(data_get($search, 'empleado_id'), fn ($q, $v) => $q->where('empleado_id', $v))
-            ->when(data_get($search, 'fecha_pago'), fn ($q, $v) => $q->whereDate('fecha_pago', $v))
+            ->when(data_get($search, 'fecha_pago'), fn ($q, $v) => $q->whereBetween('fecha_pago', [$date, $dateEnd]))
             ->when(data_get($search, 'estatus'), fn ($q, $v) => $q->where('estatus', $v));
     }
 
