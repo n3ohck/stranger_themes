@@ -94,17 +94,10 @@ class EmpleadoPago extends Model
 
     public function scopeSearch($query, $search)
     {
-        $this->search = $search;
-        return  $query
-            ->when($this->search->empleado_id, function ($query) {
-                $query->where('empleado_id', $this->search->empleado_id);
-            })
-            ->when($this->search->fecha_pago, function ($query) {
-                $query->where('fecha_pago', $this->search->fecha_pago);
-            })
-            ->when($this->search->estatus, function ($query) {
-                $query->where('estatus', $this->search->estatus);
-            });
+        return $query
+            ->when(data_get($search, 'empleado_id'), fn ($q, $v) => $q->where('empleado_id', $v))
+            ->when(data_get($search, 'fecha_pago'), fn ($q, $v) => $q->whereDate('fecha_pago', $v))
+            ->when(data_get($search, 'estatus'), fn ($q, $v) => $q->where('estatus', $v));
     }
 
     /*
