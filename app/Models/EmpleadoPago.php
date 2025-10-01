@@ -137,4 +137,9 @@ class EmpleadoPago extends Model
         return Carbon::parse($value)->timezone('America/Chihuahua')->toIso8601String();
     }
 
+    public function getCreatedAtAttribute($value)
+    {
+        return Carbon::parse($value)->timezone('America/Chihuahua')->toIso8601String();
+    }
+
 }
