@@ -359,14 +359,12 @@ class VentaCrudController extends CrudController
                 ->get()
                 ->map(function ($venta) use (&$totalVentas) {
                     if ($venta->estatus === 'activo') {
-                        $totalVentas += $venta->total;
-                    }
-                    $totalGrande =
-                        (
+                        $totalVentas += (
                             $venta->pagos->where('tipo', 'tarjeta')->sum('monto') +
                             $venta->pagos->where('tipo', 'efectivo')->sum('monto') +
                             $venta->pagos->where('tipo', 'online')->sum('monto')
                         );
+                    }
                     return [
                         'folio' => $venta->folio,
                         'created_at' => $venta->created_at,
@@ -374,7 +372,7 @@ class VentaCrudController extends CrudController
                         'efectivo' => $venta->pagos->where('tipo', 'efectivo')->sum('monto'),
                         'online' => $venta->pagos->where('tipo', 'online')->sum('monto'),
                         'descuento' => $venta->descuento ?? 0,
-                        'total' => $totalGrande,
+                        'total' => $venta->total,
                         'cambio' => $venta->pagos->sum('cambio'),
                         'estatus' => $venta->estatus,
                         'sucursal' => $venta->sucursal->razon_social,
