@@ -248,7 +248,7 @@ class VentaCrudController extends CrudController
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn ($q) => $q->where('tipo', 'online'))
                 ->where('sucursal_id', Auth::user()->sucursal_id)
-                ->search($search)
+                ->search($searchall)
                 ->with($commonWith)
                 ->get();
 
