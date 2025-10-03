@@ -246,7 +246,7 @@ class VentaCrudController extends CrudController
 
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
-                ->whereHas('pagos', fn ($q) => $q->where('tipo', 'online'))
+                ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
                 ->where('sucursal_id', Auth::user()->sucursal_id)
                 ->search($searchall)
                 ->with($commonWith)
@@ -361,6 +361,12 @@ class VentaCrudController extends CrudController
                     if ($venta->estatus === 'activo') {
                         $totalVentas += $venta->total;
                     }
+                    $totalGrande =
+                        (
+                            $venta->pagos->where('tipo', 'tarjeta')->sum('monto') +
+                            $venta->pagos->where('tipo', 'efectivo')->sum('monto') +
+                            $venta->pagos->where('tipo', 'online')->sum('monto')
+                        );
                     return [
                         'folio' => $venta->folio,
                         'created_at' => $venta->created_at,
@@ -368,7 +374,7 @@ class VentaCrudController extends CrudController
                         'efectivo' => $venta->pagos->where('tipo', 'efectivo')->sum('monto'),
                         'online' => $venta->pagos->where('tipo', 'online')->sum('monto'),
                         'descuento' => $venta->descuento ?? 0,
-                        'total' => $venta->total,
+                        'total' => $totalGrande,
                         'cambio' => $venta->pagos->sum('cambio'),
                         'estatus' => $venta->estatus,
                         'sucursal' => $venta->sucursal->razon_social,
