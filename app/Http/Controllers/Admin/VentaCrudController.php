@@ -236,6 +236,8 @@ class VentaCrudController extends CrudController
                 'reservaciones.producto',
             ];
 
+            $searchall = $search;
+            $searchall->user_id = null;
             $ventas = Venta::query()
                 ->search($search)
                 ->with($commonWith)
@@ -243,9 +245,9 @@ class VentaCrudController extends CrudController
                 ->get();
 
             $ventasOnlineExtra = Venta::query()
-                ->withoutGlobalScope(SucursalFilterScope::class)
+                ->withoutGlobalScopes()
                 ->whereHas('pagos', fn ($q) => $q->where('tipo', 'online'))
-                ->where('sucursal_id', Auth::user()->sucursal_id) // quítalo si quieres TODAS las sucursales
+                ->where('sucursal_id', Auth::user()->sucursal_id)
                 ->search($search)
                 ->with($commonWith)
                 ->get();
