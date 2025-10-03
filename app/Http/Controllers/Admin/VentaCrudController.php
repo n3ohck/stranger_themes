@@ -359,11 +359,7 @@ class VentaCrudController extends CrudController
                 ->get()
                 ->map(function ($venta) use (&$totalVentas) {
                     if ($venta->estatus === 'activo') {
-                        $totalVentas += (
-                            $venta->pagos->where('tipo', 'tarjeta')->sum('monto') +
-                            $venta->pagos->where('tipo', 'efectivo')->sum('monto') +
-                            $venta->pagos->where('tipo', 'online')->sum('monto')
-                        );
+                        $totalVentas += ( $venta->total - $venta->descuento);
                     }
                     return [
                         'folio' => $venta->folio,
