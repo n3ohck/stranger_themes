@@ -14,6 +14,7 @@ use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Actions\VentaAction;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -229,19 +230,31 @@ class VentaCrudController extends CrudController
                 $search->end_date = $search->end_date->setTimezone(config('app.display_timezone', 'America/Chihuahua'))->format('Y-m-d H:i:s');
             }
 
+            $commonWith = [
+                'productos.producto',
+                'pagos',
+                'reservaciones.producto',
+            ];
+
             $ventas = Venta::query()
                 ->search($search)
-                ->with([
-                    'productos' => function ($query) {
-                        $query->with(['producto']);
-                    },
-                    'pagos',
-                    'reservaciones' => function ($query) {
-                        $query->with(['producto']);
-                    }
-                ])
-                ->orderBy('created_at', 'desc')
+                ->with($commonWith)
+                ->orderByDesc('created_at')
                 ->get();
+
+            $ventasOnlineExtra = Venta::query()
+                ->withoutGlobalScope(SucursalFilterScope::class)
+                ->whereHas('pagos', fn ($q) => $q->where('tipo', 'online'))
+                ->where('sucursal_id', Auth::user()->sucursal_id) // quítalo si quieres TODAS las sucursales
+                ->search($search)
+                ->with($commonWith)
+                ->get();
+
+            $ventasSistema = $ventas
+                ->merge($ventasOnlineExtra)
+                ->unique('id')
+                ->sortByDesc('created_at')
+                ->values();
 
             return response()->json([
                 'message' => 'Consulta realizada con exito',
