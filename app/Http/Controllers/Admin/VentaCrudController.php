@@ -258,8 +258,8 @@ class VentaCrudController extends CrudController
 
             return response()->json([
                 'message' => 'Consulta realizada con exito',
-                'ventas' => $ventas,
-                'qty' => $ventas->count()
+                'ventas' => $ventasSistema,
+                'qty' => $ventasSistema->count()
             ], 200);
         } catch (\Exception $e) {
             return response()
