@@ -246,9 +246,8 @@ class VentaCrudController extends CrudController
                 ->get();
 
             $today = Carbon::today();
-            $start = Carbon::parse($today)->startOfDay()->format('Y-m-d H:i:s');
-            $end = Carbon::parse($today)->endOfDay()->format('Y-m-d H:i:s');
-            dd( [$start, $end]);
+            $start = Carbon::parse($today)->startOfDay();
+            $end = Carbon::parse($today)->endOfDay();
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
