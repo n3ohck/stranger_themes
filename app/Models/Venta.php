@@ -59,6 +59,10 @@ class Venta extends Model
         'created_at' => 'datetime',
     ];
 
+    protected $appends = [
+        'total_con_descuento'
+    ];
+
     /*
     |--------------------------------------------------------------------------
     | FUNCTIONS
@@ -168,5 +172,9 @@ class Venta extends Model
     public function getCreatedAtAttribute($value)
     {
         return Carbon::parse($value)->format('Y-m-d H:i:s');
+    }
+
+    public function getTotalConDescuentoAttribute(){
+        return $this->attributes['total'] - $this->attributes['descuento'];
     }
 }

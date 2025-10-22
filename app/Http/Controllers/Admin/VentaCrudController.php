@@ -75,17 +75,7 @@ class VentaCrudController extends CrudController
                 'type' => 'datetime'
             ],
             [
-                'name' => 'descuento',
-                'label' => 'Descuento',
-                'type' => 'number',
-                'decimals' => 2,
-                'prefix' => '$',
-                'value' => function ($entry) {
-                    return $entry->descuento;
-                },
-            ],
-            [
-                'name' => 'total',
+                'name' => 'total_con_descuento',
                 'label' => 'Total',
                 'type' => 'number',
                 'decimals' => 2,
