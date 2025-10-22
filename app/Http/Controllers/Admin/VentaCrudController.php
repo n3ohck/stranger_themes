@@ -239,20 +239,33 @@ class VentaCrudController extends CrudController
             $searchall = $search;
             $searchall->user_id = null;
             $ventas = Venta::query()
-                ->whereHas('pagos', fn($q) => $q->where('tipo','!=', 'online'))
                 ->search($search)
                 ->with($commonWith)
                 ->orderByDesc('created_at')
                 ->get();
 
             $today = Carbon::today();
-            $start = Carbon::parse($today)->startOfDay();
-            $end = Carbon::parse($today)->endOfDay();
+            $start = Carbon::parse($today)->startOfDay()->format('Y-m-d H:i:s');
+            $end = Carbon::parse($today)->endOfDay()->format('Y-m-d H:i:s');
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
-                ->whereBetween('created_at', [$start, $end])
-                ->where('sucursal_id', Auth::user()->sucursal_id ?? 1)
+                ->whereHas('reservaciones', function ($q) use ($start, $end) {
+                    $q->whereBetween('fecha', [$start, $end]);
+                })
+                ->where('user_id',$search->user_id)
+                ->where('sucursal_id', Auth::user()->sucursal_id)
+                ->with($commonWith)
+                ->get();
+
+            $ventasOnlineExtra = Venta::query()
+                ->withoutGlobalScopes()
+                ->select('ventas.*')
+                ->addSelect('ventas.created_at as created_at_db')
+                ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
+                ->whereBetween('ventas.created_at', [$start, $end])
+                ->where('user_id', $search->user_id)
+                ->where('sucursal_id', Auth::user()->sucursal_id)
                 ->with($commonWith)
                 ->get();
 
