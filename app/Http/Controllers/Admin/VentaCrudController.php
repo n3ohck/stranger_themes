@@ -222,6 +222,8 @@ class VentaCrudController extends CrudController
                 'user_id' => $request->get('user_id')
             ];
 
+            dd($search);
+
             if ($search->start_date) {
                 $search->start_date = $search->start_date->setTimezone(config('app.display_timezone', 'America/Chihuahua'))->format('Y-m-d H:i:s');
             }
@@ -229,8 +231,6 @@ class VentaCrudController extends CrudController
             if ($search->end_date) {
                 $search->end_date = $search->end_date->setTimezone(config('app.display_timezone', 'America/Chihuahua'))->format('Y-m-d H:i:s');
             }
-
-            dd($search);
 
             $commonWith = [
                 'productos.producto',
