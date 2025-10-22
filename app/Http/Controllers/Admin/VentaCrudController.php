@@ -376,7 +376,7 @@ class VentaCrudController extends CrudController
                         'efectivo' => $venta->pagos->where('tipo', 'efectivo')->sum('monto'),
                         'online' => $venta->pagos->where('tipo', 'online')->sum('monto'),
                         'descuento' => $venta->descuento ?? 0,
-                        'total' => $venta->total,
+                        'total' => $venta->pagos->sum('importe'),
                         'cambio' => $venta->pagos->sum('cambio'),
                         'estatus' => $venta->estatus,
                         'sucursal' => $venta->sucursal->razon_social,
