@@ -239,6 +239,7 @@ class VentaCrudController extends CrudController
             $searchall = $search;
             $searchall->user_id = null;
             $ventas = Venta::query()
+                ->whereHas('pagos', fn($q) => $q->where('tipo', '!=', 'online'))
                 ->search($search)
                 ->with($commonWith)
                 ->orderByDesc('created_at')
@@ -252,17 +253,6 @@ class VentaCrudController extends CrudController
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
                 ->whereBetween('created_at', [$start, $end])
                 ->where('sucursal_id', Auth::user()->sucursal_id ?? 1)
-                ->with($commonWith)
-                ->get();
-
-            $ventasOnlineExtra = Venta::query()
-                ->withoutGlobalScopes()
-                ->select('ventas.*')
-                ->addSelect('ventas.created_at as created_at_db')
-                ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
-                ->whereBetween('ventas.created_at', [$start, $end])
-                ->where('user_id', $search->user_id)
-                ->where('sucursal_id', Auth::user()->sucursal_id)
                 ->with($commonWith)
                 ->get();
 
