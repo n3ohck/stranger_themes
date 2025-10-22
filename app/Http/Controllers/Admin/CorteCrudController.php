@@ -325,7 +325,7 @@ class CorteCrudController extends CrudController
                 'total' => $request->get('total'),
                 'efectivo' => $request->get('efectivo'),
                 'tarjeta' => $request->get('tarjeta'),
-                'transferencia' => $request->get('transferencia'),
+                'transferencia' => $request->get('transferencia') ?? $request->get('online'),
                 'total_caja' => $request->get('total_caja'),
                 'fecha_inicio' => $this->makeDate($request->get('fecha_inicio')),
                 'fecha_final' => $this->makeDate($request->get('fecha_final')),
