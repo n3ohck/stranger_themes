@@ -222,8 +222,6 @@ class VentaCrudController extends CrudController
                 'user_id' => $request->get('user_id')
             ];
 
-            dd($search);
-
             if ($search->start_date) {
                 $search->start_date = $search->start_date->setTimezone(config('app.display_timezone', 'America/Chihuahua'))->format('Y-m-d H:i:s');
             }
@@ -250,6 +248,7 @@ class VentaCrudController extends CrudController
             $today = Carbon::today();
             $start = Carbon::parse($today)->startOfDay();
             $end = Carbon::parse($today)->endOfDay();
+            dd($start, $end);
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
