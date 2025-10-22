@@ -237,7 +237,6 @@ class VentaCrudController extends CrudController
             ];
 
             $searchall = $search;
-            dd($searchall);
             $searchall->user_id = null;
             $ventas = Venta::query()
                 ->search($search)
