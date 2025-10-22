@@ -81,7 +81,7 @@ class VentaCrudController extends CrudController
                 'decimals' => 2,
                 'prefix' => '$',
                 'value' => function ($entry) {
-                    return $entry->total - $entry->descuento;
+                    return $entry->total_con_descuento;
                 },
             ],
             [
