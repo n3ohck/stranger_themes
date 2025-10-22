@@ -254,7 +254,11 @@ class VentaCrudController extends CrudController
                 ->whereBetween('created_at', [$start, $end])
                 ->where('sucursal_id', Auth::user()->sucursal_id ?? 1)
                 ->with($commonWith)
-                ->get();
+                ->get()
+                ->map(function ($venta) {
+                    $venta->total = $venta->pagos->sum('monto');
+                    return $venta;
+                });
 
             $ventasSistema = $ventas
                 ->merge($ventasOnlineExtra)
