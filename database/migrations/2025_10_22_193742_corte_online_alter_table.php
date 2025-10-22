@@ -13,7 +13,7 @@ class CorteOnlineAlterTable extends Migration
      */
     public function up()
     {
-        Schema::table('corte', function (Blueprint $table) {
+        Schema::table('cortes', function (Blueprint $table) {
             $table->float('total_online')->default(0)->nullable();
         });
     }
@@ -25,7 +25,7 @@ class CorteOnlineAlterTable extends Migration
      */
     public function down()
     {
-        Schema::table('corte', function (Blueprint $table) {
+        Schema::table('cortes', function (Blueprint $table) {
             $table->dropColumn('total_online');
         });
     }
