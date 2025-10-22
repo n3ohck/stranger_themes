@@ -244,7 +244,7 @@ class VentaCrudController extends CrudController
                 ->orderByDesc('created_at')
                 ->get();
 
-            $today = Carbon::today()->setTimezone(config('app.display_timezone', 'America/Chihuahua'))->format('Y-m-d H:i:s');
+            $today = Carbon::today();
             $start = Carbon::parse($today)->startOfDay()->format('Y-m-d H:i:s');
             $end = Carbon::parse($today)->endOfDay()->format('Y-m-d H:i:s');
             dd($start, $end);
