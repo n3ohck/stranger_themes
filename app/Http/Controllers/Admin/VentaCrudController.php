@@ -369,6 +369,8 @@ class VentaCrudController extends CrudController
                     if ($venta->estatus === 'activo') {
                         $totalVentas += ( $venta->total - $venta->descuento);
                     }
+                    $totalVenta = ( $venta->pagos->where('tipo', 'online')->count() > 0 ) ?  ($venta->total - $venta->descuento) : $venta->total;
+
                     return [
                         'folio' => $venta->folio,
                         'created_at' => $venta->created_at,
@@ -376,7 +378,7 @@ class VentaCrudController extends CrudController
                         'efectivo' => $venta->pagos->where('tipo', 'efectivo')->sum('monto'),
                         'online' => $venta->pagos->where('tipo', 'online')->sum('monto'),
                         'descuento' => $venta->descuento ?? 0,
-                        'total' => $venta->pagos->sum('monto'),
+                        'total' => $totalVenta,
                         'cambio' => $venta->pagos->sum('cambio'),
                         'estatus' => $venta->estatus,
                         'sucursal' => $venta->sucursal->razon_social,
