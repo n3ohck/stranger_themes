@@ -236,6 +236,7 @@ class VentaCrudController extends CrudController
                 'reservaciones.producto',
             ];
 
+            dd($search);
             $searchall = $search;
             $searchall->user_id = null;
             $ventas = Venta::query()
@@ -248,7 +249,6 @@ class VentaCrudController extends CrudController
             $today = Carbon::today();
             $start = Carbon::parse($today)->startOfDay();
             $end = Carbon::parse($today)->endOfDay();
-            dd($start, $end);
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
