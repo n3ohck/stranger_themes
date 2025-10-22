@@ -245,16 +245,13 @@ class VentaCrudController extends CrudController
                 ->get();
 
             $today = Carbon::today();
-            $start = Carbon::parse($today)->startOfDay()->format('Y-m-d H:i:s');
-            $end = Carbon::parse($today)->endOfDay()->format('Y-m-d H:i:s');
+            $start = Carbon::parse($today)->startOfDay();
+            $end = Carbon::parse($today)->endOfDay();
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
-                ->whereHas('reservaciones', function ($q) use ($start, $end) {
-                    $q->whereBetween('fecha', [$start, $end]);
-                })
-                ->where('user_id',$search->user_id)
-                ->where('sucursal_id', Auth::user()->sucursal_id)
+                ->whereBetween('created_at', [$start, $end])
+                ->where('sucursal_id', Auth::user()->sucursal_id ?? 1)
                 ->with($commonWith)
                 ->get();
 
