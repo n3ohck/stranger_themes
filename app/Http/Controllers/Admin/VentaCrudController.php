@@ -223,11 +223,11 @@ class VentaCrudController extends CrudController
             ];
 
             if ($search->start_date) {
-                $search->start_date = $search->start_date->setTimezone(config('app.display_timezone', 'America/Chihuahua'))->format('Y-m-d H:i:s');
+                $search->start_date = $search->start_date->format('Y-m-d H:i:s');
             }
 
             if ($search->end_date) {
-                $search->end_date = $search->end_date->setTimezone(config('app.display_timezone', 'America/Chihuahua'))->format('Y-m-d H:i:s');
+                $search->end_date = $search->end_date->format('Y-m-d H:i:s');
             }
 
             $commonWith = [
