@@ -236,7 +236,6 @@ class VentaCrudController extends CrudController
                 'reservaciones.producto',
             ];
 
-            dd($search);
             $searchall = $search;
             $searchall->user_id = null;
             $ventas = Venta::query()
