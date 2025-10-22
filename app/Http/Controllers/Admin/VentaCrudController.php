@@ -76,7 +76,7 @@ class VentaCrudController extends CrudController
             ],
             [
                 'name' => 'descuento',
-                'label' => 'dESCUENTO',
+                'label' => 'Descuento',
                 'type' => 'number',
                 'decimals' => 2,
                 'prefix' => '$',
