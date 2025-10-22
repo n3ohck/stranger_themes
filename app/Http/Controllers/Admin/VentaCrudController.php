@@ -251,8 +251,7 @@ class VentaCrudController extends CrudController
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
-                ->whereBetween('created_at', [$start, $end])
-                ->where('user_id',$search->user_id)
+                ->search($search)
                 ->with($commonWith)
                 ->get();
 
