@@ -119,19 +119,19 @@ class Venta extends Model
         $this->search = $search;
         return $query
             ->when($this->search->folio, function ($query) {
-                return $query->where('folio', $this->search->folio);
+                 $query->where('folio', $this->search->folio);
             })
             ->when($this->search->start_date, function ($query) {
-                return $query->where('created_at', '>=', $this->search->start_date);
+                 $query->where('created_at', '>=', $this->search->start_date);
             })
             ->when($this->search->end_date, function ($query) {
-                return $query->where('created_at', '<=', $this->search->end_date);
+                 $query->where('created_at', '<=', $this->search->end_date);
             })
             ->when($this->search->status, function ($query) {
-                return $query->where('estatus', $this->search->status);
+                 $query->where('estatus', $this->search->status);
             })
             ->when($this->search->venta_id, function ($query) {
-                return $query->where('id', $this->search->venta_id);
+                 $query->where('id', $this->search->venta_id);
             })
             ->when($this->search->user_id, function ($query) {
                 return $query->where('user_id', $this->search->user_id);
