@@ -245,8 +245,8 @@ class VentaCrudController extends CrudController
                 ->get();
 
             $today = Carbon::today();
-            $start = Carbon::parse($today)->startOfDay()->format('Y-m-d H:i:s');
-            $end = Carbon::parse($today)->endOfDay()->format('Y-m-d H:i:s');
+            $start = Carbon::parse($today)->startOfDay()->setTimezone(config('app.display_timezone', 'America/Chihuahua'))->format('Y-m-d H:i:s');
+            $end = Carbon::parse($today)->endOfDay()->setTimezone(config('app.display_timezone', 'America/Chihuahua'))->format('Y-m-d H:i:s');
             dd($start, $end);
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
