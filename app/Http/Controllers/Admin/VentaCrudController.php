@@ -366,11 +366,10 @@ class VentaCrudController extends CrudController
                 ->Filters($params)
                 ->get()
                 ->map(function ($venta) use (&$totalVentas) {
-                    if ($venta->estatus === 'activo') {
-                        $totalVentas += ( $venta->total - $venta->descuento);
-                    }
                     $totalVenta = ( $venta->pagos->where('tipo', 'online')->count() > 0 ) ?  ($venta->total - $venta->descuento) : $venta->total;
-
+                    if ($venta->estatus === 'activo') {
+                        $totalVentas += $totalVenta;
+                    }
                     return [
                         'folio' => $venta->folio,
                         'created_at' => $venta->created_at,
