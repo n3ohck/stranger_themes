@@ -238,7 +238,6 @@ class VentaCrudController extends CrudController
 
             $searchall = $search;
             $searchall->user_id = null;
-            dd($search->start_date);
             $ventas = Venta::query()
                 ->whereHas('pagos', fn($q) => $q->where('tipo','!=', 'online'))
                 ->search($search)
