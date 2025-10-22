@@ -251,7 +251,7 @@ class VentaCrudController extends CrudController
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
                 ->whereHas('reservaciones', function ($q) use ($start, $end) {
-                    $q->whereBetween('created_at', [$start, $end]);
+                    $q->whereBetween('fecha', [$start, $end]);
                 })
                 ->where('user_id',$search->user_id)
                 ->where('sucursal_id', Auth::user()->sucursal_id)
