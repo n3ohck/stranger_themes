@@ -394,7 +394,7 @@ class VentaCrudController extends CrudController
                     $startLocal,
                     $endLocal,
                 ])
-                ->count();
+                ->sum('cantidad_personas');
 
 
             $utilidad_operativa = $totalVentas - ($totaEgresos + $salarios);
