@@ -230,6 +230,8 @@ class VentaCrudController extends CrudController
                 $search->end_date = $search->end_date->setTimezone(config('app.display_timezone', 'America/Chihuahua'))->format('Y-m-d H:i:s');
             }
 
+            dd($search);
+
             $commonWith = [
                 'productos.producto',
                 'pagos',
