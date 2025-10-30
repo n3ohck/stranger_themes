@@ -170,16 +170,7 @@ class Corte extends Model
     public function getGananciaAttribute()
     {
         $totalEgresos =  ($this->pago_empleados + $this->total_egresos);
-        return number_format(( ($this->attributes['total'] + $this->total_online) - $totalEgresos), 2, '.', '');
+        $total = ($this->attributes['total'] + $this->attributes['total_online'] + $this->attributes['transferencia']);
+        return number_format(( $total - $totalEgresos), 2, '.', '');
     }
-
-    /*public function getTotalOnlineAttribute()
-    {
-        return VentaPago::query()->where('tipo','online')
-            ->whereHas('venta',function($q){
-                $q->where('sucursal_id', $this->attributes['sucursal_id']);
-            })
-            ->whereBetween('created_at', [$this->attributes['fecha_inicio'], $this->attributes['fecha_final']])
-            ->sum('monto') ?? 0;
-    }*/
 }

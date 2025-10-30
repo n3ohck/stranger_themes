@@ -238,7 +238,6 @@ class CorteCrudController extends CrudController
         CRUD::field('tarjeta');
         CRUD::field('total');
         CRUD::field('total_caja');
-        CRUD::field('transferencia');
         CRUD::field('updated_at');
         CRUD::field('user_id');
 
