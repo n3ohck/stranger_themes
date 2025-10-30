@@ -170,7 +170,7 @@ class Corte extends Model
     public function getGananciaAttribute()
     {
         $totalEgresos =  ($this->pago_empleados + $this->total_egresos);
-        $total = ($this->attributes['total'] + $this->attributes['total_online'] + $this->attributes['transferencia']);
+        $total = $this->attributes['total'];
         return number_format(( $total - $totalEgresos), 2, '.', '');
     }
 }
