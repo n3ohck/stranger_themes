@@ -105,10 +105,7 @@ class VentaAction
                     ->exists();
 
                 if ($existsReference) {
-                    throw new \Exception(
-                        'La referencia de pago ya fue registrada previamente.',
-                        400
-                    );
+                   continue;
                 }
             }
 
