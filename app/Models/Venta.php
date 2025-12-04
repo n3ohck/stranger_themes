@@ -175,6 +175,8 @@ class Venta extends Model
     }
 
     public function getTotalConDescuentoAttribute(){
-        return $this->attributes['total'] - $this->attributes['descuento'];
+        $descuento = !(isset($this->attributes['descuento'])) ? 0 : $this->attributes['descuento'];
+        $venta = !(isset($this->attributes['total'])) ? 0 : $this->attributes['total'];
+        return $venta - $descuento;
     }
 }

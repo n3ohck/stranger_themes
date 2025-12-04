@@ -73,6 +73,9 @@ class VentaAction
         return $nuevasVentas;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function saleOnline(array $sales): array
     {
         $newSales = collect();
@@ -88,6 +91,25 @@ class VentaAction
                 ->where('tipo', 'online');
             if ($payments->isEmpty()) {
                 throw new \Exception('No se han encontrado pagos ONLINE para el venta', 400);
+            }
+
+            // NUEVA VALIDACIÓN: referencia de pago repetida
+            $onlineReferences = $payments
+                ->pluck('referencia')
+                ->filter() // por si alguno viene null
+                ->values();
+
+            if ($onlineReferences->isNotEmpty()) {
+                $existsReference = VentaPago::query()
+                    ->whereIn('referencia', $onlineReferences)
+                    ->exists();
+
+                if ($existsReference) {
+                    throw new \Exception(
+                        'La referencia de pago ya fue registrada previamente.',
+                        400
+                    );
+                }
             }
 
             $products = collect($sale['productos']);
