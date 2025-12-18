@@ -360,33 +360,61 @@ class VentaCrudController extends CrudController
             $cantidadReservaciones = 0;
             $totaEgresos = (new EgresoCrudController)->getTotal($params['dates']);
             $salarios = (new EmpleadoPagoCrudController)->getTotal($params['dates']);
+
+            // 1) Traes ventas online extra (tal cual ya lo tienes)
+            $ventasOnlineExtra = Venta::query()
+                ->withoutGlobalScopes()
+                ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
+                ->whereHas('reservaciones', fn($q) => $q->whereBetween('created_at', [$startLocal, $endLocal]))
+                ->where('sucursal_id', Auth::user()->sucursal_id ?? 1)
+                ->with(['user','sucursal','pagos'])
+                ->get();
+
+            // 2) Ventas normales (no online) + tu map actual
             $ventas = Venta::query()
-                ->with([
-                    'user',
-                    'sucursal',
-                    'pagos'
-                ])
+                ->with(['user','sucursal','pagos'])
+                ->whereHas('pagos', fn($q) => $q->where('tipo', '!=', 'online'))
                 ->Filters($params)
-                ->get()
-                ->map(function ($venta) use (&$totalVentas) {
-                    $totalVenta = ( $venta->pagos->where('tipo', 'online')->count() > 0 ) ?  ($venta->total - $venta->descuento) : $venta->total;
-                    if ($venta->estatus === 'activo') {
-                        $totalVentas += $totalVenta;
-                    }
-                    return [
-                        'folio' => $venta->folio,
-                        'created_at' => $venta->created_at,
-                        'tarjeta' => $venta->pagos->where('tipo', 'tarjeta')->sum('monto'),
-                        'efectivo' => $venta->pagos->where('tipo', 'efectivo')->sum('monto'),
-                        'online' => $venta->pagos->where('tipo', 'online')->sum('monto'),
-                        'descuento' => $venta->descuento ?? 0,
-                        'total' => $totalVenta,
-                        'cambio' => $venta->pagos->sum('cambio'),
-                        'estatus' => $venta->estatus,
-                        'sucursal' => $venta->sucursal->razon_social,
-                        'codigo_descuento' => $venta->codigo_descuento ?? 'N/A',
-                    ];
-                });
+                ->get();
+
+            // Helper para NO duplicar lógica (misma lógica para ambas colecciones)
+            $mapVenta = function (Venta $venta) use (&$totalVentas) {
+
+                // tu lógica original de total (respeta descuento cuando hay online)
+                if ($venta->pagos->where('tipo', 'online')->count() > 0) {
+                    $totalVenta = ($venta->total - $venta->descuento);
+                    $venta->created_at = $venta->reservaciones->first()->created_at;
+                } else {
+                    $totalVenta = $venta->total;
+                }
+
+                if ($venta->estatus === 'activo') {
+                    $totalVentas += $totalVenta;
+                }
+
+                return [
+                    'folio' => $venta->folio,
+                    'created_at' => $venta->created_at,
+                    'tarjeta' => $venta->pagos->where('tipo', 'tarjeta')->sum('monto'),
+                    'efectivo' => $venta->pagos->where('tipo', 'efectivo')->sum('monto'),
+                    'online' => $venta->pagos->where('tipo', 'online')->sum('monto'),
+                    'descuento' => $venta->descuento ?? 0,
+                    'total' => $totalVenta,
+                    'cambio' => $venta->pagos->sum('cambio'),
+                    'estatus' => $venta->estatus,
+                    'sucursal' => optional($venta->sucursal)->razon_social,
+                    'codigo_descuento' => $venta->codigo_descuento ?? 'N/A',
+                ];
+            };
+
+            // 3) Mapeas ambas y haces merge
+            $ventasMapped = $ventas->map($mapVenta);
+            $onlineMapped = $ventasOnlineExtra->map($mapVenta);
+
+            $ventasFinal = $ventasMapped
+                ->merge($onlineMapped)
+                ->sortByDesc('created_at')
+                ->values();
 
             $cantidadReservaciones = Reserva::query()
                 ->where('estado', 'confirmada')
@@ -400,8 +428,8 @@ class VentaCrudController extends CrudController
             $utilidad_operativa = $totalVentas - ($totaEgresos + $salarios);
             return response()->json([
                 'message' => 'Consulta realizada con exito',
-                'ventas' => $ventas,
-                'cantidad_ventas' => $ventas->count(),
+                'ventas' => $ventasFinal,
+                'cantidad_ventas' => $ventasFinal->count(),
                 'cantidad_reservaciones' => $cantidadReservaciones,
                 'total_ventas' => number_format($totalVentas, 2, '.', ','),
                 'total_egresos' => number_format($totaEgresos, 2, '.', ','),
