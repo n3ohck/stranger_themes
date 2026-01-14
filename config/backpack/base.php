@@ -43,6 +43,7 @@ return [
     // CSS files that are loaded in all pages, using Laravel's asset() helper
     'styles' => [
         'packages/backpack/base/css/bundle.css', // has primary color electric purple (backpack default)
+        'https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4',
         //'packages/backpack/base/css/blue-bundle.css', // has primary color blue
 
         // Here's what's inside the bundle:

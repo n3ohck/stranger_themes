@@ -93,6 +93,11 @@ class Venta extends Model
         return $this->belongsTo(Descuento::class);
     }
 
+    public function descuentoEntity(): BelongsTo
+    {
+        return $this->belongsTo(Descuento::class);
+    }
+
     public function sucursal(): BelongsTo
     {
         return $this->belongsTo(Sucursal::class);

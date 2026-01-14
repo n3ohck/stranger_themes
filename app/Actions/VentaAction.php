@@ -27,12 +27,9 @@ class VentaAction
 
     public function makeFolio(): string
     {
-        $lastVenta = Venta::query()
-            ->select(['id', 'created_at'])
-            ->latest()
-            ->first();
-        if (!$lastVenta) return 'VTA-1';
-        return 'VTA-' . ($lastVenta->id + 1);
+        $lastId = Venta::query()->max('id');
+        $next = ($lastId ?? 0) + 1;
+        return 'VTA-' . $next;
     }
 
     public function do(array $ventas): array

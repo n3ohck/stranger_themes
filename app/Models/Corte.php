@@ -47,7 +47,7 @@ class Corte extends Model
     ];
 
     protected $casts = [
-        'online' => 'float',
+        'total_online' => 'float',
         'total' => 'float',
         'efectivo' => 'float',
         'tarjeta' => 'float',

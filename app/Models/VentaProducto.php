@@ -74,6 +74,11 @@ class VentaProducto extends Model
     {
         return $this->belongsTo(Descuento::class,'descuento_id','id');
     }
+
+    public function descuentoEntity()
+    {
+        return $this->belongsTo(Descuento::class, 'descuento_id');
+    }
     /*
     |--------------------------------------------------------------------------
     | SCOPES

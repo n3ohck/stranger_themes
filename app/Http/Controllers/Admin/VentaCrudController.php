@@ -75,14 +75,11 @@ class VentaCrudController extends CrudController
                 'type' => 'datetime'
             ],
             [
-                'name' => 'total_con_descuento',
+                'name' => 'total',
                 'label' => 'Total',
                 'type' => 'number',
                 'decimals' => 2,
                 'prefix' => '$',
-                'value' => function ($entry) {
-                    return $entry->total_con_descuento;
-                },
             ],
             [
                 // 1-n relationship
@@ -101,17 +98,6 @@ class VentaCrudController extends CrudController
                 'entity' => 'user', // the method that defines the relationship in your Model
                 'attribute' => 'name', // foreign key attribute that is shown to user
                 'model' => User::class, // foreign key model
-            ],
-            [
-                'name' => 'codigo_descuento',
-                'label' => 'Codigo Descuento',
-                'type' => 'text'
-            ],
-            [
-                'name' => 'porcentaje_descuento',
-                'label' => 'Porcentaje Descuento',
-                'type' => 'number',
-                'decimals' => 2,
             ],
             [
                 'name' => 'estatus',
@@ -176,29 +162,6 @@ class VentaCrudController extends CrudController
     protected function setupCreateOperation()
     {
         CRUD::setValidation(VentaRequest::class);
-
-        CRUD::field('codigo_descuento');
-        CRUD::field('comentario_cancelacion');
-        CRUD::field('created_at');
-        CRUD::field('deleted_at');
-        CRUD::field('descuento');
-        CRUD::field('descuento_id');
-        CRUD::field('estatus');
-        CRUD::field('fecha_cancelacion');
-        CRUD::field('folio');
-        CRUD::field('id');
-        CRUD::field('porcentaje_descuento');
-        CRUD::field('sucursal_id');
-        CRUD::field('total');
-        CRUD::field('updated_at');
-        CRUD::field('user_id');
-        CRUD::field('user_id_cancelacion');
-
-        /**
-         * Fields can be defined using the fluent syntax or array syntax:
-         * - CRUD::field('price')->type('number');
-         * - CRUD::addField(['name' => 'price', 'type' => 'number']));
-         */
     }
 
     /**
@@ -248,20 +211,14 @@ class VentaCrudController extends CrudController
                 ->orderByDesc('created_at')
                 ->get();
 
-            $today = Carbon::today();
-            $start = Carbon::parse($today)->startOfDay();
-            $end = Carbon::parse($today)->endOfDay();
+            $start = Carbon::parse($search->start_date)->startOfDay();
+            $end = Carbon::parse($start)->endOfDay();
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
-                ->whereBetween('created_at', [$start, $end])
-                ->where('sucursal_id', Auth::user()->sucursal_id ?? 1)
+                ->whereHas('reservaciones', fn($q) => $q->whereBetween('fecha', [$start, $end]))
                 ->with($commonWith)
-                ->get()
-                ->map(function ($venta) {
-                    $venta->total = $venta->pagos->sum('monto');
-                    return $venta;
-                });
+                ->get();
 
             $ventasSistema = $ventas
                 ->merge($ventasOnlineExtra)
@@ -365,7 +322,7 @@ class VentaCrudController extends CrudController
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
-                ->whereHas('reservaciones', fn($q) => $q->whereBetween('created_at', [$startLocal, $endLocal]))
+                ->whereHas('reservaciones', fn($q) => $q->whereBetween('fecha', [$startLocal, $endLocal]))
                 ->where('sucursal_id', Auth::user()->sucursal_id ?? 1)
                 ->with(['user','sucursal','pagos'])
                 ->get();
@@ -492,18 +449,42 @@ class VentaCrudController extends CrudController
         try {
             $params = $request->all();
             $tz = config('app.display_timezone', 'America/Chihuahua');
+
             if (!isset($params['dates'])) {
                 $startLocal = Carbon::now($tz)->startOfDay();
-                $endLocal = Carbon::now($tz)->endOfDay();
+                $endLocal   = Carbon::now($tz)->endOfDay();
             } else {
                 $startLocal = Carbon::parse($params['dates'][0], $tz)->startOfDay();
-                $endLocal = Carbon::parse($params['dates'][1], $tz)->endOfDay();
+                $endLocal   = Carbon::parse($params['dates'][1], $tz)->endOfDay();
             }
-            // Pasa a UTC para consultar en DB (que guarda UTC)
+
+            // Pasar a UTC para DB
             $params['dates'] = [
                 $startLocal->clone()->timezone('UTC'),
                 $endLocal->clone()->timezone('UTC'),
             ];
+
+            /**
+             * Regla de redondeo SOLO para descuentos
+             */
+            $roundDiscount = function (float $value): float {
+                $sign = $value < 0 ? -1 : 1;
+                $abs  = abs($value);
+
+                $int = floor($abs);
+                $dec = $abs - $int;
+
+                if ($dec <= 0.49) {
+                    $res = floor($abs);
+                } elseif ($dec >= 0.51) {
+                    $res = ceil($abs);
+                } else {
+                    // exactamente .50
+                    $res = $abs;
+                }
+
+                return $res * $sign;
+            };
 
             $productos = VentaProducto::query()
                 ->whereHas('venta', function ($query) use ($params) {
@@ -514,35 +495,58 @@ class VentaCrudController extends CrudController
                 ->with([
                     'venta.pagos',
                     'producto',
-                    'descuento'
+                    'descuentoEntity'
                 ])
-                ->where('descuento', '>', 0)
+                ->where('descuento', '!=', 0)
                 ->get()
-                ->map(function ($producto) {
-                    $paymentsOnline = $producto->venta->pagos->where('tipo', 'online')->count();
+                ->map(function ($producto) use ($roundDiscount) {
+
+                    $paymentsOnline = $producto->venta->pagos
+                        ->where('tipo', 'online')
+                        ->count();
+
+                    // Compatibilidad con lógica previa (online)
                     if ($paymentsOnline) {
-                        $totalOrginal = $producto->total;
-                        $producto->total = $producto->descuento;
-                        $producto->descuento = $totalOrginal - $producto->descuento;
+                        $totalOriginal     = $producto->total;
+                        $producto->total  = $producto->descuento;
+                        $producto->descuento = $totalOriginal - $producto->descuento;
                     }
-                    //dd($paymentsOnline,$producto->precio, $producto->descuento, $producto->porcentaje_descuento,$producto->total);
+
+                    $precio     = (float) $producto->precio;                 // NO se redondea
+                    $porcentaje = (float) $producto->porcentaje_descuento;   // NO se redondea
+
+                    // ===== CÁLCULO CORRECTO =====
+                    if ($precio > 0 && $porcentaje > 0) {
+                        // descuento unitario RAW
+                        $descuentoUnitarioRaw = $precio * ($porcentaje / 100);
+                    } else {
+                        $descuentoUnitarioRaw = 0;
+                    }
+
+                    $descuentoUnitario = max(0, $roundDiscount($descuentoUnitarioRaw));
+
+                    $precioConDescuento = max(0, $precio - $descuentoUnitario);
+
                     return [
                         'fecha' => $producto->created_at->format('Y-m-d H:i:s'),
                         'producto' => $producto->producto->descripcion,
-                        'precio' => $producto->precio,
-                        'descuento' => $producto->descuento,
-                        'porcentaje_descuento' => $producto->porcentaje_descuento,
-                        'codigo_descuento' => $producto->codigo_descuento ?? '-',
-                        'total' => $producto->total
+                        'precio' => round($precio, 2), // solo formato
+                        'descuento' => round($descuentoUnitario, 2),
+                        'porcentaje_descuento' => round($porcentaje, 2),
+                        'codigo_descuento' => $producto->descuentoEntity->codigo ?? 'N/A',
+                        'total' => round($precioConDescuento, 2),
                     ];
                 });
+
             return response()->json([
                 'message' => 'Consulta realizada con exito',
                 'productos' => $productos
-
             ], 200);
+
         } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }
