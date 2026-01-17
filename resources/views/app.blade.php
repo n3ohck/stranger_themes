@@ -7,6 +7,7 @@
             font-size: 13px !important;
         }
     </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 @endsection
 @section('content')
     @inertia

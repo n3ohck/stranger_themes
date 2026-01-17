@@ -275,14 +275,20 @@
                                                 label="Precio Con Descuento"
                                                 align="right"
                                                 :formatter="moneyFormat"
-                                                prop="total">
+                                                prop="precio_con_descuento">
                                             </el-table-column>
                                             <el-table-column
                                                 sortable
-                                                label="Cantidad Descuento"
+                                                label="Aplicado a"
+                                                align="right"
+                                                prop="aplica_a">
+                                            </el-table-column>
+                                            <el-table-column
+                                                sortable
+                                                label="Total"
                                                 align="right"
                                                 :formatter="moneyFormat"
-                                                prop="descuento">
+                                                prop="total">
                                             </el-table-column>
                                             <el-table-column
                                                 sortable
@@ -458,22 +464,41 @@ export default {
             XLSX.writeFile(workbook, 'resumen_ventas_productos.xlsx');
         },
         exportToExcelProductosDescuento() {
-            const data = this.tableDataProductos.map(item => ({
+            // ✅ este endpoint llena tableDataDescuentos (no tableDataProductos)
+            const data = (this.tableDataDescuentos || []).map(item => ({
                 fecha: item.fecha,
                 producto: item.producto,
-                precio: item.precio,
+                precio: item.precio,                       // unitario
+                cantidad: item.cantidad,                   // qty/personas
+                porcentaje_descuento: item.porcentaje_descuento,
+                descuento_unitario: item.descuento_unitario,
+                aplica_a: item.aplica_a,                   // cuántas personas/unidades
+                precio_con_descuento: item.precio_con_descuento,
                 total: item.total,
-                descuento: item.descuento,
-                porcentaje: item.porcentaje_descuento,
-                codigo_descuento: item.codigo_descuento
+                codigo_descuento: item.codigo_descuento,
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(data);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'Resumen Ventas Productos');
 
-            // Generar el archivo Excel
-            XLSX.writeFile(workbook, 'resumen_ventas_productos.xlsx');
+            // (opcional) ancho de columnas para que no salga todo comprimido
+            worksheet["!cols"] = [
+                { wch: 19 }, // fecha
+                { wch: 35 }, // producto
+                { wch: 12 }, // precio
+                { wch: 10 }, // cantidad
+                { wch: 18 }, // porcentaje_descuento
+                { wch: 18 }, // descuento_unitario
+                { wch: 10 }, // aplica_a
+                { wch: 18 }, // precio_con_descuento
+                { wch: 12 }, // total
+                { wch: 18 }, // codigo_descuento
+            ];
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Descuentos Productos");
+
+            // ✅ nombre correcto
+            XLSX.writeFile(workbook, "resumen_descuentos_productos.xlsx");
         }
     },
     created() {

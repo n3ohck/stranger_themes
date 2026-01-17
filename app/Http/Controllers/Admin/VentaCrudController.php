@@ -300,13 +300,15 @@ class VentaCrudController extends CrudController
         try {
             $tz = config('app.display_timezone', 'America/Chihuahua');
             $params = $request->all();
+
             if (!isset($params['dates'])) {
                 $startLocal = Carbon::now($tz)->startOfDay();
-                $endLocal = Carbon::now($tz)->endOfDay();
+                $endLocal   = Carbon::now($tz)->endOfDay();
             } else {
                 $startLocal = Carbon::parse($params['dates'][0], $tz)->startOfDay();
-                $endLocal = Carbon::parse($params['dates'][1], $tz)->endOfDay();
+                $endLocal   = Carbon::parse($params['dates'][1], $tz)->endOfDay();
             }
+
             // Pasa a UTC para consultar en DB (que guarda UTC)
             $params['dates'] = [
                 $startLocal->clone()->timezone('UTC'),
@@ -314,36 +316,153 @@ class VentaCrudController extends CrudController
             ];
 
             $totalVentas = 0;
-            $cantidadReservaciones = 0;
             $totaEgresos = (new EgresoCrudController)->getTotal($params['dates']);
-            $salarios = (new EmpleadoPagoCrudController)->getTotal($params['dates']);
+            $salarios    = (new EmpleadoPagoCrudController)->getTotal($params['dates']);
 
-            // 1) Traes ventas online extra (tal cual ya lo tienes)
+            /**
+             * Regla de redondeo SOLO para DESCUENTOS (montos):
+             * - dec <= .49  -> floor
+             * - dec == .50  -> se queda igual
+             * - dec >= .51  -> ceil
+             */
+            $roundDiscount = function (float $value): float {
+                $sign = $value < 0 ? -1 : 1;
+                $abs  = abs($value);
+
+                $int = floor($abs);
+                $dec = $abs - $int;
+
+                if ($dec <= 0.49) {
+                    $res = floor($abs);
+                } elseif ($dec >= 0.51) {
+                    $res = ceil($abs);
+                } else {
+                    $res = $abs; // EXACTAMENTE .50
+                }
+
+                return $res * $sign;
+            };
+
+            /**
+             * Calcula el descuento total REAL de una venta:
+             * - Usa porcentaje_descuento y precio
+             * - Calcula a cuántas personas/unidades se aplicó para cuadrar contra total real de línea
+             * - Aplica redondeo SOLO al descuento unitario (regla cliente)
+             */
+            $calcVentaDiscountAndCodes = function (Venta $venta) use ($roundDiscount): array {
+
+                $codes = collect();
+
+                $discountTotal = 0.0;
+
+                foreach ($venta->productos as $vp) {
+
+                    $precio     = (float) $vp->precio;
+                    $cantidad   = (float) $vp->cantidad;
+                    $porcentaje = (float) $vp->porcentaje_descuento;
+                    $totalLineaObjetivo = (float) $vp->total;
+
+                    // código descuento (del entity o fallback)
+                    $code = optional($vp->descuentoEntity)->codigo
+                        ?? ($vp->codigo_descuento ?? null);
+
+                    if ($code) {
+                        $codes->push($code);
+                    }
+
+                    if ($precio <= 0 || $cantidad <= 0 || $porcentaje <= 0) {
+                        continue;
+                    }
+
+                    // descuento unitario raw por porcentaje
+                    $descuentoUnitarioRaw = $precio * ($porcentaje / 100);
+
+                    // regla cliente SOLO en descuentos
+                    $descuentoUnitario = max(0.0, $roundDiscount($descuentoUnitarioRaw));
+
+                    if ($descuentoUnitario <= 0) {
+                        continue;
+                    }
+
+                    // total sin descuento de la línea
+                    $subtotalLinea = $precio * $cantidad;
+
+                    // descuento total necesario (según el total real guardado en la línea)
+                    $descuentoNecesario = $subtotalLinea - $totalLineaObjetivo;
+
+                    // si no hay descuento necesario, no aplica
+                    if ($descuentoNecesario <= 0) {
+                        continue;
+                    }
+
+                    // cuántas unidades/personas tuvieron descuento
+                    $aplicaA = (int) round($descuentoNecesario / $descuentoUnitario);
+
+                    // clamp [0, cantidad]
+                    $aplicaA = max(0, min((int) round($cantidad), $aplicaA));
+
+                    // descuento de esta línea = descuento_unitario * aplicaA
+                    $discountTotal += ($descuentoUnitario * $aplicaA);
+                }
+
+                // si hay varios códigos, los mostramos juntos (sin repetir)
+                $codesFinal = $codes
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->implode(', ');
+
+                return [
+                    'descuento_total' => round($discountTotal, 2),
+                    'codigo_descuento' => $codesFinal ?: 'N/A',
+                ];
+            };
+
+            // 1) Ventas online extra (como lo tienes)
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
                 ->whereHas('reservaciones', fn($q) => $q->whereBetween('fecha', [$startLocal, $endLocal]))
                 ->where('sucursal_id', Auth::user()->sucursal_id ?? 1)
-                ->with(['user','sucursal','pagos'])
+                ->with([
+                    'user',
+                    'sucursal',
+                    'pagos',
+                    'reservaciones',
+                    'productos.descuentoEntity',
+                    'productos'
+                ])
                 ->get();
 
-            // 2) Ventas normales (no online) + tu map actual
+            // 2) Ventas normales
             $ventas = Venta::query()
-                ->with(['user','sucursal','pagos'])
+                ->with([
+                    'user',
+                    'sucursal',
+                    'pagos',
+                    'reservaciones',
+                    'productos.descuentoEntity',
+                    'productos'
+                ])
                 ->whereHas('pagos', fn($q) => $q->where('tipo', '!=', 'online'))
                 ->Filters($params)
                 ->get();
 
-            // Helper para NO duplicar lógica (misma lógica para ambas colecciones)
-            $mapVenta = function (Venta $venta) use (&$totalVentas) {
+            // Mapper (misma lógica para ambas colecciones)
+            $mapVenta = function (Venta $venta) use (&$totalVentas, $calcVentaDiscountAndCodes) {
 
-                // tu lógica original de total (respeta descuento cuando hay online)
-                if ($venta->pagos->where('tipo', 'online')->count() > 0) {
-                    $totalVenta = ($venta->total - $venta->descuento);
-                    $venta->created_at = $venta->reservaciones->first()->created_at;
+                $hasOnline = $venta->pagos->where('tipo', 'online')->count() > 0;
+
+                // Total según tu lógica anterior
+                if ($hasOnline) {
+                    $totalVenta = ($venta->total - ($venta->descuento ?? 0));
+                    $venta->created_at = optional($venta->reservaciones->first())->created_at ?? $venta->created_at;
                 } else {
                     $totalVenta = $venta->total;
                 }
+
+                // ✅ descuento y código correctos (desde productos)
+                $calc = $calcVentaDiscountAndCodes($venta);
 
                 if ($venta->estatus === 'activo') {
                     $totalVentas += $totalVenta;
@@ -355,34 +474,27 @@ class VentaCrudController extends CrudController
                     'tarjeta' => $venta->pagos->where('tipo', 'tarjeta')->sum('monto'),
                     'efectivo' => $venta->pagos->where('tipo', 'efectivo')->sum('monto'),
                     'online' => $venta->pagos->where('tipo', 'online')->sum('monto'),
-                    'descuento' => $venta->descuento ?? 0,
+                    'descuento' => $calc['descuento_total'],              // ✅ correcto
                     'total' => $totalVenta,
                     'cambio' => $venta->pagos->sum('cambio'),
                     'estatus' => $venta->estatus,
                     'sucursal' => optional($venta->sucursal)->razon_social,
-                    'codigo_descuento' => $venta->codigo_descuento ?? 'N/A',
+                    'codigo_descuento' => $calc['codigo_descuento'],      // ✅ correcto
                 ];
             };
 
-            // 3) Mapeas ambas y haces merge
-            $ventasMapped = $ventas->map($mapVenta);
-            $onlineMapped = $ventasOnlineExtra->map($mapVenta);
-
-            $ventasFinal = $ventasMapped
-                ->merge($onlineMapped)
+            $ventasFinal = $ventas->map($mapVenta)
+                ->merge($ventasOnlineExtra->map($mapVenta))
                 ->sortByDesc('created_at')
                 ->values();
 
             $cantidadReservaciones = Reserva::query()
                 ->where('estado', 'confirmada')
-                ->whereBetween('fecha', [
-                    $startLocal,
-                    $endLocal,
-                ])
+                ->whereBetween('fecha', [$startLocal, $endLocal])
                 ->sum('cantidad_personas');
 
-
             $utilidad_operativa = $totalVentas - ($totaEgresos + $salarios);
+
             return response()->json([
                 'message' => 'Consulta realizada con exito',
                 'ventas' => $ventasFinal,
@@ -391,8 +503,9 @@ class VentaCrudController extends CrudController
                 'total_ventas' => number_format($totalVentas, 2, '.', ','),
                 'total_egresos' => number_format($totaEgresos, 2, '.', ','),
                 'total_salarios' => number_format($salarios, 2, '.', ','),
-                'utilidad_operativa' => number_format($utilidad_operativa, 2, '.', ',')
+                'utilidad_operativa' => number_format($utilidad_operativa, 2, '.', ','),
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -465,7 +578,10 @@ class VentaCrudController extends CrudController
             ];
 
             /**
-             * Regla de redondeo SOLO para descuentos
+             * Regla de redondeo SOLO para descuentos (montos):
+             * - dec <= .49  -> floor
+             * - dec == .50  -> se queda igual
+             * - dec >= .51  -> ceil
              */
             $roundDiscount = function (float $value): float {
                 $sign = $value < 0 ? -1 : 1;
@@ -507,34 +623,88 @@ class VentaCrudController extends CrudController
 
                     // Compatibilidad con lógica previa (online)
                     if ($paymentsOnline) {
-                        $totalOriginal     = $producto->total;
-                        $producto->total  = $producto->descuento;
-                        $producto->descuento = $totalOriginal - $producto->descuento;
+                        $totalOriginal        = (float) $producto->total;
+                        $producto->total      = (float) $producto->descuento;
+                        $producto->descuento  = $totalOriginal - (float) $producto->descuento;
                     }
 
-                    $precio     = (float) $producto->precio;                 // NO se redondea
-                    $porcentaje = (float) $producto->porcentaje_descuento;   // NO se redondea
+                    // Base (NO redondear)
+                    $precio     = (float) $producto->precio;                 // unitario
+                    $cantidad   = (float) $producto->cantidad;               // qty/personas
+                    $porcentaje = (float) $producto->porcentaje_descuento;   // %
 
-                    // ===== CÁLCULO CORRECTO =====
-                    if ($precio > 0 && $porcentaje > 0) {
-                        // descuento unitario RAW
-                        $descuentoUnitarioRaw = $precio * ($porcentaje / 100);
-                    } else {
-                        $descuentoUnitarioRaw = 0;
+                    // Total real de la línea (objetivo a cuadrar)
+                    $totalObjetivo = (float) $producto->total;
+
+                    // Subtotal sin descuento
+                    $subtotalLinea = $precio * $cantidad;
+
+                    // 1) Descuento unitario raw por porcentaje
+                    $descuentoUnitarioRaw = ($precio > 0 && $porcentaje > 0)
+                        ? ($precio * ($porcentaje / 100))
+                        : 0.0;
+
+                    // 2) Aplicar regla SOLO al descuento unitario
+                    $descuentoUnitario = max(0.0, $roundDiscount($descuentoUnitarioRaw));
+
+                    // 3) Precio unitario con descuento (derivado)
+                    $precioConDescuento = max(0.0, $precio - $descuentoUnitario);
+
+                    // 4) Calcular a cuántas unidades/personas se aplicó el descuento para cuadrar con el total
+                    $aplicaA = 0;
+
+                    if ($descuentoUnitario > 0 && $cantidad > 0) {
+                        // descuento total necesario para llegar al total objetivo
+                        $descuentoTotalNecesario = $subtotalLinea - $totalObjetivo;
+
+                        // estimación
+                        $aplicaA = (int) round($descuentoTotalNecesario / $descuentoUnitario);
+
+                        // clamp al rango [0, cantidad]
+                        $aplicaA = max(0, min((int) round($cantidad), $aplicaA));
+
+                        // ajuste fino (por floats/decimales)
+                        $tries = 0;
+                        while ($tries < 6) {
+                            $totalCalc = (($cantidad - $aplicaA) * $precio) + ($aplicaA * $precioConDescuento);
+
+                            if ($totalCalc > $totalObjetivo && $aplicaA < (int) round($cantidad)) {
+                                $aplicaA++;
+                            } elseif ($totalCalc < $totalObjetivo && $aplicaA > 0) {
+                                $aplicaA--;
+                            } else {
+                                break;
+                            }
+                            $tries++;
+                        }
                     }
 
-                    $descuentoUnitario = max(0, $roundDiscount($descuentoUnitarioRaw));
-
-                    $precioConDescuento = max(0, $precio - $descuentoUnitario);
+                    // 5) Total calculado consistente
+                    $totalCalculado = (($cantidad - $aplicaA) * $precio) + ($aplicaA * $precioConDescuento);
 
                     return [
                         'fecha' => $producto->created_at->format('Y-m-d H:i:s'),
                         'producto' => $producto->producto->descripcion,
-                        'precio' => round($precio, 2), // solo formato
-                        'descuento' => round($descuentoUnitario, 2),
+
+                        // NO redondear precio/cantidad como regla de negocio
+                        'precio' => round($precio, 2),
+                        'cantidad' => round($cantidad, 2),
+
                         'porcentaje_descuento' => round($porcentaje, 2),
+
+                        // ✅ descuento con regla
+                        'descuento_unitario' => round($descuentoUnitario, 2),
+                        'aplica_a' => $aplicaA,
+
+                        'precio_con_descuento' => round($precioConDescuento, 2),
+
+                        // total calculado consistente con aplica_a
+                        'total' => round($totalCalculado, 2),
+
+                        // si quieres ver también el objetivo para debug:
+                        // 'total_objetivo' => round($totalObjetivo, 2),
+
                         'codigo_descuento' => $producto->descuentoEntity->codigo ?? 'N/A',
-                        'total' => round($precioConDescuento, 2),
                     ];
                 });
 

@@ -5,17 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="hotfix: resumen con ventas soportadas por fecha y hora para online">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/php.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/php.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/phpunit.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/phpunit.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/1e0cdb6d-80bf-41f5-b9c0-28f6416bfc4f.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/1e0cdb6d-80bf-41f5-b9c0-28f6416bfc4f.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Actions/VentaAction.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Actions/VentaAction.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/VentaCrudController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/VentaCrudController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Models/Corte.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Corte.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Models/Venta.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Venta.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/Models/VentaProducto.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/VentaProducto.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/backpack/base.php" beforeDir="false" afterPath="$PROJECT_DIR$/config/backpack/base.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/public/js/app.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/js/Pages/Dashboard/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/resources/js/Pages/Dashboard/index.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/views/app.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/app.blade.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/resources/views/vendor/backpack/crud/show.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/vendor/backpack/crud/show.blade.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -47,18 +42,22 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
-  "lastFilter": {
-    "state": "OPEN",
-    "assignee": "n3ohck"
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;n3ohck&quot;
   }
-}]]></component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "git@github.com:n3ohck/stranger_themes.git",
-    "accountId": "6493041b-3954-4ede-a85e-820fb2eabfdd"
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:n3ohck/stranger_themes.git&quot;,
+    &quot;accountId&quot;: &quot;6493041b-3954-4ede-a85e-820fb2eabfdd&quot;
   }
-}]]></component>
+}</component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
   <component name="PackageJsonUpdateNotifier">
     <dismissed value="$PROJECT_DIR$/package.json" />
   </component>
@@ -229,31 +228,33 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/laragon/www/stranger_themes/resources/views/emails&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
-    &quot;ts.external.directory.path&quot;: &quot;/Applications/PhpStorm.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "git-widget-placeholder": "main",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/laragon/www/stranger_themes/resources/views/emails",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "ts.external.directory.path": "/Applications/PhpStorm.app/Contents/plugins/javascript-plugin/jsLanguageServicesImpl/external",
+    "vue.rearranger.settings.migration": "true"
   },
-  &quot;keyToStringList&quot;: {
-    &quot;DatabaseDriversLRU&quot;: [
-      &quot;mysql&quot;
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
     ],
-    &quot;vue.recent.templates&quot;: [
-      &quot;Vue Composition API Component&quot;
+    "vue.recent.templates": [
+      "Vue Composition API Component"
     ]
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\laragon\www\stranger_themes\resources\views\emails" />
@@ -278,8 +279,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-a71380e98a7c-JavaScript-PS-252.28539.9" />
-        <option value="bundled-php-predefined-a98d8de5180a-58f58c5035b3-com.jetbrains.php.sharedIndexes-PS-252.28539.9" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PS-253.29346.257" />
+        <option value="bundled-php-predefined-a98d8de5180a-0e0d91225499-com.jetbrains.php.sharedIndexes-PS-253.29346.257" />
       </set>
     </attachedChunks>
   </component>
@@ -364,15 +365,8 @@
       <workItem from="1747065056836" duration="5614000" />
       <workItem from="1747233225562" duration="592000" />
       <workItem from="1747234430806" duration="2006000" />
-      <workItem from="1768335630961" duration="2593000" />
-    </task>
-    <task id="LOCAL-00173" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
-      <option name="closed" value="true" />
-      <created>1734831187417</created>
-      <option name="number" value="00173" />
-      <option name="presentableId" value="LOCAL-00173" />
-      <option name="project" value="LOCAL" />
-      <updated>1734831187417</updated>
+      <workItem from="1768335630961" duration="2666000" />
+      <workItem from="1768670512677" duration="1672000" />
     </task>
     <task id="LOCAL-00174" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
       <option name="closed" value="true" />
@@ -758,7 +752,15 @@
       <option name="project" value="LOCAL" />
       <updated>1750727617347</updated>
     </task>
-    <option name="localTasksCounter" value="222" />
+    <task id="LOCAL-00222" summary="hotfix: resumen con ventas soportadas por fecha y hora para online">
+      <option name="closed" value="true" />
+      <created>1768401162665</created>
+      <option name="number" value="00222" />
+      <option name="presentableId" value="LOCAL-00222" />
+      <option name="project" value="LOCAL" />
+      <updated>1768401162665</updated>
+    </task>
+    <option name="localTasksCounter" value="223" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -777,7 +779,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
-    <MESSAGE value="feature: poder eliminar cortes." />
     <MESSAGE value="feature: igualar nombres de columnas en la pantalla del corte con el ticket de corte y eliminar cortes" />
     <MESSAGE value="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados" />
     <MESSAGE value="debugging fechas corte" />
@@ -802,7 +803,8 @@
     <MESSAGE value="feature: listado de ventas" />
     <MESSAGE value="feature: descuentos publicos cambio de logica" />
     <MESSAGE value="hotfix: soporte de venta de paquetes" />
-    <option name="LAST_COMMIT_MESSAGE" value="hotfix: soporte de venta de paquetes" />
+    <MESSAGE value="hotfix: resumen con ventas soportadas por fecha y hora para online" />
+    <option name="LAST_COMMIT_MESSAGE" value="hotfix: resumen con ventas soportadas por fecha y hora para online" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

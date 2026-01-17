@@ -18,7 +18,6 @@
     $roundDiscount = function ($value) {
         $value = (float) $value;
 
-        // seguridad por si llega negativo: redondeamos por magnitud y restauramos signo
         $sign = $value < 0 ? -1 : 1;
         $abs  = abs($value);
 
@@ -190,7 +189,7 @@
                     </div>
                 @endif
 
-                {{-- CARD: Pagos (sin redondeo especial) --}}
+                {{-- CARD: Pagos --}}
                 @if ($entry->pagos->count())
                     <div class="w-full rounded-2xl border border-slate-200 bg-white shadow-sm">
                         <div class="border-b border-slate-200 px-4 py-3">
@@ -218,17 +217,28 @@
                                     </tbody>
                                 </table>
                             </div>
+
+                            {{-- total pagos --}}
+                            @php $totalPagos = (float) $entry->pagos->sum('monto'); @endphp
+                            <div class="mt-3 flex items-center justify-end">
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm">
+                                    <span class="text-slate-600">Total pagos:</span>
+                                    <span class="ml-2 font-semibold text-slate-900">{{ number_format($totalPagos, 2, '.', ',') }}</span>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 @endif
 
-                {{-- CARD: Productos (descuento con redondeo especial) --}}
+                {{-- CARD: Productos (descuento por N personas/unidades) --}}
                 @if ($entry->productos->count())
                     <div class="w-full rounded-2xl border border-slate-200 bg-white shadow-sm">
                         <div class="border-b border-slate-200 px-4 py-3">
                             <h3 class="text-base font-semibold text-slate-900">Productos</h3>
                             <p class="mt-0.5 text-xs text-slate-500">
-                                Regla descuento: ≤ .49 abajo · .50 igual · ≥ .51 arriba (solo aplica a descuentos).
+                                Regla descuento (monto): ≤ .49 abajo · .50 igual · ≥ .51 arriba.
+                                <span class="ml-2">El descuento puede aplicar a 1 o varias unidades.</span>
                             </p>
                         </div>
 
@@ -242,6 +252,7 @@
                                         <th class="px-3 py-2 text-right">Precio</th>
                                         <th class="px-3 py-2 text-right">% Desc.</th>
                                         <th class="px-3 py-2 text-right">Desc. $</th>
+                                        <th class="px-3 py-2 text-right">Aplica a</th>
                                         <th class="px-3 py-2 text-right">Precio c/Desc.</th>
                                         <th class="px-3 py-2 text-right">Total</th>
                                         <th class="px-3 py-2 text-left">Código</th>
@@ -249,37 +260,77 @@
                                     </thead>
 
                                     <tbody class="divide-y divide-slate-100">
+                                    @php
+                                        $sumTotal = 0;
+                                    @endphp
+
                                     @foreach($entry->productos as $producto)
                                         @php
-                                            $paymentsOnline = $entry->pagos->where('tipo', 'online')->count();
-
                                             // NO redondear precio/cantidad (solo descuentos)
-                                            $precio = (float) $producto->precio;
-                                            $cantidad = (float) $producto->cantidad;
+                                            $precio     = (float) $producto->precio;
+                                            $cantidad   = (float) $producto->cantidad;
                                             $porcentaje = (float) $producto->porcentaje_descuento;
 
-                                            // Ajuste online (se conserva por compatibilidad con tu data actual)
-                                            $totalLineaOriginal = (float) $producto->total;
-                                            $descuentoGuardado  = (float) $producto->descuento;
+                                            // Total objetivo (lo que ya guardaste en DB para esa línea)
+                                            $totalObjetivo = (float) $producto->total;
 
-                                            if ($paymentsOnline) {
-                                                $totalLineaOriginal = $descuentoGuardado;
-                                                $descuentoGuardado  = ((float) $producto->total) - $descuentoGuardado;
+                                            // Subtotal sin descuento
+                                            $subtotalLinea = $precio * $cantidad;
+
+                                            // Descuento unitario RAW por porcentaje
+                                            $descuentoUnitarioRaw = ($precio > 0 && $porcentaje > 0)
+                                                ? ($precio * ($porcentaje / 100))
+                                                : 0;
+
+                                            // Regla especial SOLO para el descuento unitario
+                                            $descuentoUnitario = max(0, $roundDiscount($descuentoUnitarioRaw));
+
+                                            // Precio unitario con descuento (derivado, NO se redondea aparte)
+                                            $precioConDescuento = max(0, $precio - $descuentoUnitario);
+
+                                            // === Calcular a cuántas unidades se les aplicó el descuento ===
+                                            // Queremos que:
+                                            // total = (qty_no_desc * precio) + (qty_desc * precioConDesc)
+                                            // y total cuadre con $totalObjetivo
+                                            $qtyDesc = 0;
+
+                                            if ($descuentoUnitario > 0 && $cantidad > 0) {
+                                                $descuentoTotalNecesario = $subtotalLinea - $totalObjetivo;
+
+                                                // estimación
+                                                $qtyDesc = (int) round($descuentoTotalNecesario / $descuentoUnitario);
+
+                                                // clamp a rango válido
+                                                $qtyDesc = max(0, min((int) round($cantidad), $qtyDesc));
+
+                                                // ajuste fino para cuadrar (por posibles redondeos / floats)
+                                                $tries = 0;
+                                                while ($tries < 4) {
+                                                    $totalCalc = (($cantidad - $qtyDesc) * $precio) + ($qtyDesc * $precioConDescuento);
+
+                                                    // si quedó arriba del objetivo, aumenta descuento (más qty con desc)
+                                                    if ($totalCalc > $totalObjetivo && $qtyDesc < (int) round($cantidad)) {
+                                                        $qtyDesc++;
+                                                    }
+                                                    // si quedó abajo del objetivo, reduce descuento
+                                                    elseif ($totalCalc < $totalObjetivo && $qtyDesc > 0) {
+                                                        $qtyDesc--;
+                                                    } else {
+                                                        break;
+                                                    }
+                                                    $tries++;
+                                                }
                                             }
 
-                                            // Cálculo base por porcentaje
-                                            if ($precio > 0 && $porcentaje > 0) {
-                                                $precioConDescuentoRaw = $precio * (1 - ($porcentaje / 100));
-                                                $descuentoUnitarioRaw  = $precio - $precioConDescuentoRaw;
-                                            } else {
-                                                $precioConDescuentoRaw = $precio;
-                                                $descuentoUnitarioRaw  = 0;
-                                            }
+                                            // Total calculado final (consistente)
+                                            $totalCalc = (($cantidad - $qtyDesc) * $precio) + ($qtyDesc * $precioConDescuento);
 
-                                            // Regla especial SOLO para descuentos / derivados del descuento
-                                            $descuentoUnitario  = max(0, $roundDiscount($descuentoUnitarioRaw));
-                                            $precioConDescuento = max(0, $roundDiscount($precioConDescuentoRaw));
-                                            $totalConDescuento  = max(0, $roundDiscount($precioConDescuento * $cantidad));
+                                            // Si por cualquier detalle queda una diferencia mínima por decimales,
+                                            // preferimos mostrar el total objetivo (DB), pero sumaremos el calculado.
+                                            // (Si quieres forzar DB: $totalMostrar = $totalObjetivo;)
+                                            $totalMostrar = $totalCalc;
+
+                                            $sumTotal += $totalMostrar;
 
                                             $codigo = optional($producto->descuentoEntity)->codigo ?? $producto->codigo_descuento ?? 'N/A';
                                         @endphp
@@ -289,16 +340,25 @@
                                                 {{ $producto->producto->descripcion }}
                                             </td>
 
-                                            {{-- precio y cantidad tal cual (con 2 decimales por si llegan) --}}
                                             <td class="px-3 py-2 text-right">{{ number_format($cantidad, 2, '.', ',') }}</td>
                                             <td class="px-3 py-2 text-right">{{ number_format($precio, 2, '.', ',') }}</td>
-
                                             <td class="px-3 py-2 text-right">{{ number_format($porcentaje, 2, '.', ',') }}</td>
 
-                                            {{-- descuentos con regla especial --}}
-                                            <td class="px-3 py-2 text-right">{{ number_format($descuentoUnitario, 2, '.', ',') }}</td>
-                                            <td class="px-3 py-2 text-right">{{ number_format($precioConDescuento, 2, '.', ',') }}</td>
-                                            <td class="px-3 py-2 text-right font-semibold text-slate-900">{{ number_format($totalConDescuento, 2, '.', ',') }}</td>
+                                            <td class="px-3 py-2 text-right">
+                                                {{ number_format($descuentoUnitario, 2, '.', ',') }}
+                                            </td>
+
+                                            <td class="px-3 py-2 text-right">
+                                                {{ number_format($qtyDesc, 0, '.', ',') }}
+                                            </td>
+
+                                            <td class="px-3 py-2 text-right">
+                                                {{ number_format($precioConDescuento, 2, '.', ',') }}
+                                            </td>
+
+                                            <td class="px-3 py-2 text-right font-semibold text-slate-900">
+                                                {{ number_format($totalMostrar, 2, '.', ',') }}
+                                            </td>
 
                                             <td class="px-3 py-2">
                                                 <span class="inline-block max-w-[260px] truncate align-middle text-slate-700" title="{{ $codigo }}">
@@ -310,26 +370,6 @@
                                     </tbody>
                                 </table>
                             </div>
-
-                            {{-- Total productos (con regla especial, porque viene del descuento) --}}
-                            @php
-                                $sumTotal = $entry->productos->sum(function($p) use ($roundDiscount) {
-                                    $precio = (float) $p->precio;
-                                    $cantidad = (float) $p->cantidad;
-                                    $porcentaje = (float) $p->porcentaje_descuento;
-
-                                    if ($precio > 0 && $porcentaje > 0) {
-                                        $precioConDescuentoRaw = $precio * (1 - ($porcentaje / 100));
-                                    } else {
-                                        $precioConDescuentoRaw = $precio;
-                                    }
-
-                                    $precioConDescuento = max(0, $roundDiscount($precioConDescuentoRaw));
-                                    $total = $precioConDescuento * $cantidad;
-
-                                    return max(0, $roundDiscount($total));
-                                });
-                            @endphp
 
                             <div class="mt-3 flex items-center justify-end">
                                 <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm">
