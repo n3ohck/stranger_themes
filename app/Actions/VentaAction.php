@@ -102,8 +102,8 @@ class VentaAction
                     ->whereIn('referencia', $onlineRefs->all())
                     ->exists();
                 if ($existsInDb) {
-                    continue;
-                    // throw new \Exception('La venta incluye referencia(s) ONLINE ya registradas', 409);
+                    //continue;
+                    throw new \Exception('La venta incluye referencia(s) ONLINE ya registradas', 409);
                 }
             }
 
