@@ -90,6 +90,23 @@ class VentaAction
                 throw new \Exception('No se han encontrado pagos ONLINE para el venta', 400);
             }
 
+            // Referencias ONLINE (limpias y normalizadas)
+            $onlineRefs = $payments
+                ->pluck('referencia')
+                ->filter(fn ($r) => !is_null($r) && trim((string)$r) !== '')
+                ->map(fn ($r) => trim((string)$r))
+                ->values();
+
+            if ($onlineRefs->isNotEmpty()) {
+                $existsInDb = VentaPago::query()
+                    ->whereIn('referencia', $onlineRefs->all())
+                    ->exists();
+                if ($existsInDb) {
+                    continue;
+                    // throw new \Exception('La venta incluye referencia(s) ONLINE ya registradas', 409);
+                }
+            }
+
             // NUEVA VALIDACIÓN: referencia de pago repetida
             $onlineReferences = $payments
                 ->pluck('referencia')
