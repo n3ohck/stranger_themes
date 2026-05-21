@@ -59,6 +59,7 @@ class VentaAction
             if (isset($venta['reservaciones'])) {
                 $reservaciones = $this->makeVentaReservacion($nuevaVenta->id, $venta['reservaciones']);
             }
+
             $nuevasVentas[] = [
                 'venta_id' => $nuevaVenta->id,
                 'estatus' => $nuevaVenta->estatus,
@@ -73,93 +74,116 @@ class VentaAction
     /**
      * @throws \Exception
      */
+    /**
+     * @throws \Exception
+     */
     public function saleOnline(array $sales): array
     {
-        $newSales = collect();
-        foreach ($sales as $sale) {
-            $venta['datetime'] = $this->makeDate($sale['datetime'])->setTimezone( config('app.display_timezone', 'America/Chihuahua') )->format('Y-m-d H:i:s');
-            $existe = Venta::query()
-                ->where('created_at', $sale['datetime'])
-                ->where('total', $sale['total'])
-                ->exists();
-            if ($existe) continue;
+        $newSales = [];
 
-            $payments = collect($sale['pagos'])
-                ->where('tipo', 'online');
+        foreach ($sales as $sale) {
+            $payments = collect($sale['pagos'] ?? [])
+                ->where('tipo', 'online')
+                ->values();
+
             if ($payments->isEmpty()) {
-                throw new \Exception('No se han encontrado pagos ONLINE para el venta', 400);
+                throw new \Exception('No se han encontrado pagos ONLINE para la venta', 400);
             }
 
-            // Referencias ONLINE (limpias y normalizadas)
             $onlineRefs = $payments
                 ->pluck('referencia')
-                ->filter(fn ($r) => !is_null($r) && trim((string)$r) !== '')
-                ->map(fn ($r) => trim((string)$r))
+                ->filter(fn ($r) => !is_null($r) && trim((string) $r) !== '')
+                ->map(fn ($r) => trim((string) $r))
+                ->unique()
                 ->values();
 
-            if ($onlineRefs->isNotEmpty()) {
-                $existsInDb = VentaPago::query()
-                    ->whereIn('referencia', $onlineRefs->all())
-                    ->exists();
-                if ($existsInDb) {
-                    //continue;
-                    throw new \Exception('La venta incluye referencia(s) ONLINE ya registradas', 409);
-                }
+            if ($onlineRefs->isEmpty()) {
+                throw new \Exception('La venta ONLINE no incluye referencia de pago', 422);
             }
 
-            // NUEVA VALIDACIÓN: referencia de pago repetida
-            $onlineReferences = $payments
-                ->pluck('referencia')
-                ->filter() // por si alguno viene null
-                ->values();
+            /**
+             * Importante:
+             * lockForUpdate ayuda si el publicMake ya está dentro de DB::beginTransaction()
+             */
+            $existsReference = VentaPago::query()
+                ->where('tipo', 'online')
+                ->whereIn('referencia', $onlineRefs->all())
+                ->lockForUpdate()
+                ->exists();
 
-            if ($onlineReferences->isNotEmpty()) {
-                $existsReference = VentaPago::query()
-                    ->whereIn('referencia', $onlineReferences)
-                    ->exists();
+            if ($existsReference) {
+                Log::warning('Venta online duplicada ignorada por referencia', [
+                    'referencias' => $onlineRefs->all(),
+                    'email' => $sale['email'] ?? null,
+                ]);
 
-                if ($existsReference) {
-                   continue;
-                }
+                continue;
             }
 
-            $products = collect($sale['productos']);
-            $booking = collect($sale['reservaciones']);
-            $newSales = $products
-                ->each(function ($product) use ($booking, $sale, &$newSales) {
-                    $product = (object)$product;
-                    $venta = Venta::create([
-                        'user_id' => 1,
-                        'descuento_id' => $product->descuento_id ?? null,
-                        'sucursal_id' => $sale['sucursal_id'],
-                        'folio' => $this->makeFolio(),
-                        'total' => $product->total,
-                        'codigo_descuento' => $sale['codigo_descuento'] ?? null,
-                        'descuento' => $sale['descuento'] ?? null,
-                        'porcentaje_descuento' => $sale['porcentaje_descuento'] ?? null,
-                        'created_at' => $this->makeDate($booking->first()['datetime']),
-                        'nombre' => $sale['nombre'] ?? null,
-                        'telefono' => $sale['telefono'] ?? null,
-                        'email' => $sale['email'] ?? null,
-                    ]);
-                    $this->makeVentaProductosOnline($venta->id, $sale['productos']);
-                    $this->makeVentaPagos($venta->id, $sale['pagos']);
-                    if (isset($venta['reservaciones'])) {
-                        $reservations[] = $this->makeVentaReservacion($venta->id, $sale['reservaciones'], $sale['sucursal_id']);
-                    }
-                    if (isset($sale['email'])) {
-                        ComprobanteDigitalJob::dispatch($venta->id);
-                    }
-                    return [
-                        'venta_id' => $venta->id,
-                        'estatus' => $venta->estatus,
-                        'folio' => $venta->folio,
-                        'total' => $venta->total,
-                        'reservaciones' => $reservations ?? []
-                    ];
-                });
+            $booking = collect($sale['reservaciones'] ?? []);
+
+            $createdAt = null;
+
+            if ($booking->isNotEmpty() && isset($booking->first()['datetime'])) {
+                $createdAt = $this->makeDate($booking->first()['datetime']);
+            } elseif (isset($sale['datetime'])) {
+                $createdAt = $this->makeDate($sale['datetime']);
+            } else {
+                $createdAt = now();
+            }
+
+            /**
+             * Total real de la venta.
+             * Si viene total en el payload, lo respetamos.
+             * Si no viene, sumamos productos.
+             */
+            $totalVenta = isset($sale['total'])
+                ? (float) $sale['total']
+                : collect($sale['productos'] ?? [])->sum(fn ($p) => (float) ($p['total'] ?? 0));
+
+            $venta = Venta::create([
+                'user_id' => 1,
+                'descuento_id' => $sale['descuento_id'] ?? null,
+                'sucursal_id' => $sale['sucursal_id'],
+                'folio' => $this->makeFolio(),
+                'total' => $totalVenta,
+                'codigo_descuento' => $sale['codigo_descuento'] ?? null,
+                'descuento' => $sale['descuento'] ?? null,
+                'porcentaje_descuento' => $sale['porcentaje_descuento'] ?? null,
+                'created_at' => $createdAt,
+                'nombre' => $sale['nombre'] ?? null,
+                'telefono' => $sale['telefono'] ?? null,
+                'email' => $sale['email'] ?? null,
+            ]);
+
+            $this->makeVentaProductosOnline($venta->id, $sale['productos'] ?? []);
+            $this->makeVentaPagos($venta->id, $sale['pagos'] ?? []);
+
+            $reservations = [];
+
+            if (!empty($sale['reservaciones'])) {
+                $reservations = $this->makeVentaReservacion(
+                    $venta->id,
+                    $sale['reservaciones'],
+                    $sale['sucursal_id']
+                );
+            }
+
+            if (!empty($sale['email'])) {
+                ComprobanteDigitalJob::dispatch($venta->id);
+            }
+
+            $newSales[] = [
+                'venta_id' => $venta->id,
+                'estatus' => $venta->estatus,
+                'folio' => $venta->folio,
+                'total' => $venta->total,
+                'referencias' => $onlineRefs->all(),
+                'reservaciones' => $reservations,
+            ];
         }
-        return $newSales->toArray();
+
+        return $newSales;
     }
 
     public
@@ -260,12 +284,33 @@ class VentaAction
     public function makeVentaPagos(int $ventaId, array $pagos): void
     {
         foreach ($pagos as $pago) {
+            $tipo = $pago['tipo'] ?? null;
+            $referencia = isset($pago['referencia'])
+                ? trim((string) $pago['referencia'])
+                : null;
+
+            if ($tipo === 'online' && $referencia) {
+                $exists = VentaPago::query()
+                    ->where('tipo', 'online')
+                    ->where('referencia', $referencia)
+                    ->exists();
+
+                if ($exists) {
+                    Log::warning('Pago online duplicado ignorado', [
+                        'venta_id' => $ventaId,
+                        'referencia' => $referencia,
+                    ]);
+
+                    continue;
+                }
+            }
+
             VentaPago::create([
                 'venta_id' => $ventaId,
                 'monto' => $pago['monto'],
                 'cambio' => $pago['cambio'] ?? 0,
-                'tipo' => $pago['tipo'],
-                'referencia' => $pago['referencia'] ?? null
+                'tipo' => $tipo,
+                'referencia' => $referencia,
             ]);
         }
     }
