@@ -34,7 +34,8 @@ class EmpleadoPago extends Model
         'monto',
         'estatus',
         'created_at',
-        'user_id'
+        'user_id',
+        'apertura_id'
     ];
     // protected $hidden = [];
     protected $dates = [
@@ -58,9 +59,18 @@ class EmpleadoPago extends Model
     protected static function booted()
     {
         parent::boot();
+        // Los pagos no guardan sucursal propia: la heredan del empleado. Se usa
+        // SucursalActiva para respetar la sucursal que eligió el administrador,
+        // igual que el resto de los modelos.
         static::addGlobalScope(function ($query) {
-            $query->whereHas('empleado', function ($query) {
-                $query->where('sucursal_id', backpack_user()->sucursal_id);
+            $sucursalId = \App\Support\SucursalActiva::id();
+
+            if ($sucursalId === null) {
+                return;
+            }
+
+            $query->whereHas('empleado', function ($query) use ($sucursalId) {
+                $query->where('sucursal_id', $sucursalId);
             });
         });
         static::deleting(function ($obj) {

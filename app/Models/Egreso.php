@@ -32,7 +32,8 @@ class Egreso extends Model
         'referencia',
         'imagen',
         'fecha_pago',
-        'sucursal_id'
+        'sucursal_id',
+        'apertura_id'
     ];
     // protected $hidden = [];
     protected $dates = [

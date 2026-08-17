@@ -31,7 +31,11 @@ class Venta extends Model
         'user_id_cancelacion',
         'descuento_id',
         'sucursal_id',
+        'origen',
+        'apertura_id',
         'folio',
+        'folio_consecutivo',
+        'referencia_pago',
         'total',
         'codigo_descuento',
         'descuento',
@@ -101,6 +105,11 @@ class Venta extends Model
     public function sucursal(): BelongsTo
     {
         return $this->belongsTo(Sucursal::class);
+    }
+
+    public function apertura(): BelongsTo
+    {
+        return $this->belongsTo(Apertura::class);
     }
 
     public function productos(): HasMany

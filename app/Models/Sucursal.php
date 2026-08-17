@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Image;
@@ -28,6 +29,7 @@ class Sucursal extends Model
     protected $guarded = ['id'];
     protected $fillable = [
         'razon_social',
+        'prefijo_folio',
         'rfc',
         'email',
         'telefono',
@@ -65,6 +67,47 @@ class Sucursal extends Model
     | RELATIONS
     |--------------------------------------------------------------------------
     */
+    /**
+     * Entrega el siguiente folio de la sucursal y avanza su consecutivo.
+     *
+     * El bloqueo de fila serializa a dos cajas de la misma sucursal vendiendo al
+     * mismo tiempo: la segunda espera a que la primera confirme. No se usa
+     * MAX()+1 sobre ventas porque el modelo excluye los registros con SoftDeletes
+     * y el contador retrocedía al borrar ventas, generando folios repetidos.
+     *
+     * El índice único ventas(sucursal_id, folio_consecutivo) es la red de
+     * seguridad: si algún día se rompiera la serialización, la inserción falla en
+     * vez de duplicar en silencio.
+     *
+     * @return array{folio: string, consecutivo: int}
+     */
+    public static function tomarFolio(int $sucursalId): array
+    {
+        return DB::transaction(function () use ($sucursalId) {
+            $sucursal = DB::table('sucursales')
+                ->where('id', $sucursalId)
+                ->lockForUpdate()
+                ->first(['id', 'prefijo_folio', 'folio_consecutivo']);
+
+            if (! $sucursal) {
+                throw new \RuntimeException("La sucursal {$sucursalId} no existe.");
+            }
+
+            $consecutivo = (int) $sucursal->folio_consecutivo + 1;
+
+            DB::table('sucursales')
+                ->where('id', $sucursalId)
+                ->update(['folio_consecutivo' => $consecutivo]);
+
+            $prefijo = $sucursal->prefijo_folio ?: 'S' . $sucursal->id;
+
+            return [
+                'folio' => $prefijo . '-' . $consecutivo,
+                'consecutivo' => $consecutivo,
+            ];
+        });
+    }
+
     public function users():HasMany
     {
         return $this->hasMany(User::class,'sucursal_id','id');

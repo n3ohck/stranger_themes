@@ -1,0 +1,105 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    html,
+    body,
+    #pos {
+        height: 100%;
+    }
+
+    body {
+        @apply bg-noche-900 text-slate-100 antialiased;
+        /* El POS es pantalla completa: el scroll lo manejan los paneles internos. */
+        overscroll-behavior: none;
+    }
+
+    /* Números de dinero siempre alineados en columna. */
+    .tabular {
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+@layer components {
+    .campo {
+        @apply w-full rounded-lg border border-noche-500 bg-noche-800 px-4 py-3 text-base
+               text-slate-100 placeholder-slate-500 outline-none transition
+               focus:border-acento-500 focus:ring-2 focus:ring-acento-500/30;
+    }
+
+    .etiqueta {
+        @apply mb-1.5 block text-sm font-medium text-slate-400;
+    }
+
+    .btn {
+        @apply inline-flex min-h-touch items-center justify-center gap-2 rounded-lg px-5
+               text-base font-semibold transition active:scale-[.98]
+               disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100;
+    }
+
+    .btn-primario {
+        @apply btn bg-acento-500 text-white hover:bg-acento-400;
+    }
+
+    .btn-neutro {
+        @apply btn border border-noche-500 bg-noche-700 text-slate-200 hover:bg-noche-600;
+    }
+
+    .btn-peligro {
+        @apply btn bg-sangre-500 text-white hover:bg-sangre-400;
+    }
+
+    .btn-fantasma {
+        @apply btn text-slate-400 hover:bg-noche-700 hover:text-slate-100;
+    }
+
+    .tarjeta {
+        @apply rounded-xl border border-noche-600 bg-noche-800;
+    }
+
+    .chip {
+        @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold;
+    }
+}
+
+/*
+ * Impresión térmica de 58mm.
+ *
+ * El área imprimible real de una impresora de 58mm ronda los 48mm; el resto es
+ * margen mecánico. Se oculta toda la aplicación y solo se deja el ticket, para
+ * que el navegador no intente reescalar la pantalla completa al rollo.
+ */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    #ticket,
+    #ticket * {
+        visibility: visible;
+    }
+
+    #ticket {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 48mm;
+        margin: 0;
+        padding: 0;
+        color: #000;
+        background: #fff;
+        font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+        font-size: 9pt;
+        line-height: 1.35;
+    }
+
+    #ticket .no-imprimir {
+        display: none !important;
+    }
+
+    @page {
+        size: 58mm auto;
+        margin: 0;
+    }
+}

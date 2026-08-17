@@ -61,6 +61,11 @@ class Reserva extends Model
         return $this->belongsTo(Producto::class, 'producto_id')->withTrashed();
     }
 
+    public function venta(): BelongsTo
+    {
+        return $this->belongsTo(Venta::class, 'venta_id');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | SCOPES

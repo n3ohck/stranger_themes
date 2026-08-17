@@ -82,6 +82,22 @@ class Apertura extends Model
     | SCOPES
     |--------------------------------------------------------------------------
     */
+    /**
+     * Turno de caja abierto de un usuario en su sucursal.
+     *
+     * El POS admite una sola caja abierta por usuario a la vez; si quedaran
+     * varias por un cierre fallido, se toma la más reciente.
+     */
+    public static function aperturaActiva($user): ?self
+    {
+        return self::query()
+            ->where('user_id', $user->id)
+            ->where('sucursal_id', $user->sucursal_id)
+            ->where('estado', 'abierto')
+            ->orderByDesc('id')
+            ->first();
+    }
+
     public function scopeSearch($query,$search)
     {
         $this->search = $search;

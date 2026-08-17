@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Venta;
 use App\Models\VentaProducto;
 use App\Scopes\SucursalFilterScope;
+use App\Support\SucursalActiva;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
@@ -423,7 +424,7 @@ class VentaCrudController extends CrudController
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
                 ->whereHas('reservaciones', fn($q) => $q->whereBetween('fecha', [$startLocal, $endLocal]))
-                ->where('sucursal_id', Auth::user()->sucursal_id ?? 1)
+                ->where('sucursal_id', SucursalActiva::id())
                 ->with([
                     'user',
                     'sucursal',

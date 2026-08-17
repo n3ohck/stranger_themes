@@ -2,8 +2,6 @@
 
 namespace Backpack\CRUD\app\Models\Traits;
 
-use Carbon\Carbon;
-
 trait CrudTrait
 {
     use HasIdentifiableAttribute;

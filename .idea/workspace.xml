@@ -5,13 +5,27 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="582cf141-1500-4e09-8d93-4e598e35f275" name="Changes" comment="hotfix: resumen con ventas soportadas por fecha y hora para online">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/1e0cdb6d-80bf-41f5-b9c0-28f6416bfc4f.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/1e0cdb6d-80bf-41f5-b9c0-28f6416bfc4f.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Actions/VentaAction.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Actions/VentaAction.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/DashboardController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/DashboardController.php" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/Http/Controllers/Admin/VentaCrudController.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Controllers/Admin/VentaCrudController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Http/Kernel.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Http/Kernel.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/Apertura.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Apertura.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/Egreso.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Egreso.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/EmpleadoPago.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/EmpleadoPago.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/Reserva.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Reserva.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/Sucursal.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Sucursal.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Models/Venta.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Models/Venta.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Providers/RouteServiceProvider.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Providers/RouteServiceProvider.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/Scopes/SucursalFilterScope.php" beforeDir="false" afterPath="$PROJECT_DIR$/app/Scopes/SucursalFilterScope.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/composer.lock" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/public/js/app.js" beforeDir="false" afterPath="$PROJECT_DIR$/public/js/app.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/js/Pages/Dashboard/index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/resources/js/Pages/Dashboard/index.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/app.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/app.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/views/vendor/backpack/crud/show.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/resources/views/vendor/backpack/crud/show.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/mix-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/public/mix-manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/routes/web.php" beforeDir="false" afterPath="$PROJECT_DIR$/routes/web.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vendor/backpack/crud/src/app/Models/Traits/CrudTrait.php" beforeDir="false" afterPath="$PROJECT_DIR$/vendor/backpack/crud/src/app/Models/Traits/CrudTrait.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/webpack.mix.js" beforeDir="false" afterPath="$PROJECT_DIR$/webpack.mix.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -25,7 +39,12 @@
   </component>
   <component name="ComposerSettings" synchronizationState="SYNCHRONIZE">
     <pharConfigPath>$PROJECT_DIR$/composer.json</pharConfigPath>
-    <execution />
+    <execution>
+      <execution />
+    </execution>
+  </component>
+  <component name="EmbeddingIndexingInfo">
+    <option name="cachedIndexableFilesCount" value="4416" />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -57,6 +76,65 @@
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
+  </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0000000000471883" />
+      <entry key="MS500" value="1.0133034644559433" />
+      <entry key="S2" value="1.6734352461361952" />
+      <entry key="S5" value="2.6167326926410115" />
+      <entry key="S10" value="3.193864023784616" />
+      <entry key="S30" value="3.7004204960576685" />
+      <entry key="S60" value="3.8459495994308037" />
+      <entry key="M2" value="3.921876711890731" />
+      <entry key="M5" value="3.968482804250698" />
+      <entry key="M10" value="3.9841963884133422" />
+      <entry key="M15" value="3.989454228519845" />
+      <entry key="M30" value="3.9947220921862403" />
+      <entry key="H1" value="3.9973597892862274" />
+      <entry key="H2" value="3.9986795802801773" />
+      <entry key="H4" value="3.9993397115291938" />
+      <entry key="D1" value="3.99988994100164" />
+      <entry key="W1" value="3.9999842770185006" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="0.0" />
+      <entry key="S10" value="0.0" />
+      <entry key="S30" value="0.0" />
+      <entry key="S60" value="0.0" />
+      <entry key="M2" value="0.0" />
+      <entry key="M5" value="0.0" />
+      <entry key="M10" value="0.0" />
+      <entry key="M15" value="0.0" />
+      <entry key="M30" value="0.0" />
+      <entry key="H1" value="0.0" />
+      <entry key="H2" value="0.0" />
+      <entry key="H4" value="0.0" />
+      <entry key="D1" value="0.0" />
+      <entry key="W1" value="0.0" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="0.8766057213614771" />
+      <entry key="MS500" value="0.9871271110456876" />
+      <entry key="S2" value="1.6594558768259238" />
+      <entry key="S5" value="2.60393470751472" />
+      <entry key="S10" value="3.1848018045598794" />
+      <entry key="S30" value="3.6965544572991575" />
+      <entry key="S60" value="3.8438903569475826" />
+      <entry key="M2" value="3.920813775554822" />
+      <entry key="M5" value="3.9680493987909276" />
+      <entry key="M10" value="3.9839782938177364" />
+      <entry key="M15" value="3.9893085213186503" />
+      <entry key="M30" value="3.9946490828068875" />
+      <entry key="H1" value="3.9973232455810876" />
+      <entry key="H2" value="3.998661298664883" />
+      <entry key="H4" value="3.999330568279756" />
+      <entry key="D1" value="3.9998884167875026" />
+      <entry key="W1" value="3.999984059265315" />
+    </decayedShown>
   </component>
   <component name="PackageJsonUpdateNotifier">
     <dismissed value="$PROJECT_DIR$/package.json" />
@@ -233,10 +311,12 @@
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.laravel_idea.move_run_console_settings": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
-    "last_opened_file_path": "C:/laragon/www/stranger_themes/resources/views/emails",
+    "last_opened_file_path": "/Users/alexsalgado/Sites/stranger_themes",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -279,8 +359,7 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PS-253.29346.257" />
-        <option value="bundled-php-predefined-a98d8de5180a-0e0d91225499-com.jetbrains.php.sharedIndexes-PS-253.29346.257" />
+        <option value="bundled-php-predefined-a98d8de5180a-ff90ddd8021d-com.jetbrains.php.sharedIndexes-PS-262.8665.325" />
       </set>
     </attachedChunks>
   </component>
@@ -367,6 +446,7 @@
       <workItem from="1747234430806" duration="2006000" />
       <workItem from="1768335630961" duration="2666000" />
       <workItem from="1768670512677" duration="1672000" />
+      <workItem from="1786982404587" duration="6334000" />
     </task>
     <task id="LOCAL-00174" summary="feature: al eliminar un corte se eliminen las ventas y reservaciones relacionados">
       <option name="closed" value="true" />

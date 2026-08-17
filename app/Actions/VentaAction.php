@@ -5,12 +5,14 @@ namespace App\Actions;
 use App\Jobs\ComprobanteDigitalJob;
 use App\Models\Descuento;
 use App\Models\Reserva;
+use App\Models\Sucursal;
 use App\Models\User;
 use App\Models\Venta;
 use App\Models\VentaPago;
 use App\Models\VentaProducto;
 use App\Traits\DateTrait;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -25,12 +27,28 @@ class VentaAction
         $this->user = backpack_user();
     }
 
-    public function makeFolio(): string
+    /**
+     * Asigna el folio de la sucursal a la que pertenece la venta.
+     *
+     * Cada sucursal lleva su propio consecutivo con prefijo (PV-1, PV-2, ...),
+     * repartido por Sucursal::tomarFolio() con bloqueo de fila.
+     */
+    public static function sellarFolio(Venta $venta): Venta
     {
-        $lastId = Venta::query()->max('id');
-        $next = ($lastId ?? 0) + 1;
-        return 'VTA-' . $next;
+        $folio = Sucursal::tomarFolio($venta->sucursal_id);
+
+        $venta->folio = $folio['folio'];
+        $venta->folio_consecutivo = $folio['consecutivo'];
+        $venta->save();
+
+        return $venta;
     }
+
+    /**
+     * La columna folio es NOT NULL, así que se siembra en el insert y se sella
+     * con el consecutivo real inmediatamente después, en la misma transacción.
+     */
+    public const FOLIO_PENDIENTE = 'PENDIENTE';
 
     public function do(array $ventas): array
     {
@@ -46,13 +64,15 @@ class VentaAction
                 'user_id' => $this->user->id,
                 'descuento_id' => $venta['descuento_id'] ?? null,
                 'sucursal_id' => $this->user->sucursal_id,
-                'folio' => $this->makeFolio(),
+                'origen' => 'pos',
+                'folio' => self::FOLIO_PENDIENTE,
                 'total' => $venta['total'],
                 'codigo_descuento' => $venta['codigo_descuento'] ?? null,
                 'descuento' => $venta['descuento'] ?? null,
                 'porcentaje_descuento' => $venta['porcentaje_descuento'] ?? null,
                 'created_at' => $venta['datetime']
             ]);
+            self::sellarFolio($nuevaVenta);
             $this->makeVentaProductos($nuevaVenta->id, $venta['productos']);
             $this->makeVentaPagos($nuevaVenta->id, $venta['pagos']);
 
@@ -101,17 +121,16 @@ class VentaAction
                 throw new \Exception('La venta ONLINE no incluye referencia de pago', 422);
             }
 
-            /**
-             * Importante:
-             * lockForUpdate ayuda si el publicMake ya está dentro de DB::beginTransaction()
-             */
-            $existsReference = VentaPago::query()
-                ->where('tipo', 'online')
-                ->whereIn('referencia', $onlineRefs->all())
-                ->lockForUpdate()
+            // Una referencia de Stripe corresponde a un cobro. Si ya hay una venta
+            // con ella, este request es un reintento y no una compra nueva.
+            $referenciaPago = $onlineRefs->first();
+
+            $yaRegistrada = Venta::query()
+                ->withoutGlobalScopes()
+                ->where('referencia_pago', $referenciaPago)
                 ->exists();
 
-            if ($existsReference) {
+            if ($yaRegistrada) {
                 Log::warning('Venta online duplicada ignorada por referencia', [
                     'referencias' => $onlineRefs->all(),
                     'email' => $sale['email'] ?? null,
@@ -119,6 +138,8 @@ class VentaAction
 
                 continue;
             }
+
+            $sucursalId = $this->resolverSucursal($sale);
 
             $booking = collect($sale['reservaciones'] ?? []);
 
@@ -141,21 +162,42 @@ class VentaAction
                 ? (float) $sale['total']
                 : collect($sale['productos'] ?? [])->sum(fn ($p) => (float) ($p['total'] ?? 0));
 
-            $venta = Venta::create([
-                'user_id' => 1,
-                'descuento_id' => $sale['descuento_id'] ?? null,
-                'sucursal_id' => $sale['sucursal_id'],
-                'folio' => $this->makeFolio(),
-                'total' => $totalVenta,
-                'codigo_descuento' => $sale['codigo_descuento'] ?? null,
-                'descuento' => $sale['descuento'] ?? null,
-                'porcentaje_descuento' => $sale['porcentaje_descuento'] ?? null,
-                'created_at' => $createdAt,
-                'nombre' => $sale['nombre'] ?? null,
-                'telefono' => $sale['telefono'] ?? null,
-                'email' => $sale['email'] ?? null,
-            ]);
+            try {
+                $venta = Venta::create([
+                    'user_id' => 1,
+                    'descuento_id' => $sale['descuento_id'] ?? null,
+                    'sucursal_id' => $sucursalId,
+                    'origen' => 'web',
+                    'referencia_pago' => $referenciaPago,
+                    'folio' => self::FOLIO_PENDIENTE,
+                    'total' => $totalVenta,
+                    'codigo_descuento' => $sale['codigo_descuento'] ?? null,
+                    'descuento' => $sale['descuento'] ?? null,
+                    'porcentaje_descuento' => $sale['porcentaje_descuento'] ?? null,
+                    'created_at' => $createdAt,
+                    'nombre' => $sale['nombre'] ?? null,
+                    'telefono' => $sale['telefono'] ?? null,
+                    'email' => $sale['email'] ?? null,
+                ]);
+            } catch (QueryException $e) {
+                // El índice único de referencia_pago es la garantía real: si dos
+                // peticiones del sitio llegan a la vez, ambas pasan la consulta
+                // previa y es la base la que rechaza a la segunda. Se trata como
+                // reintento, no como error, para no devolverle una falla al sitio
+                // por una compra que sí quedó registrada.
+                if ($this->esReferenciaDuplicada($e)) {
+                    Log::warning('Venta online duplicada bloqueada por la base de datos', [
+                        'referencia' => $referenciaPago,
+                        'email' => $sale['email'] ?? null,
+                    ]);
 
+                    continue;
+                }
+
+                throw $e;
+            }
+
+            self::sellarFolio($venta);
             $this->makeVentaProductosOnline($venta->id, $sale['productos'] ?? []);
             $this->makeVentaPagos($venta->id, $sale['pagos'] ?? []);
 
@@ -165,7 +207,7 @@ class VentaAction
                 $reservations = $this->makeVentaReservacion(
                     $venta->id,
                     $sale['reservaciones'],
-                    $sale['sucursal_id']
+                    $sucursalId
                 );
             }
 
@@ -186,9 +228,41 @@ class VentaAction
         return $newSales;
     }
 
-    public
-    function makeVentaReservacion(int $ventaId, array $reservas, $branchId = null): array
+    /**
+     * La sucursal de una venta web llega en el payload del sitio. Se valida que
+     * exista: con dos sucursales operando, un id equivocado ya no es inofensivo,
+     * mandaría la venta y su reservación a la sucursal que no es.
+     */
+    private function resolverSucursal(array $sale): int
     {
+        $sucursalId = (int) ($sale['sucursal_id'] ?? 0);
+
+        if (! $sucursalId || ! Sucursal::query()->whereKey($sucursalId)->exists()) {
+            throw new \Exception('La venta no indica una sucursal válida', 422);
+        }
+
+        return $sucursalId;
+    }
+
+    private function esReferenciaDuplicada(QueryException $e): bool
+    {
+        return $e->getCode() === '23000'
+            && str_contains($e->getMessage(), 'ventas_referencia_pago_unique');
+    }
+
+    /**
+     * La reservación siempre pertenece a la sucursal de su venta.
+     *
+     * Cuando la llamada trae $branchId es una venta web y no hay usuario en
+     * sesión; sin él es una venta de mostrador y la sucursal es la del cajero.
+     * Antes se leía $this->user->sucursal_id primero, lo que en las ventas web
+     * accedía a una propiedad sobre null y solo funcionaba porque PHP devuelve
+     * null con un aviso.
+     */
+    public function makeVentaReservacion(int $ventaId, array $reservas, $branchId = null): array
+    {
+        $sucursalId = $branchId ?? optional($this->user)->sucursal_id;
+
         $reservasNuevas = [];
         foreach ($reservas as $reserva) {
             $reserva['datetime'] = $this->makeDate($reserva['datetime']);
@@ -198,7 +272,7 @@ class VentaAction
                 'cantidad_personas' => $reserva['number'],
                 'fecha' => $reserva['datetime'],
                 'estado' => 'confirmada',
-                'sucursal_id' => $this->user->sucursal_id ?? $branchId,
+                'sucursal_id' => $sucursalId,
                 'venta_id' => $ventaId
             ]);
         }
@@ -215,12 +289,16 @@ class VentaAction
         $descuentoId = null;
         $codigoDescuento = null;
         foreach ($productos as $producto) {
-            $subtotal += $producto['precio'];
+            // precio es unitario: así lo guardan las líneas y así lo leen los
+            // reportes (precio * cantidad). Antes aquí se tomaba como total de
+            // línea, lo que descuadraba la cabecera en cuanto cantidad > 1.
+            $subtotalLinea = $producto['precio'] * $producto['cantidad'];
+            $subtotal += $subtotalLinea;
 
             if (isset($producto['descuentos'])) {
                 foreach ($producto['descuentos'] as $descuento) {
-                    $totalDescuento += $producto['precio'] - $producto['total'];
-                    $descuentoDinero = $producto['precio'] - $producto['total'];
+                    $totalDescuento += $subtotalLinea - $producto['total'];
+                    $descuentoDinero = $subtotalLinea - $producto['total'];
                     $porcentaje = $descuento['porcentaje_descuento'] ?? 0;
                     $descuentoId = $descuento['descuento_id'] ?? null;
                     $codigoDescuento = $descuentos['codigo_descuento'] ?? null;
