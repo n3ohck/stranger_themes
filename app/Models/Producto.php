@@ -31,7 +31,10 @@ class Producto extends Model
         'existencia',
         'tipo',
         'sucursal_id',
-        'tours'
+        'tours',
+        'capacidad',
+        'duracion_minutos',
+        'visible_en_tienda'
     ];
     // protected $hidden = [];
     protected $dates = [
@@ -43,7 +46,10 @@ class Producto extends Model
     protected $casts = [
         'precio' => 'float',
         'existencia' => 'integer',
-        'tours' => 'array'
+        'tours' => 'array',
+        'capacidad' => 'integer',
+        'duracion_minutos' => 'integer',
+        'visible_en_tienda' => 'boolean'
     ];
 
     protected $appends = ['category','name','price','stock'];
@@ -72,19 +78,23 @@ class Producto extends Model
     | SCOPES
     |--------------------------------------------------------------------------
     */
-    public function scopeFilterByType($query,$type,$sucursalId = null)
+    /** Tipos válidos de la columna enum `tipo`. */
+    public const TIPOS = ['articulo', 'tour', 'tour_paquete', 'diferencias'];
+
+    /**
+     * Sin tipo devuelve el catálogo completo. Antes hacía `return $type` cuando
+     * no venía, es decir devolvía null en vez del query, y el llamador reventaba
+     * al encadenar orderBy() sobre null.
+     */
+    public function scopeFilterByType($query, $type = null, $sucursalId = null)
     {
-        if( !isset( $type ) ){
-            return $type;
-        }
-        if( !in_array($type,['articulo','tour','tour_paquete']) ){
+        if (isset($type) && ! in_array($type, self::TIPOS, true)) {
             throw new \Exception('Tipo de producto no válido');
         }
+
         return $query
-            ->when($sucursalId,function($query) use ($sucursalId){
-                return $query->where('sucursal_id',$sucursalId);
-            })
-            ->where('tipo',$type);
+            ->when($sucursalId, fn($query) => $query->where('sucursal_id', $sucursalId))
+            ->when(isset($type), fn($query) => $query->where('tipo', $type));
     }
     /*
     |--------------------------------------------------------------------------

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class SucursalRequest extends FormRequest
 {
@@ -26,6 +27,15 @@ class SucursalRequest extends FormRequest
     {
         return [
             'razon_social' => 'required|min:5|max:255',
+            // El prefijo encabeza los folios de venta de la sucursal, así que dos
+            // sucursales con el mismo prefijo producirían folios indistinguibles.
+            'prefijo_folio' => [
+                'required',
+                'string',
+                'max:8',
+                'regex:/^[A-Za-z0-9]+$/',
+                Rule::unique('sucursales', 'prefijo_folio')->ignore($this->route('id')),
+            ],
             'rfc' => 'required|min:10|max:13',
             'email'=> 'required|email:rfc,dns',
             'telefono' => 'nullable|max:10',
@@ -55,6 +65,9 @@ class SucursalRequest extends FormRequest
     public function messages()
     {
         return [
+            'prefijo_folio.required' => 'Indica el prefijo de folio de la sucursal.',
+            'prefijo_folio.unique' => 'Ese prefijo ya lo usa otra sucursal.',
+            'prefijo_folio.regex' => 'El prefijo solo admite letras y números, sin espacios ni guiones.',
             'razon_social.required' => 'La razon social o nombre de la sucursal es requerido.',
             'razon_social.max' => 'La razon social debe contener maximo 255 caracteres.',
             'rfc.required' => 'El RFC es obligatorio.',

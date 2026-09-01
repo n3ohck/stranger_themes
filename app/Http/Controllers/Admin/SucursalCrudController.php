@@ -59,6 +59,11 @@ class SucursalCrudController extends CrudController
                 'type'  => 'text'
             ],
             [
+                'name'  => 'prefijo_folio',
+                'label' => 'Prefijo de folio',
+                'type'  => 'text'
+            ],
+            [
                 'name'  => 'email',
                 'label' => 'Email',
                 'type'  => 'text'
@@ -102,6 +107,14 @@ class SucursalCrudController extends CrudController
                 'type'  => 'text',
                 'hint'       => 'Nombre de la sucursal.', // helpful text, show up after input
                 'placeholder' => 'Nombre de la sucursal',
+            ],
+            [   // Text
+                'name'  => 'prefijo_folio',
+                'label' => "Prefijo de folio",
+                'type'  => 'text',
+                'hint'  => 'Iniciales que encabezan los folios de venta de esta sucursal, por ejemplo PV para PV-1, PV-2. Debe ser distinto al de las demás sucursales y no conviene cambiarlo una vez que la sucursal empezó a vender.',
+                'placeholder' => 'PV',
+                'attributes' => ['maxlength' => 8, 'style' => 'text-transform: uppercase;'],
             ],
             [   // Text
                 'name'  => 'rfc',

@@ -7,8 +7,9 @@ const mix = require('laravel-mix');
  |
  | Dos aplicaciones independientes:
  |
- |   app.js  -> dashboard y reportes con Inertia, dentro del panel de Backpack.
- |   pos.js  -> punto de venta, SPA propia servida en /pos.
+ |   app.js     -> dashboard y reportes con Inertia, dentro del panel de Backpack.
+ |   pos.js     -> punto de venta, SPA propia servida en /pos.
+ |   tienda.js  -> tienda en línea pública, servida en /comprar.
  |
  | Se compilan por separado a propósito: el POS no debe arrastrar element-plus
  | ni chart.js, y el panel no debe cargar el reset de Tailwind.
@@ -21,6 +22,12 @@ mix.js('resources/js/app.js', 'public/js')
 
 mix.js('resources/js/pos/main.js', 'public/js/pos.js')
     .postCss('resources/css/pos.css', 'public/css', [
+        require('tailwindcss'),
+        require('autoprefixer'),
+    ]);
+
+mix.js('resources/js/tienda/main.js', 'public/js/tienda.js')
+    .postCss('resources/css/tienda.css', 'public/css', [
         require('tailwindcss'),
         require('autoprefixer'),
     ]);

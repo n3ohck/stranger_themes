@@ -29,28 +29,34 @@ class ProductoCrudController extends CrudController
      */
     public function setup()
     {
-        if( !backpack_user() ){
-            \Auth::loginUsingId(1);
-        }
+        // Estos controladores sirven al panel y también a endpoints de API que se
+        // consumen sin sesión. Aquí se hacía Auth::loginUsingId(1) cuando no había
+        // usuario, para que las llamadas a ->can() de más abajo no reventaran: eso
+        // dejaba autenticada como administrador a cualquier petición anónima, y con
+        // varias sucursales además aplicaba el filtro de la sucursal 1 a consultas
+        // públicas de otras sucursales. Los permisos solo se evalúan si hay usuario;
+        // las rutas de API no dependen de ellos.
 
         CRUD::setModel(\App\Models\Producto::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/producto');
         CRUD::setEntityNameStrings('producto', 'productos');
-        if( !backpack_user()->can('productos.ver') ){
-            Alert::warning('No tienes permisos para ver los productos')->flash();
-            $this->crud->denyAccess('list');
-        }
+        if (backpack_user()) {
+            if( !backpack_user()->can('productos.ver') ){
+                Alert::warning('No tienes permisos para ver los productos')->flash();
+                $this->crud->denyAccess('list');
+            }
 
-        if( !backpack_user()->can('productos.crear') ){
-            $this->crud->denyAccess('create');
-        }
+            if( !backpack_user()->can('productos.crear') ){
+                $this->crud->denyAccess('create');
+            }
 
-        if( !backpack_user()->can('productos.editar') ){
-            $this->crud->denyAccess('update');
-        }
+            if( !backpack_user()->can('productos.editar') ){
+                $this->crud->denyAccess('update');
+            }
 
-        if( !backpack_user()->can('productos.eliminar') ){
-            $this->crud->denyAccess('delete');
+            if( !backpack_user()->can('productos.eliminar') ){
+                $this->crud->denyAccess('delete');
+            }
         }
     }
 
@@ -162,6 +168,29 @@ class ProductoCrudController extends CrudController
 
             ],
             [
+                'name' => 'visible_en_tienda',
+                'type' => 'checkbox',
+                'label' => 'Vender en la tienda en línea',
+                'hint' => 'Si se marca, aparece en /comprar para que el público lo compre desde el sitio web. Requiere capacidad y duración.',
+                'wrapper' => ['class' => 'form-group col-md-4'],
+            ],
+            [
+                'name' => 'capacidad',
+                'type' => 'number',
+                'label' => 'Capacidad por horario',
+                'hint' => 'Máximo de participantes que caben en una sesión. Cada horario es exclusivo del grupo que lo reserva.',
+                'attributes' => ['placeholder' => 'Ej. 8', 'class' => 'form-control', 'min' => 1],
+                'wrapper' => ['class' => 'form-group col-md-4'],
+            ],
+            [
+                'name' => 'duracion_minutos',
+                'type' => 'number',
+                'label' => 'Duración (minutos)',
+                'hint' => 'Cuánto dura el recorrido. En un paquete, la suma de los recorridos que incluye.',
+                'attributes' => ['placeholder' => 'Ej. 25', 'class' => 'form-control', 'min' => 1],
+                'wrapper' => ['class' => 'form-group col-md-4'],
+            ],
+            [
                 'name' => 'precio',
                 'type' => 'number',
                 'label' => 'Precio del producto',
@@ -251,11 +280,24 @@ class ProductoCrudController extends CrudController
         $this->setupCreateOperation();
     }
 
+    /**
+     * Sirve tanto a /api/productos (con JWT, donde el scope global ya recorta por
+     * sucursal) como a /api/public/productos, que el sitio web consume sin sesión.
+     *
+     * En el caso público el scope no filtra nada porque no hay usuario, así que la
+     * sucursal es obligatoria: sin ella el sitio recibiría el catálogo de todas
+     * las sucursales mezclado y podría vender una sala en la sucursal equivocada.
+     */
     public function fetch(Request $request)
     {
         try{
             $tipo = $request->get('tipo');
             $sucursalId = $request->get('sucursal_id');
+
+            if (! backpack_user() && ! $sucursalId) {
+                throw new \Exception('Debes indicar la sucursal para consultar el catálogo');
+            }
+
             $productos = Producto::query()
                 ->FilterByType($tipo,$sucursalId)
                 ->orderBy('descripcion','asc')

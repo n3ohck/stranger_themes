@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use App\Actions\VentaAction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class VentaCrudController
@@ -214,10 +215,14 @@ class VentaCrudController extends CrudController
 
             $start = Carbon::parse($search->start_date)->startOfDay();
             $end = Carbon::parse($start)->endOfDay();
+            // withoutGlobalScopes es necesario porque estas ventas se crean con
+            // user_id = 1, pero hay que reponer el filtro de sucursal a mano: sin
+            // él la consulta devuelve las ventas en línea de todas las sucursales.
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
                 ->whereHas('reservaciones', fn($q) => $q->whereBetween('fecha', [$start, $end]))
+                ->when(SucursalActiva::id(), fn($q, $sucursalId) => $q->where('sucursal_id', $sucursalId))
                 ->with($commonWith)
                 ->get();
 
@@ -235,8 +240,7 @@ class VentaCrudController extends CrudController
         } catch (\Exception $e) {
             return response()
                 ->json([
-                    'error' => $e->getMessage(),
-                    'trace' => $e->getTrace()
+                    'error' => $e->getMessage()
                 ], 400);
         }
     }
@@ -256,7 +260,7 @@ class VentaCrudController extends CrudController
             return response()->json(['ventas' => $ventas, 'qty' => count($ventas)], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 400);
+            return response()->json(['error' => $e->getMessage()], 400);
         }
     }
 
@@ -276,7 +280,17 @@ class VentaCrudController extends CrudController
             return response()->json(['ventas' => $ventas, 'qty' => count($ventas)], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 400);
+
+            // El detalle va al log del servidor, no a la respuesta: este endpoint
+            // es público y antes devolvía el stack trace completo con las rutas
+            // absolutas del servidor, unos 16 KB por error.
+            Log::error('Falló el registro de una venta online', [
+                'mensaje' => $e->getMessage(),
+                'archivo' => $e->getFile() . ':' . $e->getLine(),
+                'payload' => $request->input('ventas'),
+            ]);
+
+            return response()->json(['error' => $e->getMessage()], 400);
         }
     }
 
@@ -419,12 +433,20 @@ class VentaCrudController extends CrudController
                 ];
             };
 
-            // 1) Ventas online extra (como lo tienes)
+            // Sucursal del reporte: la que se eligió en el filtro de la pantalla y,
+            // si no viene, la sucursal activa del usuario. Antes esta consulta usaba
+            // la sucursal del usuario mientras el resto del reporte usaba la del
+            // filtro, así que al consultar otra sucursal las ventas en línea seguían
+            // siendo las propias.
+            $sucursalReporte = $params['sucursal'] ?? SucursalActiva::id();
+
+            // 1) Ventas en línea: se buscan aparte porque su created_at es la fecha
+            //    de compra y el reporte las ubica por la fecha de la experiencia.
             $ventasOnlineExtra = Venta::query()
                 ->withoutGlobalScopes()
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
                 ->whereHas('reservaciones', fn($q) => $q->whereBetween('fecha', [$startLocal, $endLocal]))
-                ->where('sucursal_id', SucursalActiva::id())
+                ->when($sucursalReporte, fn($q) => $q->where('sucursal_id', $sucursalReporte))
                 ->with([
                     'user',
                     'sucursal',

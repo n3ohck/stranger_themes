@@ -142,8 +142,7 @@ class PaymentReportController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTrace()
+                'message' => $e->getMessage()
             ]);
         }
     }

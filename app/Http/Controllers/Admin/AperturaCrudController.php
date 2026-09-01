@@ -123,8 +123,7 @@ class AperturaCrudController extends CrudController
             ], 200);
         }catch (\Exception $e){
             return response()->json([
-                'error' => $e->getMessage(),
-                'trace' => $e->getTrace()
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -149,8 +148,7 @@ class AperturaCrudController extends CrudController
             ], 200);
         }catch (\Exception $e){
             return response()->json([
-                'error' => $e->getMessage(),
-                'trace' => $e->getTrace()
+                'error' => $e->getMessage()
             ], 500);
         }
     }

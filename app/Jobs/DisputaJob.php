@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class DisputaJob implements ShouldQueue
@@ -41,7 +42,21 @@ class DisputaJob implements ShouldQueue
             }
         ]);
 
-        // Send email
-        Mail::to('brauliogiovannivisconti@gmail.com')->send(new \App\Mail\DisputaMail($this->sale));
+        // El destinatario estaba escrito directamente en el código. Ahora sale de
+        // config/mail.php (variable DISPUTAS_EMAIL) y, si la sucursal tiene correo
+        // propio, también se le avisa: con varias sucursales operando, la disputa
+        // le sirve a quien atiende esa sucursal.
+        $destinatarios = collect([
+            config('mail.disputas'),
+            optional($this->sale->sucursal)->email,
+        ])->filter()->unique()->values();
+
+        if ($destinatarios->isEmpty()) {
+            Log::warning('Disputa sin destinatario configurado', ['venta_id' => $this->sale->id]);
+
+            return;
+        }
+
+        Mail::to($destinatarios->all())->send(new \App\Mail\DisputaMail($this->sale));
     }
 }

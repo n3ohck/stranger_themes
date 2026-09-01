@@ -30,9 +30,13 @@ class ReservaCrudController extends CrudController
      */
     public function setup()
     {
-        if( !backpack_user() ){
-            \Auth::loginUsingId(1);
-        }
+        // Estos controladores sirven al panel y también a endpoints de API que se
+        // consumen sin sesión. Aquí se hacía Auth::loginUsingId(1) cuando no había
+        // usuario, para que las llamadas a ->can() de más abajo no reventaran: eso
+        // dejaba autenticada como administrador a cualquier petición anónima, y con
+        // varias sucursales además aplicaba el filtro de la sucursal 1 a consultas
+        // públicas de otras sucursales. Los permisos solo se evalúan si hay usuario;
+        // las rutas de API no dependen de ellos.
         CRUD::setModel(\App\Models\Reserva::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/reserva');
         CRUD::setEntityNameStrings('reserva', 'reservas');
@@ -163,9 +167,13 @@ class ReservaCrudController extends CrudController
             if (!$request->has('product_id')) throw new \Exception('Falta product_id');
             if (!$request->has('datetime')) throw new \Exception('Falta fecha de reserva');
             if (!$request->has('name')) throw new \Exception('Falta name (nombre cliente) de reserva');
-            if( !backpack_user() ){
-                \Auth::loginUsingId(1);
+            // Ruta protegida por JWT: el usuario siempre existe. Antes había un
+            // fallback a Auth::loginUsingId(1) que, de dispararse, habría agendado
+            // la reservación en la sucursal 1 sin avisar a nadie.
+            if (! backpack_user()) {
+                throw new \Exception('No hay una sesión válida para crear la reservación');
             }
+
             $sucursalId = backpack_user()->sucursal_id;
             $reserva = Reserva::create([
                 'producto_id' => $request->product_id,

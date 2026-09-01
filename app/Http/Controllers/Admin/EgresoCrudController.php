@@ -284,7 +284,7 @@ class EgresoCrudController extends CrudController
             ], 200);
         }catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 500);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -311,7 +311,7 @@ class EgresoCrudController extends CrudController
                 'qty' => $egresos->count()
             ], 200);
         }catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 500);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 

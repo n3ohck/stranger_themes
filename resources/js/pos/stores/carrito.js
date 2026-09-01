@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { api } from '../api/cliente';
-import { descuentoUnitario } from '../utils/descuento';
+import { descuentoUnitario } from '../../shared/descuento';
 import { useCatalogo } from './catalogo';
 
 let contador = 0;

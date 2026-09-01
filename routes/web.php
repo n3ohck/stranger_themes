@@ -27,3 +27,13 @@ Route::get('/home', function(){ return redirect('/admin'); });
 Route::view('/pos/{cualquiera?}', 'pos')
     ->where('cualquiera', '.*')
     ->name('pos');
+
+/*
+ * Tienda en línea.
+ *
+ * Ruta pública pensada para enlazarse desde strangerthemes.com. El comodín deja que
+ * vue-router maneje sus propias pantallas al recargar, igual que en el POS.
+ */
+Route::view('/comprar/{cualquiera?}', 'tienda')
+    ->where('cualquiera', '.*')
+    ->name('tienda');

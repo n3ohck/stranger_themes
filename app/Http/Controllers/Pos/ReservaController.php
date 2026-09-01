@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Reserva;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ReservaController extends Controller
 {
@@ -30,7 +31,10 @@ class ReservaController extends Controller
         $desde = Carbon::parse($request->input('desde'))->startOfDay();
         $hasta = Carbon::parse($request->input('hasta'))->endOfDay();
 
+        // Filtro explícito de sucursal por la misma razón que en el catálogo: el
+        // aislamiento del POS no debe depender del scope ambiental.
         $reservas = Reserva::query()
+            ->where('sucursal_id', Auth::user()->sucursal_id)
             ->whereBetween('fecha', [$desde, $hasta])
             ->when(
                 $request->filled('estado'),

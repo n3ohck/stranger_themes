@@ -29,27 +29,33 @@ class DescuentoCrudController extends CrudController
      */
     public function setup()
     {
-        if( !backpack_user() ){
-            \Auth::loginUsingId(1);
-        }
+        // Estos controladores sirven al panel y también a endpoints de API que se
+        // consumen sin sesión. Aquí se hacía Auth::loginUsingId(1) cuando no había
+        // usuario, para que las llamadas a ->can() de más abajo no reventaran: eso
+        // dejaba autenticada como administrador a cualquier petición anónima, y con
+        // varias sucursales además aplicaba el filtro de la sucursal 1 a consultas
+        // públicas de otras sucursales. Los permisos solo se evalúan si hay usuario;
+        // las rutas de API no dependen de ellos.
         CRUD::setModel(\App\Models\Descuento::class);
         CRUD::setRoute(config('backpack.base.route_prefix') . '/descuento');
         CRUD::setEntityNameStrings('descuento', 'descuentos');
-        if( !backpack_user()->can('descuentos.ver') ){
-            Alert::warning('No tienes permisos para ver los descuentos')->flash();
-            $this->crud->denyAccess('list');
-        }
+        if (backpack_user()) {
+            if( !backpack_user()->can('descuentos.ver') ){
+                Alert::warning('No tienes permisos para ver los descuentos')->flash();
+                $this->crud->denyAccess('list');
+            }
 
-        if( !backpack_user()->can('descuentos.crear') ){
-            $this->crud->denyAccess('create');
-        }
+            if( !backpack_user()->can('descuentos.crear') ){
+                $this->crud->denyAccess('create');
+            }
 
-        if( !backpack_user()->can('descuentos.editar') ){
-            $this->crud->denyAccess('update');
-        }
+            if( !backpack_user()->can('descuentos.editar') ){
+                $this->crud->denyAccess('update');
+            }
 
-        if( !backpack_user()->can('descuentos.eliminar') ){
-            $this->crud->denyAccess('delete');
+            if( !backpack_user()->can('descuentos.eliminar') ){
+                $this->crud->denyAccess('delete');
+            }
         }
     }
 

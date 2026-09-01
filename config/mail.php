@@ -107,4 +107,19 @@ return [
         ],
     ],
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Destinatario de disputas
+    |--------------------------------------------------------------------------
+    |
+    | Correo que recibe el aviso cuando un cliente cancela una compra en línea
+    | desde el sitio web. Antes estaba escrito directamente en DisputaJob. Si la
+    | sucursal de la venta tiene correo propio, se le notifica además de a esta
+    | dirección.
+    |
+    */
+
+    'disputas' => env('DISPUTAS_EMAIL', 'brauliogiovannivisconti@gmail.com'),
+
 ];

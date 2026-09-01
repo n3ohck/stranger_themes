@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Pos;
 use App\Http\Controllers\Controller;
 use App\Models\Descuento;
 use App\Models\Producto;
+use Illuminate\Support\Facades\Auth;
 
 class CatalogoController extends Controller
 {
@@ -18,7 +19,14 @@ class CatalogoController extends Controller
      */
     public function index()
     {
+        // El scope global ya recorta por sucursal, pero aquí se filtra de forma
+        // explícita: el POS fija la sucursal en la ficha del usuario y no debe
+        // depender del contexto ambiental para aislarla. Si mañana alguien monta
+        // estas rutas bajo el grupo 'web', el aislamiento seguiría en pie.
+        $sucursalId = Auth::user()->sucursal_id;
+
         $productos = Producto::query()
+            ->where('sucursal_id', $sucursalId)
             ->orderBy('descripcion')
             ->get();
 
@@ -56,6 +64,7 @@ class CatalogoController extends Controller
         });
 
         $descuentos = Descuento::query()
+            ->where('sucursal_id', $sucursalId)
             ->where('estatus', 'activo')
             ->orderBy('codigo')
             ->get()

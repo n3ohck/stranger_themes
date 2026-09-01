@@ -202,7 +202,7 @@ class EmpleadoPagoCrudController extends CrudController
             ], 201);
         }catch (\Exception $e){
             DB::rollBack();
-            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 500);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
@@ -223,7 +223,7 @@ class EmpleadoPagoCrudController extends CrudController
                 'data' => $pagos
             ],200);
         }catch (\Exception $e){
-            return response()->json(['error' => $e->getMessage(), 'trace' => $e->getTrace()], 500);
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 

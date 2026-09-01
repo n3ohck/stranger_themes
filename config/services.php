@@ -30,4 +30,26 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Stripe (tienda del sitio web)
+    |--------------------------------------------------------------------------
+    |
+    | El cobro se hace con Stripe Checkout, la página alojada por Stripe: el cliente
+    | escribe su tarjeta en el dominio de Stripe y este servidor nunca ve ni guarda
+    | datos de tarjeta.
+    |
+    | 'webhook_secret' valida que los avisos de pago vengan de Stripe y no de
+    | cualquiera que conozca la URL.
+    |
+    */
+
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+        'secret' => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'moneda' => env('STRIPE_MONEDA', 'mxn'),
+    ],
+
 ];

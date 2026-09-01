@@ -23,9 +23,13 @@ Route::post('login', 'App\Http\Controllers\AuthController@authenticate');
 Route::get('public/productos', [\App\Http\Controllers\Admin\ProductoCrudController::class,'fetch']);
 Route::get('public/descuentos', [\App\Http\Controllers\Admin\DescuentoCrudController::class,'publicFetch']);
 Route::get('public/reservas', [\App\Http\Controllers\ReservasController::class,'fetch']);
+Route::get('public/sucursales', [\App\Http\Controllers\SucursalController::class,'publicIndex']);
 Route::get('public/sucursal', [\App\Http\Controllers\SucursalController::class,'getByBranch']);
 Route::post('public/ventas/make', [\App\Http\Controllers\Admin\VentaCrudController::class,'publicMake']);
-Route::post('public/ventas/cancel', [\App\Http\Controllers\Admin\DisputasController::class,'set']);
+// La cancelación es pública y se verifica con la referencia del cobro; el límite
+// de intentos evita que alguien tantee referencias por fuerza bruta.
+Route::post('public/ventas/cancel', [\App\Http\Controllers\Admin\DisputasController::class,'set'])
+    ->middleware('throttle:10,1');
 Route::group(['middleware' => ['jwt.verify']], function () {
     //Login
     Route::post('user', 'App\Http\Controllers\Admin\UserController@getAuthenticatedUser');

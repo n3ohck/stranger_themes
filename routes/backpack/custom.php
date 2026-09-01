@@ -31,6 +31,7 @@ Route::group([
     Route::crud('corte', 'CorteCrudController');
     Route::crud('empleado', 'EmpleadoCrudController');
     Route::crud('empleado-pago', 'EmpleadoPagoCrudController');
+    Route::post('sucursal-activa', 'SucursalActivaController@cambiar')->name('sucursal-activa.cambiar');
     Route::get('dashboard', 'DashboardController@index');
     Route::get('payment-report', 'PaymentReportController@view');
     Route::get('payment-report/{corte}/egreso', 'PaymentReportController@view');

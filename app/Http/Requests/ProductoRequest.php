@@ -31,6 +31,11 @@ class ProductoRequest extends FormRequest
             'existencia' => 'required|integer',
             'tipo' => 'required',
             'sucursal_id' => 'required|exists:sucursales,id',
+            // Sin capacidad ni duración la tienda no puede calcular horarios, así que
+            // se exigen justo cuando el producto se pone a la venta en línea.
+            'visible_en_tienda' => 'nullable|boolean',
+            'capacidad' => 'nullable|integer|min:1|max:100|required_if:visible_en_tienda,1',
+            'duracion_minutos' => 'nullable|integer|min:5|max:600|required_if:visible_en_tienda,1',
         ];
     }
 
@@ -54,6 +59,8 @@ class ProductoRequest extends FormRequest
     public function messages()
     {
         return [
+            'capacidad.required_if' => 'Para vender en línea hay que indicar cuántas personas caben por horario.',
+            'duracion_minutos.required_if' => 'Para vender en línea hay que indicar cuánto dura el recorrido.',
             'codigo.required' => 'El campo código es obligatorio.',
             'descripcion.required' => 'El campo descripción es obligatorio.',
             'precio.required' => 'El campo precio es obligatorio.',

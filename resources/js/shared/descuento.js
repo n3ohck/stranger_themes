@@ -1,9 +1,11 @@
 /**
  * Regla de redondeo de descuentos, espejo de App\Support\ReglaDescuento.
  *
- * Está duplicada a propósito: el servidor es la autoridad sobre el importe
- * cobrado, pero el cajero necesita ver el total correcto antes de cobrar. Si
- * esta regla cambia en el backend, hay que cambiarla aquí también.
+ * La comparten el punto de venta y la tienda en línea. Existe en JavaScript
+ * porque el cajero y el cliente necesitan ver el total antes de pagar, pero el
+ * servidor sigue siendo la autoridad sobre el importe que se cobra: si ambos
+ * difieren, manda el servidor. Si la regla cambia en el backend, hay que
+ * cambiarla aquí también.
  *
  *   decimal <= .49  -> hacia abajo
  *   decimal == .50  -> se queda igual

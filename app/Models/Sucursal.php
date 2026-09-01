@@ -68,6 +68,15 @@ class Sucursal extends Model
     |--------------------------------------------------------------------------
     */
     /**
+     * El prefijo se guarda siempre en mayúsculas para que los folios se vean
+     * iguales sin importar cómo lo haya escrito quien dio de alta la sucursal.
+     */
+    public function setPrefijoFolioAttribute($value)
+    {
+        $this->attributes['prefijo_folio'] = $value ? mb_strtoupper(trim($value)) : null;
+    }
+
+    /**
      * Entrega el siguiente folio de la sucursal y avanza su consecutivo.
      *
      * El bloqueo de fila serializa a dos cajas de la misma sucursal vendiendo al
