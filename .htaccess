@@ -1,0 +1,39 @@
+# Redirección del docroot hacia public/
+#
+# Solo hace falta cuando el hosting no permite apuntar el dominio directamente a
+# la carpeta public/ del proyecto (caso típico de Hostinger y otros compartidos).
+# Si puedes cambiar la raíz del sitio desde el panel, hazlo: este archivo deja de
+# ser necesario y el árbol del proyecto queda fuera del alcance de la web.
+#
+# En local es inerte: Valet ya sirve public/ directamente y nunca consulta este
+# archivo.
+
+# Sin listados de directorio: sin esto, una carpeta sin índice muestra su contenido.
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Todo entra por public/. La condición evita el bucle infinito: sin ella, la
+    # petición reescrita vuelve a entrar aquí y se le antepone public/ otra vez.
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Segunda barrera.
+#
+# La reescritura de arriba ya manda todo a public/, así que /.env responde 404.
+# Pero si mod_rewrite se desactiva, este archivo se pierde en un despliegue o
+# alguien lo edita mal, el proyecto entero queda navegable desde internet: el
+# .env con las credenciales de base de datos y las llaves de Stripe, los logs de
+# storage/, y el código en app/. Estas reglas siguen negando el acceso aunque la
+# reescritura no llegue a aplicarse.
+<FilesMatch "^(\.env.*|\.git.*|composer\.(json|lock)|package(-lock)?\.json|artisan|phpunit\.xml|server\.php|webpack\.mix\.js|tailwind\.config\.js|CLAUDE\.md|README\.md|\.valetrc|\.styleci\.yml|\.editorconfig)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
