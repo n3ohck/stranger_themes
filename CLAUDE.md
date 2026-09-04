@@ -135,6 +135,16 @@ caso como reintento en vez de devolver error al sitio.
 Es nullable por la misma razón que el folio: las 36 referencias duplicadas del
 histórico se conservan y no estorban al índice.
 
+**No agregues un índice único sobre `venta_pagos(tipo, referencia)`.** Existió una
+migración así y se eliminó: las 36 referencias duplicadas del histórico se conservan
+por decisión del negocio, así que ese índice nunca puede crearse. Peor aún, la
+migración abortaba `php artisan migrate` y dejaba sin correr todo lo que venía
+después, bloqueando cada despliegue. La protección vive en `ventas.referencia_pago`;
+para diagnosticar el histórico está `php artisan pos:duplicados-online`.
+
+**Una migración nunca debe abortar el despliegue por el estado de los datos.** Si algo
+necesita revisión humana, va en un comando de diagnóstico, no en una migración.
+
 ### 9. Endpoints públicos: la sucursal y la referencia son obligatorias
 
 `public/*` no lleva sesión, así que el scope de sucursal no filtra nada. Todos exigen
