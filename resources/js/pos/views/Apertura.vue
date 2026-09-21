@@ -2,7 +2,6 @@
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSesion } from '../stores/sesion';
-import { dinero } from '../utils/formato';
 
 const sesion = useSesion();
 const router = useRouter();
@@ -11,14 +10,7 @@ const monto = ref('');
 const error = ref('');
 const enviando = ref(false);
 
-// Denominaciones de billete comunes, para armar el fondo sin teclear.
-const atajos = [200, 500, 1000, 1500, 2000];
-
 const montoNumerico = computed(() => Number(monto.value) || 0);
-
-function sumar(cantidad) {
-    monto.value = String(montoNumerico.value + cantidad);
-}
 
 async function abrir() {
     error.value = '';
@@ -69,21 +61,6 @@ function salir() {
                                 autofocus
                             >
                         </div>
-                    </div>
-
-                    <div class="flex flex-wrap gap-2">
-                        <button
-                            v-for="atajo in atajos"
-                            :key="atajo"
-                            type="button"
-                            class="btn-neutro min-h-[2.5rem] px-3 text-sm"
-                            @click="sumar(atajo)"
-                        >
-                            +{{ dinero(atajo) }}
-                        </button>
-                        <button type="button" class="btn-fantasma min-h-[2.5rem] px-3 text-sm" @click="monto = ''">
-                            Limpiar
-                        </button>
                     </div>
 
                     <p v-if="error" class="rounded-lg bg-sangre-600/15 px-3 py-2 text-sm text-sangre-400">

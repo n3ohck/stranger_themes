@@ -19,6 +19,34 @@ const enviandoCancelacion = ref(false);
 
 const soloActivas = ref(false);
 
+const etiquetaPago = {
+    efectivo: 'Efectivo',
+    tarjeta: 'Tarjeta',
+    transferencia: 'Transferencia',
+    online: 'En línea',
+};
+
+const colorPago = {
+    efectivo: 'bg-emerald-600/20 text-emerald-400',
+    tarjeta: 'bg-sky-600/20 text-sky-400',
+    transferencia: 'bg-indigo-600/20 text-indigo-400',
+    online: 'bg-amber-600/20 text-amber-400',
+};
+
+/** Formas de pago de una venta, con su importe, para verlas de un vistazo. */
+function formasDePago(venta) {
+    const porTipo = {};
+
+    venta.pagos.forEach((p) => {
+        porTipo[p.tipo] = (porTipo[p.tipo] || 0) + p.monto;
+    });
+
+    // Una venta de cortesía no tiene pagos y se marca como tal.
+    if (!Object.keys(porTipo).length) return [{ tipo: 'cortesia', monto: 0 }];
+
+    return Object.entries(porTipo).map(([tipo, monto]) => ({ tipo, monto }));
+}
+
 const visibles = computed(() =>
     soloActivas.value ? ventas.value.filter((v) => v.estatus === 'activo') : ventas.value
 );
@@ -146,12 +174,30 @@ async function verTicket(venta) {
                                 {{ horaCorta(venta.fecha) }}
                                 <span v-if="venta.cliente"> · {{ venta.cliente }}</span>
                             </p>
+
+                            <!-- Cómo se pagó: era lo primero que se buscaba al revisar el turno. -->
+                            <div class="mt-1.5 flex flex-wrap gap-1">
+                                <span
+                                    v-for="p in formasDePago(venta)" :key="p.tipo"
+                                    class="chip"
+                                    :class="p.tipo === 'cortesia'
+                                        ? 'bg-acento-600/25 text-acento-400'
+                                        : colorPago[p.tipo] || 'bg-noche-700 text-slate-300'"
+                                >
+                                    <template v-if="p.tipo === 'cortesia'">Cortesía</template>
+                                    <template v-else>{{ etiquetaPago[p.tipo] || p.tipo }} {{ dinero(p.monto) }}</template>
+                                </span>
+                            </div>
                         </div>
 
                         <div class="text-right">
                             <p class="tabular text-lg font-bold text-slate-100">{{ dinero(venta.total) }}</p>
+                            <!-- El monto solo no dice nada: al lado va el código aplicado. -->
                             <p v-if="venta.descuento > 0" class="tabular text-xs text-emerald-400">
                                 −{{ dinero(venta.descuento) }}
+                            </p>
+                            <p v-if="venta.descuento > 0 && venta.codigo_descuento" class="text-xs text-emerald-400/80">
+                                {{ venta.codigo_descuento }}
                             </p>
                         </div>
                     </div>

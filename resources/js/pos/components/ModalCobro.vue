@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, reactive, watch } from 'vue';
 import { dinero } from '../utils/formato';
 
 const props = defineProps({
@@ -24,8 +24,6 @@ const referencias = reactive({
     tarjeta: '',
     transferencia: '',
 });
-
-const cliente = reactive({ nombre: '', telefono: '', email: '' });
 
 const num = (valor) => Number(valor) || 0;
 
@@ -57,7 +55,6 @@ function confirmar() {
             { tipo: 'tarjeta', monto: num(pagos.tarjeta), referencia: referencias.tarjeta },
             { tipo: 'transferencia', monto: num(pagos.transferencia), referencia: referencias.transferencia },
         ],
-        cliente: { ...cliente },
     });
 }
 </script>
@@ -74,9 +71,12 @@ function confirmar() {
                 <div class="rounded-xl bg-noche-900 p-4 text-center">
                     <p class="text-xs uppercase tracking-wide text-slate-500">Total a cobrar</p>
                     <p class="tabular mt-1 text-4xl font-extrabold text-slate-100">{{ dinero(total) }}</p>
+                    <p v-if="total <= 0" class="mt-2 text-sm text-emerald-400">
+                        Cortesía: no hay nada que cobrar.
+                    </p>
                 </div>
 
-                <div>
+                <div v-if="total > 0">
                     <label class="etiqueta">Efectivo</label>
                     <input v-model="pagos.efectivo" type="number" inputmode="decimal" min="0" step="0.01"
                            class="campo tabular text-lg" placeholder="0.00" autofocus>
@@ -93,7 +93,7 @@ function confirmar() {
                     </div>
                 </div>
 
-                <div class="grid gap-4 sm:grid-cols-2">
+                <div v-if="total > 0" class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="etiqueta">Tarjeta</label>
                         <input v-model="pagos.tarjeta" type="number" inputmode="decimal" min="0" step="0.01"
@@ -110,7 +110,7 @@ function confirmar() {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3 rounded-xl border border-noche-600 p-4">
+                <div v-if="total > 0" class="grid grid-cols-2 gap-3 rounded-xl border border-noche-600 p-4">
                     <div>
                         <p class="text-xs uppercase tracking-wide text-slate-500">Recibido</p>
                         <p class="tabular text-xl font-bold text-slate-100">{{ dinero(recibido) }}</p>
@@ -125,25 +125,6 @@ function confirmar() {
                     </div>
                 </div>
 
-                <details class="rounded-xl border border-noche-600">
-                    <summary class="cursor-pointer px-4 py-3 text-sm font-medium text-slate-400">
-                        Datos del cliente (opcional)
-                    </summary>
-                    <div class="grid gap-3 border-t border-noche-700 p-4 sm:grid-cols-2">
-                        <div class="sm:col-span-2">
-                            <label class="etiqueta text-xs">Nombre</label>
-                            <input v-model="cliente.nombre" type="text" class="campo py-2 text-sm">
-                        </div>
-                        <div>
-                            <label class="etiqueta text-xs">Teléfono</label>
-                            <input v-model="cliente.telefono" type="tel" class="campo py-2 text-sm">
-                        </div>
-                        <div>
-                            <label class="etiqueta text-xs">Correo</label>
-                            <input v-model="cliente.email" type="email" class="campo py-2 text-sm">
-                        </div>
-                    </div>
-                </details>
 
                 <p v-if="error" class="rounded-lg bg-sangre-600/15 px-3 py-2 text-sm text-sangre-400">{{ error }}</p>
             </div>
@@ -155,7 +136,7 @@ function confirmar() {
                     :disabled="!puedeCobrar || guardando"
                     @click="confirmar"
                 >
-                    {{ guardando ? 'Registrando…' : `Cobrar ${dinero(total)}` }}
+                    {{ guardando ? 'Registrando…' : (total > 0 ? `Cobrar ${dinero(total)}` : 'Registrar venta') }}
                 </button>
             </div>
         </div>

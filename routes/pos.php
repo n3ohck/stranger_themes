@@ -3,6 +3,7 @@
 use App\Http\Controllers\Pos\AuthController;
 use App\Http\Controllers\Pos\CajaController;
 use App\Http\Controllers\Pos\CatalogoController;
+use App\Http\Controllers\Pos\DisponibilidadController;
 use App\Http\Controllers\Pos\MovimientoController;
 use App\Http\Controllers\Pos\ReservaController;
 use App\Http\Controllers\Pos\SesionController;
@@ -28,6 +29,7 @@ Route::post('login', [AuthController::class, 'login'])
 Route::middleware(['jwt.verify', 'pos.user'])->group(function () {
     Route::get('session', [SesionController::class, 'show'])->name('session');
     Route::get('catalogo', [CatalogoController::class, 'index'])->name('catalogo');
+    Route::get('disponibilidad', [DisponibilidadController::class, 'index'])->name('disponibilidad');
 
     // Caja
     Route::post('caja/apertura', [CajaController::class, 'abrir'])->name('caja.abrir');
@@ -43,6 +45,8 @@ Route::middleware(['jwt.verify', 'pos.user'])->group(function () {
 
     // Reservaciones
     Route::get('reservas', [ReservaController::class, 'index'])->name('reservas');
+    Route::get('reservas/dia', [ReservaController::class, 'dia'])->name('reservas.dia');
+    Route::put('reservas/{reserva}', [ReservaController::class, 'actualizar'])->name('reservas.actualizar');
 
     // Salidas de dinero del turno
     Route::get('movimientos', [MovimientoController::class, 'index'])->name('movimientos');

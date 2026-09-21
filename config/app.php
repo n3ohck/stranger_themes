@@ -66,7 +66,21 @@ return [
     | ahead and set this to a sensible default for you out of the box.
     |
     */
-    'timezone' => 'UTC',
+    /*
+     | La aplicación trabaja en la hora de operación del negocio, no en UTC.
+     |
+     | Es deliberado y no es lo que recomienda Laravel por defecto: las 4,582 ventas
+     | históricas ya estaban guardadas en hora de Chihuahua, y el código nuevo que
+     | usaba Carbon::now() (UTC) las registraba 6 horas adelantadas. Unificar aquí
+     | alinea escrituras, comparaciones y lecturas con lo que ya existe.
+     |
+     | Consecuencia a tener presente: si se abre una sucursal en otra zona horaria,
+     | esto deja de funcionar y hay que migrar a UTC con conversión en presentación.
+     */
+    'timezone' => env('APP_TIMEZONE', 'America/Chihuahua'),
+
+    // Se conserva porque varios puntos del código la leen; hoy coincide con la de
+    // arriba, así que las conversiones que la usan son inocuas.
     'display_timezone' => 'America/Chihuahua',
 
     /*

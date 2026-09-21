@@ -163,19 +163,41 @@ class SucursalCrudController extends CrudController
                             'domingo' => 'Domingo'
                         ],
                         'allows_null' => false,
-                        'wrapper' => ['class' => 'form-group col-md-4'],
+                        'wrapper' => ['class' => 'form-group col-md-3'],
                     ],
                     [
                         'name'    => 'hora_entrada',
                         'type'    => 'time',
                         'label'   => 'Hora Apertura',
-                        'wrapper' => ['class' => 'form-group col-md-4'],
+                        'wrapper' => ['class' => 'form-group col-md-3'],
                     ],
                     [
                         'name'    => 'hora_salida',
                         'type'    => 'time',
                         'label'   => 'Hora Cierre',
-                        'wrapper' => ['class' => 'form-group col-md-4'],
+                        'wrapper' => ['class' => 'form-group col-md-3'],
+                    ],
+                    [
+                        // Cada cuánto sale un recorrido ese día. Es lo que define los
+                        // horarios que ve el cajero en el punto de venta, la rejilla de
+                        // la lista de reservas y lo que se ofrece en la tienda en línea:
+                        // los tres leen de aquí, así que no pueden desincronizarse.
+                        'name'        => 'intervalo_minutos',
+                        'label'       => 'Un recorrido cada',
+                        'type'        => 'select2_from_array',
+                        'options'     => [
+                            15 => 'Cada 15 minutos',
+                            20 => 'Cada 20 minutos',
+                            30 => 'Cada 30 minutos',
+                            45 => 'Cada 45 minutos',
+                            60 => 'Cada hora',
+                            90 => 'Cada hora y media',
+                            120 => 'Cada 2 horas',
+                        ],
+                        'allows_null' => false,
+                        'default'     => 30,
+                        'hint'        => 'Define los horarios disponibles de ese día.',
+                        'wrapper' => ['class' => 'form-group col-md-3'],
                     ]
                 ],
                 'new_item_label'  => 'Añadir', // customize the text of the button

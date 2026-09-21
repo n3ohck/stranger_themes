@@ -174,8 +174,8 @@ class CajaController extends Controller
             })
             ->get();
 
-        $egresosEfectivo = (float) $egresos->where('tipo_pago', 'efectivo')->sum('monto');
-        $egresosTotal = (float) $egresos->sum('monto');
+        // Todo egreso del punto de venta es en efectivo, así que ya no se separan.
+        $egresosEfectivo = (float) $egresos->sum('monto');
 
         $pagosEmpleados = (float) EmpleadoPago::query()
             ->where('estatus', 'activo')
@@ -213,9 +213,9 @@ class CajaController extends Controller
                 'online' => round($online, 2),
             ],
             'salidas' => [
-                'egresos_efectivo' => round($egresosEfectivo, 2),
-                'egresos_total' => round($egresosTotal, 2),
+                'egresos' => round($egresosEfectivo, 2),
                 'pagos_empleados' => round($pagosEmpleados, 2),
+                'total' => round($egresosEfectivo + $pagosEmpleados, 2),
             ],
             'caja' => [
                 'efectivo_esperado' => round($efectivoEsperado, 2),

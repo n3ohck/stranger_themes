@@ -47,8 +47,6 @@ class MovimientoController extends Controller
                 'id' => $egreso->id,
                 'monto' => (float) $egreso->monto,
                 'descripcion' => $egreso->descripcion,
-                'tipo_pago' => $egreso->tipo_pago,
-                'referencia' => $egreso->referencia,
                 'fecha' => (string) $egreso->fecha_pago,
                 'comprobante' => $this->urlComprobante($egreso->imagen),
             ])->values(),
@@ -61,15 +59,12 @@ class MovimientoController extends Controller
                 'comprobante' => $this->urlComprobante($pago->imagen),
             ])->values(),
 
+            // Tres cifras y no cinco: como todo egreso es en efectivo, distinguir
+            // "egresos efectivo" de "egresos total" solo repetía el mismo número.
             'totales' => [
-                'egresos_efectivo' => round((float) $egresos->where('tipo_pago', 'efectivo')->sum('monto'), 2),
-                'egresos_total' => round((float) $egresos->sum('monto'), 2),
+                'egresos' => round((float) $egresos->sum('monto'), 2),
                 'pagos_empleados' => round((float) $pagos->sum('monto'), 2),
-                // Lo que en conjunto se descuenta del efectivo esperado en caja.
-                'salida_efectivo' => round(
-                    (float) $egresos->where('tipo_pago', 'efectivo')->sum('monto') + (float) $pagos->sum('monto'),
-                    2
-                ),
+                'salida_efectivo' => round((float) $egresos->sum('monto') + (float) $pagos->sum('monto'), 2),
             ],
         ]);
     }
@@ -96,8 +91,10 @@ class MovimientoController extends Controller
         $datos = $request->validate([
             'monto' => ['required', 'numeric', 'min:0.01'],
             'descripcion' => ['required', 'string', 'min:3', 'max:255'],
-            'tipo_pago' => ['required', 'in:efectivo,tarjeta,transferencia'],
-            'referencia' => ['nullable', 'string', 'max:255'],
+            // Solo efectivo: un egreso es dinero saliendo del cajón. Lo que se paga
+            // con tarjeta o transferencia de la empresa no toca la caja del turno y
+            // se registra desde el panel, no desde el punto de venta.
+            'tipo_pago' => ['nullable', 'in:efectivo'],
             'imagen' => ['nullable', 'image', 'max:5120'],
         ], [
             'monto.required' => 'Indica el monto del egreso.',
@@ -119,9 +116,9 @@ class MovimientoController extends Controller
             'apertura_id' => $apertura->id,
             'monto' => $datos['monto'],
             'descripcion' => $datos['descripcion'],
-            'tipo_pago' => $datos['tipo_pago'],
+            'tipo_pago' => 'efectivo',
             'estatus' => 'activo',
-            'referencia' => $datos['referencia'] ?? 'N/A',
+            'referencia' => 'N/A',
             // El campo del formulario tiene que llamarse 'imagen': el mutator del
             // modelo delega en uploadFileToDisk de Backpack, que no usa el valor
             // recibido sino que lee request()->file('imagen') por su cuenta.

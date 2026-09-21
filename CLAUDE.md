@@ -73,17 +73,28 @@ Esto es implícito y frágil: si se cambia el guard por defecto o se sustituye e
 middleware por `auth:api`, se rompe medio `routes/api.php` con "Call to a member
 function on null".
 
-### 3. Zonas horarias
-- DB en **UTC** (`config('app.timezone') = 'UTC'`)
-- Presentación en `config('app.display_timezone') = 'America/Chihuahua'`
-- Los reportes (`VentaCrudController@resumen*`) parsean fechas en TZ local y las
-  convierten a UTC antes de consultar
-- `App\Traits\DateTrait::makeDate()` normaliza strings ISO (`T` → espacio)
-- `App\Support\DateTimeHelper` tiene la versión "buena" de la conversión, pero está
-  poco usada
+### 3. Zonas horarias: todo en hora de Chihuahua
+
+`config('app.timezone') = 'America/Chihuahua'`. **No es UTC y es deliberado.**
+
+Las 4,582 ventas históricas ya estaban guardadas en hora local, pero el código nuevo
+usaba `Carbon::now()` que con `app.timezone = UTC` guardaba UTC: los registros nuevos
+salían 6 horas adelantados. Unificar la zona de la aplicación alinea escrituras,
+comparaciones y lecturas con lo que ya existe.
+
+Consecuencias:
+
+- `Carbon::now()`, `now()` y los timestamps de Eloquent dan hora local. **No conviertas
+  nada a UTC**; los reportes lo hacían y corrían la ventana 6 horas, dejando fuera las
+  ventas de madrugada.
+- `display_timezone` se conserva porque varios puntos la leen, pero hoy coincide con la
+  de la aplicación, así que esas conversiones son inocuas.
+- `App\Traits\DateTrait::makeDate()` normaliza strings ISO (`T` → espacio).
+- **Si se abre una sucursal en otra zona horaria esto deja de servir** y hay que migrar
+  a UTC con conversión en presentación, corriendo también los datos históricos.
 
 **La mayoría de los bugs históricos del repo vienen de aquí.** Ante cualquier cambio de
-fechas, revisar en qué TZ está el dato antes de comparar.
+fechas, revisar en qué zona está el dato antes de comparar.
 
 ### 4. La lógica de venta vive en `App\Actions\VentaAction`
 No en el controlador. Métodos:
@@ -176,20 +187,26 @@ SPA de Vue pública, enlazada desde strangerthemes.com. Diseño alineado al del 
 1. **Cada horario es exclusivo del grupo que lo reserva.** La capacidad del producto
    no suma grupos: solo rechaza grupos más grandes de lo que cabe. Disponibilidad
    binaria, no por lugares restantes.
-2. **Un paquete ocupa un tramo por recorrido**, encadenados cada 30 minutos, y solo
-   se ofrece si todos caben antes del cierre. Apartar un paquete también bloquea esos
-   recorridos por separado.
-3. **El horario se aparta 20 minutos mientras se paga** (`compras_pendientes`). Sin
+2. **La cadencia de salidas la define cada sucursal, día por día**
+   (`horarios[].intervalo_minutos`). Una sucursal saca recorridos cada 30 minutos y
+   otra cada hora. `Disponibilidad` es la única fuente: de ahí leen la tienda, el
+   punto de venta y la lista de reservas, así que no pueden desincronizarse.
+3. **Un paquete ocupa un tramo por recorrido**, encadenados según ese intervalo, y
+   solo se ofrece si todos caben antes del cierre. El último tramo se mide con la
+   **duración real** del recorrido, no con el intervalo: con salidas cada hora y
+   recorridos de 25 minutos, la salida de las 21:30 termina 21:55 y sí es vendible.
+   Apartar un paquete también bloquea esos recorridos por separado.
+4. **El horario se aparta 20 minutos mientras se paga** (`compras_pendientes`). Sin
    eso dos clientes pagan el mismo horario. Lo caducado deja de bloquear solo; el
    comando `tienda:limpiar-pendientes` únicamente marca el estado.
-4. **La confirmación del pago es idempotente**: llegan el regreso del cliente y el
+5. **La confirmación del pago es idempotente**: llegan el regreso del cliente y el
    webhook, y los webhooks se reintentan. Ver `ConfirmarCompraAction`.
-5. **El precio se calcula en el servidor** desde el catálogo, igual que en el POS.
+6. **El precio se calcula en el servidor** desde el catálogo, igual que en el POS.
    Los códigos de descuento los resuelve `App\Support\Tienda\DescuentoAplicado`, que
    usan tanto la validación en pantalla como el cobro, para que no puedan diferir.
    **Los códigos que dejan el total en cero se rechazan en línea**: son de taquilla,
    donde alguien verifica en persona, y Stripe no admite cobros de cero.
-6. `productos.visible_en_tienda`, `capacidad` y `duracion_minutos` controlan qué se
+7. `productos.visible_en_tienda`, `capacidad` y `duracion_minutos` controlan qué se
    vende en línea. Las dos últimas son obligatorias para publicar un producto.
 
 Cuidado con `Eloquent\Collection::map()`: solo degrada a colección base si detecta
@@ -240,6 +257,22 @@ entran por `/pos`, **no** por `/admin`.
    elegida por el cajero: lo que se captura es dinero saliendo del cajón ahora.
    Van con `apertura_id`, y el precorte los cuenta por turno cuando lo traen y
    por ventana de fechas cuando no (los capturados desde el panel).
+   **Los egresos del POS son siempre en efectivo**: lo pagado con tarjeta o
+   transferencia de la empresa no toca la caja del turno y se captura en el panel.
+9. **Una línea de venta lleva una fecha, una hora y un nombre.** Los recorridos de
+   un paquete se encadenan solos desde la hora elegida (el servidor devuelve los
+   tramos), y `cantidad` es el número de participantes. Antes había un contador de
+   cantidad y otro de personas por reservación que se desincronizaban.
+10. **Los horarios salen de `/pos-api/disponibilidad`**, que usa el mismo
+   `Disponibilidad` que la tienda, pero con anticipación 0: en mostrador se vende la
+   salida que viene enseguida, mientras que el sitio web exige una hora de margen.
+11. **Una venta de total cero se registra sin pagos.** Pasa con los códigos de
+   cortesía que cubren el importe completo; `pagos` es `present|array`, no
+   `required|min:1`, y `validarPagos` sale temprano cuando el total es cero.
+12. **En la lista de reservas se puede mover, cambiar personas y cambiar recorrido,
+   y la venta NO se toca.** Es decisión del negocio: mantiene cuadrado el corte, a
+   cambio de que los reportes de dinero no reflejen esos ajustes. Mover sí valida
+   que el horario destino esté libre, porque cada horario es de un solo grupo.
 
 ### Subida de comprobantes: el campo se tiene que llamar `imagen`
 

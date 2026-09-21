@@ -1,6 +1,7 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useCarrito } from '../stores/carrito';
+import { useCatalogo } from '../stores/catalogo';
 import { dinero } from '../utils/formato';
 import Icono from './Icono.vue';
 
@@ -9,27 +10,22 @@ const props = defineProps({
 });
 
 const carrito = useCarrito();
+const catalogo = useCatalogo();
 
-const codigo = ref(props.linea.codigo_descuento || '');
+const abierta = ref(true);
 const errorDescuento = ref('');
-const abierta = ref(props.linea.producto.requiere_reservacion);
 
-function aplicar() {
-    errorDescuento.value = carrito.aplicarDescuento(props.linea.uid, codigo.value.trim()) || '';
-}
+/** Solo los códigos que aplican a este producto: el resto sobra en la lista. */
+const descuentosAplicables = computed(() =>
+    catalogo.descuentos.filter(
+        (d) => !d.producto_tipo || d.producto_tipo === props.linea.producto.tipo
+    )
+);
 
-function limpiarDescuento() {
-    codigo.value = '';
-    errorDescuento.value = '';
-    carrito.aplicarDescuento(props.linea.uid, '');
-}
+const capacidad = computed(() => props.linea.producto.capacidad || 99);
 
-/**
- * Marcar personas como editadas evita que cambiar la cantidad de la línea
- * pise un número de personas que el cajero ya ajustó a mano.
- */
-function personasEditadas(reservacion) {
-    reservacion.personasEditadas = true;
+function elegirDescuento(codigo) {
+    errorDescuento.value = carrito.aplicarDescuento(props.linea.uid, codigo) || '';
 }
 </script>
 
@@ -39,32 +35,11 @@ function personasEditadas(reservacion) {
             <div class="min-w-0 flex-1">
                 <p class="truncate text-sm font-semibold text-slate-100">{{ linea.producto.nombre }}</p>
                 <p class="tabular mt-0.5 text-xs text-slate-500">
-                    {{ dinero(linea.precio) }} c/u
+                    {{ dinero(linea.precio) }} por persona
                     <template v-if="linea.descuento">
                         · <span class="text-emerald-400">−{{ dinero(linea.descuentoUnitario) }} ({{ linea.descuento.porcentaje }}%)</span>
                     </template>
                 </p>
-            </div>
-
-            <div class="flex shrink-0 items-center gap-1">
-                <button
-                    type="button"
-                    class="btn-neutro h-9 min-h-0 w-9 px-0"
-                    :disabled="linea.cantidad <= 1"
-                    aria-label="Quitar uno"
-                    @click="carrito.cambiarCantidad(linea.uid, linea.cantidad - 1)"
-                >
-                    <Icono nombre="menos" clase="h-4 w-4" />
-                </button>
-                <span class="tabular w-8 text-center text-base font-bold text-slate-100">{{ linea.cantidad }}</span>
-                <button
-                    type="button"
-                    class="btn-neutro h-9 min-h-0 w-9 px-0"
-                    aria-label="Agregar uno"
-                    @click="carrito.cambiarCantidad(linea.uid, linea.cantidad + 1)"
-                >
-                    <Icono nombre="mas" clase="h-4 w-4" />
-                </button>
             </div>
 
             <div class="shrink-0 text-right">
@@ -91,75 +66,100 @@ function personasEditadas(reservacion) {
                 @click="abierta = !abierta"
             >
                 <span>
-                    {{ linea.producto.requiere_reservacion
-                        ? `Reservación (${linea.reservaciones.length})`
-                        : 'Descuento' }}
+                    {{ linea.cantidad }} {{ linea.cantidad === 1 ? 'persona' : 'personas' }}
+                    <template v-if="linea.hora"> · {{ linea.horarios.find(h => h.inicio === linea.hora)?.etiqueta }}</template>
+                    <template v-else-if="linea.producto.requiere_reservacion"> · sin horario</template>
                 </span>
                 <Icono :nombre="abierta ? 'menos' : 'mas'" clase="h-3.5 w-3.5" />
             </button>
         </div>
 
         <div v-if="abierta" class="space-y-3 border-t border-noche-700 bg-noche-900/40 p-3">
-            <div
-                v-for="(reservacion, indice) in linea.reservaciones"
-                :key="indice"
-                class="rounded-lg border border-noche-600 p-2.5"
-            >
-                <p class="mb-2 text-xs font-semibold text-acento-400">
-                    {{ reservacion.etiqueta }}
-                </p>
-
-                <div class="grid grid-cols-2 gap-2">
-                    <div class="col-span-2">
-                        <label class="etiqueta text-xs">Nombre del cliente</label>
-                        <input
-                            v-model="reservacion.nombre"
-                            type="text"
-                            class="campo py-2 text-sm"
-                            placeholder="Opcional"
-                        >
-                    </div>
-                    <div>
-                        <label class="etiqueta text-xs">Fecha</label>
-                        <input v-model="reservacion.fecha" type="date" class="campo py-2 text-sm" required>
-                    </div>
-                    <div>
-                        <label class="etiqueta text-xs">Hora</label>
-                        <input v-model="reservacion.hora" type="time" class="campo py-2 text-sm" required>
-                    </div>
-                    <div>
-                        <label class="etiqueta text-xs">Personas</label>
-                        <input
-                            v-model.number="reservacion.personas"
-                            type="number"
-                            min="1"
-                            class="campo py-2 text-sm"
-                            @input="personasEditadas(reservacion)"
-                        >
-                    </div>
+            <!-- Participantes: un solo control para toda la línea -->
+            <div>
+                <label class="etiqueta text-xs">Participantes</label>
+                <div class="flex items-center gap-2">
+                    <button
+                        type="button" class="btn-neutro h-10 min-h-0 w-10 px-0"
+                        :disabled="linea.cantidad <= 1"
+                        aria-label="Quitar una persona"
+                        @click="carrito.cambiarCantidad(linea.uid, linea.cantidad - 1)"
+                    >
+                        <Icono nombre="menos" clase="h-4 w-4" />
+                    </button>
+                    <span class="tabular w-10 text-center text-lg font-bold text-slate-100">{{ linea.cantidad }}</span>
+                    <button
+                        type="button" class="btn-neutro h-10 min-h-0 w-10 px-0"
+                        :disabled="linea.cantidad >= capacidad"
+                        aria-label="Agregar una persona"
+                        @click="carrito.cambiarCantidad(linea.uid, linea.cantidad + 1)"
+                    >
+                        <Icono nombre="mas" clase="h-4 w-4" />
+                    </button>
+                    <span v-if="linea.producto.capacidad" class="text-xs text-slate-500">
+                        máximo {{ linea.producto.capacidad }}
+                    </span>
                 </div>
             </div>
 
-            <div>
-                <label class="etiqueta text-xs">Código de descuento</label>
-                <div class="flex gap-2">
-                    <input
-                        v-model="codigo"
-                        type="text"
-                        class="campo py-2 text-sm uppercase"
-                        placeholder="Sin descuento"
-                        @keyup.enter="aplicar"
-                    >
-                    <button v-if="linea.descuento" type="button" class="btn-fantasma min-h-0 px-3 py-2 text-sm" @click="limpiarDescuento">
-                        Quitar
-                    </button>
-                    <button v-else type="button" class="btn-neutro min-h-0 px-3 py-2 text-sm" @click="aplicar">
-                        Aplicar
-                    </button>
+            <template v-if="linea.producto.requiere_reservacion">
+                <!-- Un solo nombre, aunque el paquete traiga varios recorridos -->
+                <div>
+                    <label class="etiqueta text-xs">Nombre del cliente</label>
+                    <input v-model="linea.cliente" type="text" class="campo py-2 text-sm" placeholder="Opcional">
                 </div>
+
+                <div>
+                    <label class="etiqueta text-xs">Fecha</label>
+                    <input
+                        :value="linea.fecha" type="date" class="campo py-2 text-sm"
+                        @change="carrito.cambiarFecha(linea.uid, $event.target.value)"
+                    >
+                </div>
+
+                <div>
+                    <label class="etiqueta text-xs">Horario</label>
+
+                    <p v-if="linea.cargandoHorarios" class="text-xs text-slate-500">Buscando horarios…</p>
+                    <p v-else-if="linea.avisoHorarios" class="text-xs text-amber-400">{{ linea.avisoHorarios }}</p>
+
+                    <div v-else class="grid grid-cols-3 gap-1.5">
+                        <button
+                            v-for="h in linea.horarios" :key="h.inicio" type="button"
+                            class="rounded border px-2 py-2 text-xs font-semibold transition"
+                            :class="linea.hora === h.inicio
+                                ? 'border-acento-500 bg-acento-500 text-white'
+                                : h.libre
+                                    ? 'border-noche-600 text-slate-200 hover:border-acento-500'
+                                    : 'cursor-not-allowed border-noche-700 text-slate-600 line-through'"
+                            :disabled="!h.libre"
+                            :title="h.libre ? '' : 'Ese horario ya está ocupado'"
+                            @click="carrito.elegirHorario(linea.uid, h.inicio)"
+                        >{{ h.etiqueta }}</button>
+                    </div>
+
+                    <p v-if="linea.hora && linea.tramos.length > 1" class="mt-2 text-xs text-slate-500">
+                        Los {{ linea.tramos.length }} recorridos van uno tras otro desde esa hora.
+                    </p>
+                </div>
+            </template>
+
+            <!-- Descuento: lista de códigos, no texto libre -->
+            <div>
+                <label class="etiqueta text-xs">Descuento</label>
+                <select
+                    :value="linea.codigo_descuento"
+                    class="campo py-2 text-sm"
+                    @change="elegirDescuento($event.target.value)"
+                >
+                    <option value="">Sin descuento</option>
+                    <option v-for="d in descuentosAplicables" :key="d.id" :value="d.codigo">
+                        {{ d.codigo }} — {{ d.porcentaje }}%
+                    </option>
+                </select>
                 <p v-if="errorDescuento" class="mt-1 text-xs text-sangre-400">{{ errorDescuento }}</p>
-                <p v-else-if="linea.descuento" class="mt-1 text-xs text-emerald-400">
-                    {{ linea.descuento.codigo }} · {{ linea.descuento.porcentaje }}% aplicado
+                <p v-else-if="!descuentosAplicables.length" class="mt-1 text-xs text-slate-600">
+                    No hay códigos que apliquen a este producto.
                 </p>
             </div>
         </div>

@@ -324,11 +324,10 @@ class VentaCrudController extends CrudController
                 $endLocal   = Carbon::parse($params['dates'][1], $tz)->endOfDay();
             }
 
-            // Pasa a UTC para consultar en DB (que guarda UTC)
-            $params['dates'] = [
-                $startLocal->clone()->timezone('UTC'),
-                $endLocal->clone()->timezone('UTC'),
-            ];
+            // Sin convertir a UTC: la base guarda hora local, así que la ventana del
+            // reporte ya está en la misma zona que los datos. La conversión anterior
+            // corría el rango 6 horas y dejaba fuera las ventas de madrugada.
+            $params['dates'] = [$startLocal, $endLocal];
 
             $totalVentas = 0;
             $totaEgresos = (new EgresoCrudController)->getTotal($params['dates']);
@@ -546,11 +545,10 @@ class VentaCrudController extends CrudController
                 $startLocal = Carbon::parse($params['dates'][0], $tz)->startOfDay();
                 $endLocal = Carbon::parse($params['dates'][1], $tz)->endOfDay();
             }
-            // Pasa a UTC para consultar en DB (que guarda UTC)
-            $params['dates'] = [
-                $startLocal->clone()->timezone('UTC'),
-                $endLocal->clone()->timezone('UTC'),
-            ];
+            // Sin convertir a UTC: la base guarda hora local, así que la ventana del
+            // reporte ya está en la misma zona que los datos. La conversión anterior
+            // corría el rango 6 horas y dejaba fuera las ventas de madrugada.
+            $params['dates'] = [$startLocal, $endLocal];
 
             $productos = VentaProducto::query()
                 ->whereHas('venta', function ($query) use ($params) {
@@ -594,11 +592,9 @@ class VentaCrudController extends CrudController
                 $endLocal   = Carbon::parse($params['dates'][1], $tz)->endOfDay();
             }
 
-            // Pasar a UTC para DB
-            $params['dates'] = [
-                $startLocal->clone()->timezone('UTC'),
-                $endLocal->clone()->timezone('UTC'),
-            ];
+            // Sin convertir a UTC: la base guarda hora local, así que la ventana del
+            // reporte ya está en la misma zona que los datos.
+            $params['dates'] = [$startLocal, $endLocal];
 
             /**
              * Regla de redondeo SOLO para descuentos (montos):

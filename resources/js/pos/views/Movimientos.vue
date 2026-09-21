@@ -14,11 +14,10 @@ const empleados = ref([]);
 const cargando = ref(true);
 const error = ref('');
 
+// Sin forma de pago: todo egreso del punto de venta sale del cajón en efectivo.
 const formEgreso = reactive({
     monto: '',
     descripcion: '',
-    tipo_pago: 'efectivo',
-    referencia: '',
     comprobante: null,
 });
 
@@ -68,16 +67,12 @@ async function guardarEgreso() {
         await api.subir('egresos', {
             monto: formEgreso.monto,
             descripcion: formEgreso.descripcion,
-            tipo_pago: formEgreso.tipo_pago,
-            referencia: formEgreso.referencia,
             // El backend espera el archivo bajo 'imagen': el mutator del modelo
             // lo lee del request por ese nombre exacto.
             imagen: formEgreso.comprobante,
         });
 
-        Object.assign(formEgreso, {
-            monto: '', descripcion: '', tipo_pago: 'efectivo', referencia: '', comprobante: null,
-        });
+        Object.assign(formEgreso, { monto: '', descripcion: '', comprobante: null });
 
         exito.value = 'Egreso registrado.';
         await cargar();
@@ -110,7 +105,6 @@ async function guardarPago() {
     }
 }
 
-const etiquetaPago = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 'Transferencia' };
 </script>
 
 <template>
@@ -124,14 +118,10 @@ const etiquetaPago = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 
                 </p>
             </div>
 
-            <div v-if="totales" class="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div v-if="totales" class="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <div class="tarjeta p-3">
-                    <p class="text-xs uppercase tracking-wide text-slate-500">Egresos efectivo</p>
-                    <p class="tabular text-lg font-bold text-amber-400">{{ dinero(totales.egresos_efectivo) }}</p>
-                </div>
-                <div class="tarjeta p-3">
-                    <p class="text-xs uppercase tracking-wide text-slate-500">Egresos total</p>
-                    <p class="tabular text-lg font-bold text-slate-100">{{ dinero(totales.egresos_total) }}</p>
+                    <p class="text-xs uppercase tracking-wide text-slate-500">Egresos</p>
+                    <p class="tabular text-lg font-bold text-amber-400">{{ dinero(totales.egresos) }}</p>
                 </div>
                 <div class="tarjeta p-3">
                     <p class="text-xs uppercase tracking-wide text-slate-500">Pagos empleados</p>
@@ -185,32 +175,6 @@ const etiquetaPago = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 
                                    placeholder="Ej. compra de insumos de limpieza" maxlength="255">
                         </div>
 
-                        <div>
-                            <label class="etiqueta">Forma de pago</label>
-                            <div class="grid grid-cols-3 gap-2">
-                                <button
-                                    v-for="(etiqueta, tipo) in etiquetaPago"
-                                    :key="tipo"
-                                    type="button"
-                                    class="rounded-lg px-2 py-2.5 text-sm font-semibold transition"
-                                    :class="formEgreso.tipo_pago === tipo
-                                        ? 'bg-acento-500 text-white'
-                                        : 'bg-noche-700 text-slate-400 hover:text-slate-100'"
-                                    @click="formEgreso.tipo_pago = tipo"
-                                >
-                                    {{ etiqueta }}
-                                </button>
-                            </div>
-                            <p v-if="formEgreso.tipo_pago !== 'efectivo'" class="mt-1.5 text-xs text-slate-500">
-                                Solo los egresos en efectivo se descuentan del cajón.
-                            </p>
-                        </div>
-
-                        <div v-if="formEgreso.tipo_pago !== 'efectivo'">
-                            <label class="etiqueta">Referencia</label>
-                            <input v-model="formEgreso.referencia" type="text" class="campo py-2.5"
-                                   placeholder="Autorización o folio">
-                        </div>
 
                         <CampoComprobante v-model="formEgreso.comprobante" />
 
@@ -285,15 +249,11 @@ const etiquetaPago = { efectivo: 'Efectivo', tarjeta: 'Tarjeta', transferencia: 
                                 <div class="min-w-0 flex-1">
                                     <p class="truncate text-sm font-semibold text-slate-100">{{ egreso.descripcion }}</p>
                                     <p class="text-xs text-slate-500">
-                                        {{ horaCorta(egreso.fecha) }} · {{ etiquetaPago[egreso.tipo_pago] }}
-                                        <template v-if="egreso.referencia && egreso.referencia !== 'N/A'">
-                                            · {{ egreso.referencia }}
-                                        </template>
+                                        {{ horaCorta(egreso.fecha) }}
                                     </p>
                                 </div>
 
-                                <span class="tabular shrink-0 text-lg font-bold"
-                                      :class="egreso.tipo_pago === 'efectivo' ? 'text-amber-400' : 'text-slate-300'">
+                                <span class="tabular shrink-0 text-lg font-bold text-amber-400">
                                     −{{ dinero(egreso.monto) }}
                                 </span>
                             </li>

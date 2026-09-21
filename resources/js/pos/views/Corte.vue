@@ -141,7 +141,7 @@ function terminar() {
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-slate-400">− Egresos en efectivo</dt>
-                            <dd class="tabular text-slate-200">{{ dinero(precorte.salidas.egresos_efectivo) }}</dd>
+                            <dd class="tabular text-slate-200">{{ dinero(precorte.salidas.egresos) }}</dd>
                         </div>
                         <div class="flex justify-between">
                             <dt class="text-slate-400">− Pagos a empleados</dt>

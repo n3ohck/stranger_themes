@@ -77,7 +77,7 @@ function imprimir() {
                         <span>+ Efectivo</span><span>{{ dinero(corte.efectivo) }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span>- Egresos</span><span>{{ dinero(corte.detalle?.salidas?.egresos_efectivo ?? 0) }}</span>
+                        <span>- Egresos</span><span>{{ dinero(corte.detalle?.salidas?.egresos ?? 0) }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>- Pago empleados</span><span>{{ dinero(corte.detalle?.salidas?.pagos_empleados ?? 0) }}</span>

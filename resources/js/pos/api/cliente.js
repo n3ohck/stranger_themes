@@ -95,6 +95,7 @@ async function peticion(metodo, ruta, cuerpo = null, opciones = {}) {
 export const api = {
     get: (ruta, opciones) => peticion('GET', ruta, null, opciones),
     post: (ruta, cuerpo, opciones) => peticion('POST', ruta, cuerpo, opciones),
+    put: (ruta, cuerpo, opciones) => peticion('PUT', ruta, cuerpo, opciones),
 
     /**
      * Envía un formulario con archivo. Los campos nulos se omiten para que

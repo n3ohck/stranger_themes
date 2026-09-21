@@ -72,7 +72,7 @@ class RegistrarVentaAction
             $this->crearLinea($venta, $linea);
         }
 
-        $this->crearPagos($venta, $datos['pagos'], $totalNeto);
+        $this->crearPagos($venta, $datos['pagos'] ?? [], $totalNeto);
 
         return $venta->fresh(['productos.producto', 'pagos', 'reservaciones.producto', 'sucursal', 'user']);
     }
@@ -218,6 +218,13 @@ class RegistrarVentaAction
 
     private function validarPagos(array $pagos, float $totalNeto): void
     {
+        // Una venta de total cero no lleva pago: pasa con los códigos de cortesía
+        // (cumpleañero, 2x1) que cubren el importe completo. Antes se exigía al
+        // menos una forma de pago y el cajero no podía cerrar la venta.
+        if (round($totalNeto, 2) <= 0) {
+            return;
+        }
+
         if (empty($pagos)) {
             throw ValidationException::withMessages([
                 'pagos' => 'La venta debe incluir al menos una forma de pago.',

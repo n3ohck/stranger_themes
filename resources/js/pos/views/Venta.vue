@@ -36,7 +36,7 @@ const productosVisibles = computed(() => {
     return lista;
 });
 
-const faltanDatos = computed(() => carrito.reservacionesIncompletas.length > 0);
+const faltanDatos = computed(() => carrito.sinHorario.length > 0);
 
 function agregar(producto) {
     carrito.agregar(producto);
@@ -49,9 +49,8 @@ function abrirCobro() {
     cobrando.value = true;
 }
 
-async function cobrar({ pagos, cliente }) {
+async function cobrar({ pagos }) {
     errorCobro.value = '';
-    carrito.cliente = cliente;
 
     try {
         const venta = await carrito.cobrar(pagos);
@@ -112,7 +111,7 @@ async function cobrar({ pagos, cliente }) {
                     No hay productos que coincidan.
                 </p>
 
-                <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                <div v-else class="grid grid-cols-1 gap-3 sm:grid-cols-2 2xl:grid-cols-3">
                     <TarjetaProducto
                         v-for="producto in productosVisibles"
                         :key="producto.id"
@@ -125,7 +124,7 @@ async function cobrar({ pagos, cliente }) {
 
         <!-- Carrito -->
         <aside
-            class="fixed inset-0 z-40 flex w-full flex-col border-l border-noche-700 bg-noche-800 lg:static lg:z-auto lg:w-[26rem] xl:w-[30rem]"
+            class="fixed inset-0 z-40 flex w-full flex-col border-l border-noche-700 bg-noche-800 lg:static lg:z-auto lg:w-[34rem] xl:w-[40rem] 2xl:w-[44rem]"
             :class="carritoAbierto ? 'flex' : 'hidden lg:flex'"
         >
             <div class="flex shrink-0 items-center justify-between border-b border-noche-700 px-4 py-3">
@@ -134,6 +133,20 @@ async function cobrar({ pagos, cliente }) {
                     <span v-if="carrito.lineas.length" class="text-slate-500">· {{ carrito.lineas.length }}</span>
                 </h2>
                 <div class="flex items-center gap-1">
+                    <!--
+                        Cuando llega un grupo que paga por separado, se repite la venta
+                        anterior y solo se ajusta lo que cambie, en vez de recapturar
+                        todo persona por persona.
+                    -->
+                    <button
+                        v-if="carrito.vacio && carrito.puedeDuplicar"
+                        type="button"
+                        class="btn-neutro min-h-0 px-3 py-1.5 text-sm"
+                        title="Repite la venta anterior para ajustar solo lo necesario"
+                        @click="carrito.duplicar()"
+                    >
+                        Duplicar anterior
+                    </button>
                     <button
                         v-if="carrito.lineas.length"
                         type="button"
@@ -152,6 +165,14 @@ async function cobrar({ pagos, cliente }) {
                 <div v-if="carrito.vacio" class="flex h-full flex-col items-center justify-center gap-3 text-center text-slate-600">
                     <Icono nombre="carrito" clase="h-12 w-12" />
                     <p class="text-sm">Agrega productos para iniciar la venta</p>
+                    <button
+                        v-if="carrito.puedeDuplicar"
+                        type="button"
+                        class="btn-neutro min-h-0 px-4 py-2 text-sm"
+                        @click="carrito.duplicar()"
+                    >
+                        Duplicar venta anterior
+                    </button>
                 </div>
 
                 <LineaCarrito
@@ -162,6 +183,12 @@ async function cobrar({ pagos, cliente }) {
             </div>
 
             <div v-if="!carrito.vacio" class="shrink-0 space-y-3 border-t border-noche-700 bg-noche-900/60 p-4">
+                <div>
+                    <label class="etiqueta text-xs">Nombre de la venta <span class="normal-case text-slate-600">(opcional)</span></label>
+                    <input v-model="carrito.cliente.nombre" type="text" class="campo py-2 text-sm"
+                           placeholder="Se usa en los recorridos que no tengan nombre propio">
+                </div>
+
                 <div class="space-y-1 text-sm">
                     <div class="flex justify-between text-slate-400">
                         <span>Subtotal</span>
@@ -180,9 +207,9 @@ async function cobrar({ pagos, cliente }) {
                 <p v-if="faltanDatos" class="flex items-start gap-2 rounded-lg bg-amber-600/15 px-3 py-2 text-xs text-amber-400">
                     <Icono nombre="alerta" clase="h-4 w-4 shrink-0" />
                     <span>
-                        Falta fecha u hora en
-                        {{ carrito.reservacionesIncompletas.length }}
-                        {{ carrito.reservacionesIncompletas.length === 1 ? 'reservación' : 'reservaciones' }}.
+                        Falta elegir horario en
+                        {{ carrito.sinHorario.length }}
+                        {{ carrito.sinHorario.length === 1 ? 'recorrido' : 'recorridos' }}.
                     </span>
                 </p>
 

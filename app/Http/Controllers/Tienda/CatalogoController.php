@@ -96,7 +96,7 @@ class CatalogoController extends Controller
             'horarios' => collect($horarios)->map(fn ($h) => [
                 'inicio' => $h['inicio'],
                 'etiqueta' => $h['etiqueta'],
-                'termina' => $this->finDe($h),
+                'termina' => $this->finDe($h, Disponibilidad::intervaloDe($sucursal, $fecha)),
             ])->values(),
         ]);
     }
@@ -148,10 +148,10 @@ class CatalogoController extends Controller
             ->contains(fn ($h) => strtr(mb_strtolower($h['dia'] ?? ''), ['á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u']) === $hoy);
     }
 
-    private function finDe(array $horario): string
+    private function finDe(array $horario, int $intervalo): string
     {
         $ultimo = Carbon::parse(end($horario['tramos'])['inicio']);
 
-        return $ultimo->addMinutes(Disponibilidad::INTERVALO_MINUTOS)->format('g:i a');
+        return $ultimo->addMinutes($intervalo)->format('g:i a');
     }
 }

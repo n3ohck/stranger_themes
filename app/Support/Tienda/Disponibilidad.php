@@ -24,8 +24,12 @@ use Illuminate\Support\Collection;
  */
 class Disponibilidad
 {
-    /** Rejilla de horarios. Coincide con la operación histórica del negocio. */
-    public const INTERVALO_MINUTOS = 30;
+    /**
+     * Intervalo por omisión, solo para sucursales que todavía no lo tienen capturado.
+     * El valor real sale de cada día del horario de la sucursal, porque una sucursal
+     * puede sacar recorridos cada 30 minutos y otra cada hora.
+     */
+    public const INTERVALO_POR_OMISION = 30;
 
     /** Margen mínimo para poder comprar un horario de hoy. */
     public const ANTICIPACION_MINUTOS = 60;
@@ -33,8 +37,12 @@ class Disponibilidad
     /**
      * @return array<int, array{inicio: string, etiqueta: string, tramos: array}>
      */
-    public static function paraProducto(Producto $producto, Sucursal $sucursal, CarbonInterface $fecha): array
-    {
+    public static function paraProducto(
+        Producto $producto,
+        Sucursal $sucursal,
+        CarbonInterface $fecha,
+        ?int $anticipacionMinutos = null
+    ): array {
         $recorridos = self::recorridosDe($producto);
 
         if ($recorridos->isEmpty()) {
@@ -47,22 +55,33 @@ class Disponibilidad
             return []; // La sucursal no abre ese día.
         }
 
-        [$apertura, $cierre] = $jornada;
+        [$apertura, $cierre, $intervalo] = $jornada;
 
         $ocupados = self::horariosOcupados($sucursal, $recorridos->pluck('id')->all(), $fecha);
-        $minimo = Carbon::now()->addMinutes(self::ANTICIPACION_MINUTOS);
+        // El sitio web exige margen para que nadie compre una salida inminente.
+        // El mostrador vende la siguiente salida, así que ahí se pasa 0.
+        $minimo = Carbon::now()->addMinutes($anticipacionMinutos ?? self::ANTICIPACION_MINUTOS);
 
         $disponibles = [];
 
-        for ($inicio = $apertura->copy(); $inicio < $cierre; $inicio->addMinutes(self::INTERVALO_MINUTOS)) {
+        for ($inicio = $apertura->copy(); $inicio < $cierre; $inicio->addMinutes($intervalo)) {
             if ($inicio->lt($minimo)) {
                 continue;
             }
 
-            $tramos = self::armarTramos($recorridos, $inicio);
+            $tramos = self::armarTramos($recorridos, $inicio, $intervalo);
 
-            // El último tramo tiene que terminar antes del cierre.
-            $fin = $inicio->copy()->addMinutes(self::INTERVALO_MINUTOS * $recorridos->count());
+            // El último recorrido tiene que terminar antes del cierre.
+            //
+            // Se suma su duración real, no el intervalo: el intervalo es cada cuánto
+            // sale un recorrido, no cuánto dura. Con salidas cada hora y recorridos de
+            // 25 minutos, la salida de las 21:30 termina 21:55 y es perfectamente
+            // vendible; calcularlo con el intervalo la descartaba sin razón.
+            $duracionUltimo = (int) ($recorridos->last()->duracion_minutos ?: $intervalo);
+
+            $fin = $inicio->copy()
+                ->addMinutes($intervalo * ($recorridos->count() - 1))
+                ->addMinutes($duracionUltimo);
 
             if ($fin->gt($cierre)) {
                 break;
@@ -130,12 +149,12 @@ class Disponibilidad
         return $ids->map(fn ($id) => $porId->get($id))->filter()->values();
     }
 
-    private static function armarTramos(Collection $recorridos, CarbonInterface $inicio): array
+    private static function armarTramos(Collection $recorridos, CarbonInterface $inicio, int $intervalo): array
     {
         return $recorridos->values()->map(fn (Producto $recorrido, int $i) => [
             'producto_id' => $recorrido->id,
             'producto' => $recorrido->descripcion,
-            'inicio' => $inicio->copy()->addMinutes(self::INTERVALO_MINUTOS * $i)->format('Y-m-d H:i:s'),
+            'inicio' => $inicio->copy()->addMinutes($intervalo * $i)->format('Y-m-d H:i:s'),
         ])->all();
     }
 
@@ -175,7 +194,43 @@ class Disponibilidad
     }
 
     /**
-     * Apertura y cierre de la sucursal para ese día, o null si no abre.
+     * Intervalo configurado para ese día, en minutos.
+     */
+    public static function intervaloDe(Sucursal $sucursal, CarbonInterface $fecha): int
+    {
+        $jornada = self::jornadaDe($sucursal, $fecha);
+
+        return $jornada ? $jornada[2] : self::INTERVALO_POR_OMISION;
+    }
+
+    /**
+     * Todos los horarios en que puede salir un recorrido ese día, estén libres u
+     * ocupados. La lista de reservas la usa para pintar la rejilla completa: el
+     * operador necesita ver los huecos, no solo lo vendido.
+     *
+     * @return array<int, string> ['15:30', '16:00', ...]
+     */
+    public static function rejillaDelDia(Sucursal $sucursal, CarbonInterface $fecha): array
+    {
+        $jornada = self::jornadaDe($sucursal, $fecha);
+
+        if (! $jornada) {
+            return [];
+        }
+
+        [$apertura, $cierre, $intervalo] = $jornada;
+
+        $horas = [];
+
+        for ($inicio = $apertura->copy(); $inicio < $cierre; $inicio->addMinutes($intervalo)) {
+            $horas[] = $inicio->format('H:i');
+        }
+
+        return $horas;
+    }
+
+    /**
+     * Apertura, cierre e intervalo de la sucursal para ese día, o null si no abre.
      *
      * Los días se guardan sin acento ('sabado', 'miercoles'), así que se comparan
      * normalizados para que un 'Sábado' capturado con acento no deje el día cerrado.
@@ -192,9 +247,12 @@ class Disponibilidad
             return null;
         }
 
+        $intervalo = (int) ($jornada['intervalo_minutos'] ?? 0);
+
         return [
             $fecha->copy()->setTimeFromTimeString($jornada['hora_entrada']),
             $fecha->copy()->setTimeFromTimeString($jornada['hora_salida']),
+            $intervalo > 0 ? $intervalo : self::INTERVALO_POR_OMISION,
         ];
     }
 
