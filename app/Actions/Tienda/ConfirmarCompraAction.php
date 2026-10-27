@@ -26,27 +26,39 @@ class ConfirmarCompraAction
 {
     public function ejecutar(CompraPendiente $compra, string $paymentIntent): Venta
     {
-        if ($compra->venta_id) {
-            return Venta::withoutGlobalScopes()->findOrFail($compra->venta_id);
-        }
-
-        $existente = Venta::query()
-            ->withoutGlobalScopes()
-            ->where('referencia_pago', $paymentIntent)
-            ->first();
-
-        if ($existente) {
-            $compra->forceFill([
-                'estado' => 'pagada',
-                'venta_id' => $existente->id,
-                'stripe_payment_intent' => $paymentIntent,
-            ])->save();
-
-            return $existente;
-        }
+        $nueva = false;
 
         try {
-            $venta = DB::transaction(fn () => $this->crearVenta($compra, $paymentIntent));
+            // Candado sobre la fila de la compra: el regreso del cliente y el
+            // webhook pueden llegar en el mismo instante. El segundo espera aquí,
+            // ve la venta del primero y la devuelve sin crear otra ni mandar otro
+            // correo. El índice único de referencia_pago queda como respaldo.
+            $venta = DB::transaction(function () use (&$compra, $paymentIntent, &$nueva) {
+                $compra = CompraPendiente::query()->lockForUpdate()->findOrFail($compra->id);
+
+                if ($compra->venta_id) {
+                    return Venta::withoutGlobalScopes()->findOrFail($compra->venta_id);
+                }
+
+                $existente = Venta::query()
+                    ->withoutGlobalScopes()
+                    ->where('referencia_pago', $paymentIntent)
+                    ->first();
+
+                if ($existente) {
+                    $compra->forceFill([
+                        'estado' => 'pagada',
+                        'venta_id' => $existente->id,
+                        'stripe_payment_intent' => $paymentIntent,
+                    ])->save();
+
+                    return $existente;
+                }
+
+                $nueva = true;
+
+                return $this->crearVenta($compra, $paymentIntent);
+            });
         } catch (QueryException $e) {
             // Dos avisos simultáneos del mismo pago: gana el primero y este se
             // engancha a la venta que ya quedó registrada.
@@ -63,6 +75,11 @@ class ConfirmarCompraAction
 
             $compra->forceFill(['estado' => 'pagada', 'venta_id' => $venta->id])->save();
 
+            return $venta;
+        }
+
+        // Solo quien creó la venta manda el correo: los avisos repetidos no.
+        if (! $nueva) {
             return $venta;
         }
 

@@ -50,7 +50,7 @@ class RouteServiceProvider extends ServiceProvider
                 ->group(base_path('routes/pos.php'));
 
             Route::prefix('tienda-api')
-                ->middleware('api')
+                ->middleware(['api', 'tienda.seguridad'])
                 ->as('tienda.')
                 ->group(base_path('routes/tienda.php'));
         });
@@ -63,8 +63,28 @@ class RouteServiceProvider extends ServiceProvider
      */
     protected function configureRateLimiting()
     {
+        // Por usuario o por IP. Sin by() la cuenta era una sola para todo el
+        // sistema: 60 peticiones por minuto entre todos los cajeros, la tienda y la
+        // API juntos. Este límite corre antes que jwt.verify, así que en la práctica
+        // cuenta por IP, y los cajeros de una sucursal comparten la suya: por eso
+        // 120 y no 60 (el POS consulta horarios y fechas por cada recorrido).
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(60);
+            return Limit::perMinute(120)->by(optional($request->user())->id ?: $request->ip());
         });
+
+        // Tienda en línea: un límite con nombre por ruta. Con throttle:N,M todas
+        // las rutas compartían la misma cuenta por IP, y consultar horarios gastaba
+        // el cupo de pagar: tras diez cambios de fecha, Pagar respondía 429.
+        foreach ([
+            'tienda-catalogo' => 60,
+            'tienda-disponibilidad' => 120,
+            // Diez por minuto: más que eso ya es probar códigos al azar.
+            'tienda-descuento' => 10,
+            'tienda-checkout' => 10,
+            'tienda-comprobante' => 60,
+            'tienda-retorno' => 30,
+        ] as $nombre => $porMinuto) {
+            RateLimiter::for($nombre, fn (Request $request) => Limit::perMinute($porMinuto)->by($nombre . '|' . $request->ip()));
+        }
     }
 }

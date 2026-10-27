@@ -24,6 +24,20 @@ const validandoCodigo = ref(false);
 const errorCodigo = ref('');
 
 const cliente = reactive({ nombre: '', email: '', telefono: '' });
+
+// Anti-bots: un campo que una persona no ve (si llega lleno, fue un bot) y el
+// tiempo que tardó en llenar la pantalla, medido aquí para no depender del reloj
+// del servidor. Ver CheckoutController::rechazarBots().
+const trampa = ref('');
+const cargadaEn = Date.now();
+
+const modoPrueba = ref(false);
+const parametros = new URLSearchParams(window.location.search);
+const avisoRegreso = parametros.has('pago_invalido')
+    ? 'No pudimos confirmar ese pago. Si se hizo un cargo, escríbenos con tu correo y lo revisamos.'
+    : parametros.has('cancelado')
+        ? 'Cancelaste el pago. Tu horario se liberó; puedes elegirlo de nuevo.'
+        : '';
 const enviando = ref(false);
 const errorPago = ref('');
 
@@ -73,6 +87,7 @@ onMounted(async () => {
         const datos = await api.catalogo();
         sucursales.value = datos.sucursales;
         productos.value = datos.productos;
+        modoPrueba.value = !!datos.modo_prueba;
         if (sucursales.value.length === 1) sucursalId.value = sucursales.value[0].id;
     } catch (e) {
         errorCarga.value = e.message;
@@ -184,26 +199,61 @@ function revalidarCodigo() {
     }
 }
 
+/**
+ * Clave de idempotencia del intento de pago. Se conserva mientras la compra sea
+ * la misma, para que un reintento tras perder la conexión recupere la sesión de
+ * Stripe que el servidor ya creó en vez de apartar otra. Cambia si cambian los
+ * datos o si el servidor contestó (aceptó o rechazó ese intento).
+ */
+let intento = null;
+
+function nuevaClave() {
+    if (window.crypto?.randomUUID) return window.crypto.randomUUID();
+
+    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+}
+
+function claveDe(compra) {
+    const firma = JSON.stringify(compra);
+
+    if (!intento || intento.firma !== firma) {
+        intento = { firma, clave: nuevaClave() };
+    }
+
+    return intento.clave;
+}
+
 async function pagar() {
     errorPago.value = '';
     enviando.value = true;
 
+    const compra = {
+        sucursal_id: sucursalId.value,
+        producto_id: productoId.value,
+        personas: personas.value,
+        fecha: fecha.value,
+        hora: horaElegida.value,
+        nombre: cliente.nombre.trim(),
+        email: cliente.email.trim(),
+        telefono: cliente.telefono.trim() || null,
+        codigo_descuento: descuento.value ? descuento.value.codigo : null,
+    };
+
     try {
         const datos = await api.checkout({
-            sucursal_id: sucursalId.value,
-            producto_id: productoId.value,
-            personas: personas.value,
-            fecha: fecha.value,
-            hora: horaElegida.value,
-            nombre: cliente.nombre.trim(),
-            email: cliente.email.trim(),
-            telefono: cliente.telefono.trim() || null,
-            codigo_descuento: descuento.value ? descuento.value.codigo : null,
+            ...compra,
+            clave_idempotencia: claveDe(compra),
+            sitio_web: trampa.value,
+            tiempo_llenado: Date.now() - cargadaEn,
         });
 
         window.location.href = datos.url;
     } catch (e) {
-        errorPago.value = e.primero;
+        // Con respuesta del servidor el intento quedó resuelto: el siguiente es
+        // otro. Sin respuesta (se cayó la red) se reintenta con la misma clave.
+        if (e.estado) intento = null;
+
+        errorPago.value = e.primero || 'Se perdió la conexión. Revisa tu internet y vuelve a pulsar Pagar.';
         // El horario pudo haberse ocupado mientras llenaba sus datos.
         cargarHorarios();
         enviando.value = false;
@@ -217,6 +267,14 @@ async function pagar() {
             <h1 class="font-titular text-5xl leading-tight text-terror-rojo sm:text-6xl">Compra tus boletos</h1>
             <p class="mt-2 text-sm">Elige tu recorrido, tu horario y listo. Te enviamos los boletos por correo.</p>
         </div>
+
+        <div v-if="modoPrueba" class="mb-6 border border-amber-500/60 bg-amber-500/10 p-4 text-sm text-amber-200">
+            <strong class="text-amber-100">Modo de prueba:</strong> no se cobra dinero real.
+            Paga con la tarjeta <span class="font-semibold tabular-nums">4242 4242 4242 4242</span>,
+            cualquier fecha futura y cualquier CVC.
+        </div>
+
+        <p v-if="avisoRegreso" class="mb-6 border border-terror-borde p-4 text-sm">{{ avisoRegreso }}</p>
 
         <p v-if="cargando" class="py-16 text-center">Cargando recorridos…</p>
         <p v-else-if="errorCarga" class="panel p-6 text-center text-terror-rojoClaro">{{ errorCarga }}</p>
@@ -327,6 +385,10 @@ async function pagar() {
 
             <Paso :numero="sucursales.length > 1 ? 4 : 3" titulo="Tus datos" :activo="!!horaElegida">
                 <div class="grid gap-4 sm:grid-cols-2">
+                    <!-- Campo trampa: fuera de pantalla, sin tabulación ni autocompletado. -->
+                    <div aria-hidden="true" style="position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden;">
+                        <label>Sitio web <input v-model="trampa" type="text" name="sitio_web" tabindex="-1" autocomplete="off"></label>
+                    </div>
                     <div class="sm:col-span-2">
                         <label class="etiqueta-terror">Nombre completo</label>
                         <input v-model="cliente.nombre" type="text" class="campo-terror" placeholder="A nombre de quién va la reservación">

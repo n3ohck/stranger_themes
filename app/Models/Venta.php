@@ -146,36 +146,26 @@ class Venta extends Model
     |--------------------------------------------------------------------------
     */
     /**
-     * Ventas del sitio web de una sucursal creadas en una ventana de tiempo. No
-     * pasan por caja (no llevan apertura_id), así que el POS las asocia al turno
-     * por fecha de creación. Lo usan el corte y el historial, para que coincidan.
+     * Ventas del sitio web de una sucursal cuya primera visita cae en la ventana
+     * (desde, hasta]. Una venta en línea cuenta el día de su reservación, no el
+     * de la compra: así la ven el historial y el corte, igual que los reportes del
+     * panel. El límite inferior es exclusivo para que una venta justo en el cierre
+     * de un corte no entre también en el siguiente.
      *
      * Solo quita el scope de sucursal: withoutGlobalScopes() también quitaba el
      * de SoftDeletes y contaba ventas borradas.
      */
-    public function scopeEnLineaEntre($query, int $sucursalId, $desde, $hasta)
-    {
-        return $query
-            ->withoutGlobalScope(SucursalFilterScope::class)
-            ->where('sucursal_id', $sucursalId)
-            ->where('origen', 'web')
-            ->whereBetween('created_at', [$desde, $hasta]);
-    }
-
-    /**
-     * Ventas del sitio web de una sucursal con alguna visita en esa ventana,
-     * compradas cuando sea. Es lo que el cajero necesita para recibir a quien
-     * llega hoy con una compra hecha días antes.
-     */
     public function scopeEnLineaConVisitaEntre($query, int $sucursalId, $desde, $hasta)
     {
+        $primeraVisita = '(select min(r.fecha) from ' . (new Reserva)->getTable() . ' r'
+            . ' where r.venta_id = ventas.id and r.deleted_at is null)';
+
         return $query
             ->withoutGlobalScope(SucursalFilterScope::class)
             ->where('sucursal_id', $sucursalId)
             ->where('origen', 'web')
-            ->whereHas('reservaciones', fn ($reservas) => $reservas
-                ->withoutGlobalScope(SucursalFilterScope::class)
-                ->whereBetween('fecha', [$desde, $hasta]));
+            ->whereRaw("{$primeraVisita} > ?", [Carbon::parse($desde)])
+            ->whereRaw("{$primeraVisita} <= ?", [Carbon::parse($hasta)]);
     }
 
     public function scopeSearch($query, $search)

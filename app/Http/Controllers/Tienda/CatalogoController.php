@@ -27,6 +27,9 @@ class CatalogoController extends Controller
             ->get();
 
         return response()->json([
+            // Con llaves de prueba la tienda lo avisa: en staging el cliente sabe
+            // que no se cobra y qué tarjeta usar.
+            'modo_prueba' => str_starts_with((string) config('services.stripe.secret'), 'sk_test_'),
             'sucursales' => $sucursales->map(fn (Sucursal $s) => [
                 'id' => $s->id,
                 'nombre' => $s->razon_social,
@@ -115,7 +118,9 @@ class CatalogoController extends Controller
         $datos = $request->validate([
             'producto_id' => ['required', 'integer', 'exists:productos,id'],
             'personas' => ['required', 'integer', 'min:1', 'max:20'],
-            'codigo' => ['required', 'string', 'max:100'],
+            'codigo' => ['required', 'string', 'regex:/^[\\pL\\pN\\s_.-]{1,60}$/u'],
+        ], [
+            'codigo.regex' => 'Ese código de descuento no es válido.',
         ]);
 
         $producto = Producto::query()

@@ -14,28 +14,30 @@ use Illuminate\Support\Facades\Route;
 |
 | El límite de peticiones está puesto porque son rutas abiertas a internet:
 | el catálogo se consulta seguido y se deja holgado, pero crear intentos de
-| pago aparta horarios, así que ahí se limita fuerte.
+| pago aparta horarios, así que ahí se limita fuerte. Cada ruta tiene su límite
+| con nombre (RouteServiceProvider::configureRateLimiting) para que no se gasten
+| el cupo unas a otras.
 |
 */
 
 Route::get('catalogo', [CatalogoController::class, 'index'])
-    ->middleware('throttle:60,1')
+    ->middleware('throttle:tienda-catalogo')
     ->name('catalogo');
 
 Route::get('disponibilidad', [CatalogoController::class, 'disponibilidad'])
-    ->middleware('throttle:120,1')
+    ->middleware('throttle:tienda-disponibilidad')
     ->name('disponibilidad');
 
 Route::get('descuento', [CatalogoController::class, 'descuento'])
-    ->middleware('throttle:30,1')
+    ->middleware('throttle:tienda-descuento')
     ->name('descuento');
 
 Route::post('checkout', [CheckoutController::class, 'crear'])
-    ->middleware('throttle:10,1')
+    ->middleware('throttle:tienda-checkout')
     ->name('checkout');
 
 Route::get('comprobante/{referencia}', [CheckoutController::class, 'comprobante'])
-    ->middleware('throttle:60,1')
+    ->middleware('throttle:tienda-comprobante')
     ->name('comprobante');
 
 // Lo llama Stripe, no el navegador: sin límite de peticiones para no perder avisos

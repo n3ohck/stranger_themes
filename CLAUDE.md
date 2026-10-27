@@ -206,8 +206,19 @@ SPA de Vue pública, enlazada desde strangerthemes.com. Diseño alineado al del 
    eso dos clientes pagan el mismo horario. Son 30 (31 internos) porque la sesión
    de Stripe vence junto con el apartado y Stripe no acepta menos de 30 minutos. Lo caducado deja de bloquear solo; el
    comando `tienda:limpiar-pendientes` únicamente marca el estado.
-5. **La confirmación del pago es idempotente**: llegan el regreso del cliente y el
-   webhook, y los webhooks se reintentan. Ver `ConfirmarCompraAction`.
+5. **El pago es idempotente de punta a punta.**
+   - *Inicio*: la pantalla manda una `clave_idempotencia` por intento (única en
+     `compras_pendientes`). Si el mismo intento llega dos veces (doble clic, corte
+     de red), bajo un candado por clave se devuelve la misma sesión de Stripe en
+     vez de apartar otra. La sesión se crea con `idempotency_key` de Stripe.
+   - *Confirmación*: llegan el regreso del cliente y el webhook, y los webhooks se
+     reintentan. `ConfirmarCompraAction` bloquea la fila de la compra
+     (`lockForUpdate`); el segundo aviso ve la venta del primero y no manda otro
+     correo. El índice único de `ventas.referencia_pago` queda de respaldo.
+   - **Nunca confirmes con una sesión sin verificar que es de esa compra**
+     (`sesionEsDeLaCompra`: `client_reference_id`, monto y moneda). El
+     `session_id` llega en la URL: sin esa revisión, pagar el boleto más barato
+     confirmaba cualquier otra compra.
 6. **El precio se calcula en el servidor** desde el catálogo, igual que en el POS.
    Los códigos de descuento los resuelve `App\Support\Tienda\DescuentoAplicado`, que
    usan tanto la validación en pantalla como el cobro, para que no puedan diferir.
@@ -215,6 +226,12 @@ SPA de Vue pública, enlazada desde strangerthemes.com. Diseño alineado al del 
    donde alguien verifica en persona, y Stripe no admite cobros de cero.
 7. `productos.visible_en_tienda`, `capacidad` y `duracion_minutos` controlan qué se
    vende en línea. Las dos últimas son obligatorias para publicar un producto.
+8. **Protecciones de la tienda** (verificables con `php artisan tienda:seguridad`):
+   honeypot `sitio_web` + `tiempo_llenado` mínimo de 3 s, tope de 4 apartados por
+   IP cada 30 min, validación estricta de nombre, teléfono, correo y código,
+   cabeceras de seguridad con CSP (`CabecerasSeguridadTienda`) y un límite con
+   nombre por ruta. **No uses `throttle:N,M` en rutas públicas**: en Laravel 8 todas
+   comparten la misma cuenta por IP y una ruta le gasta el cupo a otra.
 
 Cuidado con `Eloquent\Collection::map()`: solo degrada a colección base si detecta
 algún elemento que no sea modelo, así que sobre un resultado **vacío** devuelve una
@@ -245,9 +262,12 @@ entran por `/pos`, **no** por `/admin`.
    cliente mandaba los importes ya calculados.
 2. **Las ventas se amarran a la apertura** (`ventas.apertura_id`), no a un rango
    de fechas. Un turno que cruza la medianoche sigue siendo un turno.
-   Las ventas en línea no tienen apertura: el corte suma las compradas desde que
-   se abrió la caja (`Venta::enLineaEntre`), y el historial muestra esas más las
-   que tienen visita hoy (`Venta::enLineaConVisitaEntre`), sin botón de cancelar.
+   Las ventas en línea no tienen apertura y **cuentan el día de su visita, no el
+   de la compra** (como los reportes del panel): el corte suma las de primera
+   visita entre el cierre del corte anterior de la sucursal y el corte actual
+   (`ResumenCorte::inicioEnLinea` + `Venta::enLineaConVisitaEntre`). No se usa el
+   día calendario porque hay días con varios turnos y se contarían dos veces. El
+   historial muestra esas más las que vienen más tarde hoy, sin botón de cancelar.
 3. **El corte lo calcula el servidor** (`App\Support\Caja\ResumenCorte`). El
    POS solo declara el efectivo contado; la diferencia contra lo esperado queda
    registrada. La misma clase alimenta el precorte, el ticket impreso, los
@@ -353,6 +373,7 @@ php artisan migrate
 php artisan remember:command     # recordatorios de reserva (agendado c/15 min)
 php artisan pos:duplicados-online   # diagnóstico de ventas online duplicadas
 php artisan tienda:limpiar-pendientes  # marca compras web abandonadas (agendado c/10 min)
+php artisan tienda:seguridad [--url=…]  # suite de seguridad de la tienda por HTTP (no crea compras)
 ```
 
 **No ejecutes `vendor/bin/phpunit` sin revisar antes `phpunit.xml`**: la línea

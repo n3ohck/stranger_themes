@@ -44,12 +44,14 @@ class ComprobanteDigitalJob implements ShouldQueue
         $log->save();
         $this->sale->load([
             'sucursal',
+            'pagos',
             'reservaciones' => function ($q) {
                 $q->with('producto');
             }
         ]);
 
-        $this->sale->total = ($this->sale->total - $this->sale->descuento);
+        // El correo muestra lo pagado y el descuento por separado. Antes se le
+        // restaba aquí el descuento a un total que ya lo traía aplicado.
         // Send email
         Mail::to($this->sale->email)->send(new \App\Mail\ComprobanteMail($this->sale));
     }

@@ -4,6 +4,7 @@ namespace App\Support\Caja;
 
 use App\Models\Apertura;
 use App\Models\Corte;
+use App\Scopes\SucursalFilterScope;
 use App\Models\Egreso;
 use App\Models\EmpleadoPago;
 use App\Models\Venta;
@@ -50,9 +51,11 @@ class ResumenCorte
         $transferencia = (float) $pagos->where('tipo', 'transferencia')->sum('monto');
 
         // Las ventas del sitio web no pasan por este cajón, pero se reportan en
-        // el corte porque el negocio las revisa junto con las del turno.
+        // el corte porque el negocio las revisa junto con las del turno. Cuentan
+        // por la hora de su primera visita, no por cuándo se compraron.
+        $desdeEnLinea = self::inicioEnLinea($apertura, $sucursalId);
         $online = (float) Venta::query()
-            ->enLineaEntre($sucursalId, $desde, $hasta)
+            ->enLineaConVisitaEntre($sucursalId, $desdeEnLinea, $hasta)
             ->where('estatus', 'activo')
             ->sum('total');
 
@@ -81,6 +84,7 @@ class ResumenCorte
             'periodo' => [
                 'desde' => $desde->toDateTimeString(),
                 'hasta' => $hasta->toDateTimeString(),
+                'en_linea_desde' => $desdeEnLinea->toDateTimeString(),
             ],
             'ventas' => [
                 'cantidad' => $activas->count(),
@@ -108,6 +112,30 @@ class ResumenCorte
                 'pagos_sin_firma' => $pagosSinFirma,
             ],
         ];
+    }
+
+    /**
+     * Desde cuándo cuentan las ventas en línea de un turno: el cierre del corte
+     * anterior de la sucursal, o la apertura si es el primero.
+     *
+     * No se usa el día calendario porque hay días con dos o tres turnos y la
+     * venta se contaría en todos. Con cortes consecutivos cada venta en línea cae
+     * en exactamente uno: el primero que se cierra después de su visita. Si la
+     * caja cierra antes de una visita y ese día no se abre otra, la venta entra
+     * en el siguiente corte de la sucursal.
+     */
+    public static function inicioEnLinea(Apertura $apertura, int $sucursalId): Carbon
+    {
+        $abierta = Carbon::parse($apertura->created_at);
+
+        $cierreAnterior = Corte::query()
+            ->withoutGlobalScope(SucursalFilterScope::class)
+            ->where('sucursal_id', $sucursalId)
+            ->where('apertura_id', '!=', $apertura->id)
+            ->where('fecha_final', '<=', $abierta)
+            ->max('fecha_final');
+
+        return $cierreAnterior ? Carbon::parse($cierreAnterior) : $abierta;
     }
 
     /**

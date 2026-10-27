@@ -91,6 +91,7 @@ class ApartarCompraAction
                 'descuento_id' => $descuento->id,
                 'porcentaje_descuento' => $descuento->porcentaje,
                 'estado' => 'apartada',
+                'clave_idempotencia' => $datos['clave_idempotencia'] ?? null,
                 'expira_en' => Carbon::now()->addMinutes(self::MINUTOS_PARA_PAGAR),
             ]);
         });

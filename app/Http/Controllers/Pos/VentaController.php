@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Pos\RegistrarVentaRequest;
 use App\Models\Apertura;
 use App\Models\Reserva;
+use App\Support\Caja\ResumenCorte;
 use App\Models\Venta;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -23,10 +24,10 @@ class VentaController extends Controller
      * que puede cancelar. Las de mostrador se filtran por apertura_id y no por
      * rango de fechas: un turno que cruza la medianoche seguía siendo un turno.
      *
-     * Las del sitio web no pasan por caja. Se muestran dos grupos: las compradas
-     * desde que se abrió la caja (las mismas que suma el corte) y las que tienen
-     * visita hoy aunque se hayan comprado otro día, para recibir a quien llega.
-     * Van aparte en el resumen: no son dinero del cajón.
+     * Las del sitio web no pasan por caja y cuentan el día de su visita, no el de
+     * la compra. Se muestran dos grupos: las que ya cuentan en este turno (las
+     * mismas que suma el corte) y las que vienen más tarde hoy, para recibir a
+     * quien llega. Van aparte en el resumen: no son dinero del cajón.
      */
     public function delTurno()
     {
@@ -45,13 +46,16 @@ class VentaController extends Controller
         $sucursalId = Auth::user()->sucursal_id;
         $relaciones = ['productos.producto', 'pagos', 'reservaciones.producto', 'ventaOriginal'];
 
+        // Las que cuentan en este turno, con la misma regla del corte.
         $enLinea = Venta::query()
-            ->enLineaEntre($sucursalId, Carbon::parse($apertura->created_at), Carbon::now())
+            ->enLineaConVisitaEntre($sucursalId, ResumenCorte::inicioEnLinea($apertura, $sucursalId), Carbon::now())
             ->with($relaciones)
             ->get();
 
+        // Las que vienen más tarde hoy: todavía no cuentan, pero el cajero tiene
+        // que saber a quién esperar.
         $visitanHoy = Venta::query()
-            ->enLineaConVisitaEntre($sucursalId, Carbon::today(), Carbon::today()->endOfDay())
+            ->enLineaConVisitaEntre($sucursalId, Carbon::now(), Carbon::today()->endOfDay())
             ->with($relaciones)
             ->get();
 

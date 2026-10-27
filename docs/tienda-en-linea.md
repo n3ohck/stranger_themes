@@ -150,6 +150,46 @@ reintentan. La confirmación es idempotente en tres capas:
 
 ---
 
+### Staging: que el cliente pruebe sin cobrar
+
+En el servidor de staging se usan **las llaves de prueba**, nunca las `live`:
+
+```
+APP_ENV=staging
+STRIPE_KEY=pk_test_...
+STRIPE_SECRET=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...   # el del webhook de staging, no el de stripe listen
+STRIPE_MONEDA=mxn
+```
+
+1. En Stripe, en **modo prueba**, crea un destino de webhook a
+   `https://TU-STAGING/tienda-api/webhook/stripe` con los eventos
+   `checkout.session.completed` y `checkout.session.async_payment_succeeded`, y copia
+   su *Signing secret* a `STRIPE_WEBHOOK_SECRET`.
+2. `php artisan config:cache` después de editar el `.env`.
+3. Con una llave `sk_test_` la tienda muestra el aviso **"Modo de prueba"** con la
+   tarjeta 4242 4242 4242 4242, así que el cliente sabe qué usar y que no se cobra.
+4. `php artisan tienda:seguridad --url=https://TU-STAGING` para verificar el servidor.
+
+Los pagos de prueba aparecen en el panel de Stripe en modo prueba, y las ventas y
+reservaciones se crean igual que las reales en la base de staging.
+
+## Seguridad
+
+`php artisan tienda:seguridad` prueba por HTTP: cabeceras, inyección SQL, XSS,
+honeypot, firma del webhook, regreso manipulado y límites de peticiones. No crea
+compras ni toca Stripe. Las de límite gastan el cupo de tu IP un minuto
+(`--sin-limites` las omite).
+
+- **Honeypot**: campo oculto `sitio_web` y `tiempo_llenado` (mínimo 3 s, medido en el
+  navegador). La respuesta al bot es genérica.
+- **Tope de apartados**: 4 por IP cada 30 minutos, para que nadie bloquee horarios
+  sin pagar.
+- **Pago verificado**: el regreso y el webhook solo confirman si la sesión de Stripe
+  es de esa compra, por ese monto y en esa moneda.
+- **Idempotencia**: clave por intento de pago (doble clic, cortes de red) y candado
+  sobre la compra al confirmar (regreso y webhook simultáneos).
+
 ## Qué se guarda al confirmarse el pago
 
 Una venta normal del sistema, indistinguible de las demás salvo por su origen:

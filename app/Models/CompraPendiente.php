@@ -21,7 +21,7 @@ class CompraPendiente extends Model
     protected $table = 'compras_pendientes';
 
     protected $fillable = [
-        'referencia', 'sucursal_id', 'producto_id', 'personas', 'horarios',
+        'referencia', 'clave_idempotencia', 'sucursal_id', 'producto_id', 'personas', 'horarios',
         'nombre', 'email', 'telefono',
         'total', 'codigo_descuento', 'descuento_id', 'descuento', 'porcentaje_descuento',
         'stripe_session_id', 'stripe_payment_intent', 'estado', 'venta_id', 'expira_en',

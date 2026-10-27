@@ -37,9 +37,10 @@ Route::view('/pos/{cualquiera?}', 'pos')
 // Regreso del cliente desde Stripe. Va antes del comodín, que si no se la traga,
 // y es ruta web porque redirige a las pantallas de la tienda.
 Route::get('/comprar/retorno', [\App\Http\Controllers\Tienda\CheckoutController::class, 'retorno'])
-    ->middleware('throttle:30,1')
+    ->middleware(['throttle:tienda-retorno', 'tienda.seguridad'])
     ->name('tienda.retorno');
 
 Route::view('/comprar/{cualquiera?}', 'tienda')
+    ->middleware('tienda.seguridad')
     ->where('cualquiera', '.*')
     ->name('tienda');
