@@ -29,11 +29,7 @@ class DisponibilidadController extends Controller
         ]);
 
         $sucursal = Sucursal::findOrFail(Auth::user()->sucursal_id);
-
-        $producto = Producto::query()
-            ->where('id', $datos['producto_id'])
-            ->where('sucursal_id', $sucursal->id)
-            ->first();
+        $producto = $this->productoDe($sucursal, $datos['producto_id']);
 
         if (! $producto) {
             return response()->json(['error' => 'Ese producto no es de tu sucursal.'], 404);
@@ -60,5 +56,53 @@ class DisponibilidadController extends Controller
                 'tramos' => $porInicio->get($hora)['tramos'] ?? [],
             ])->values(),
         ]);
+    }
+
+    /**
+     * Resumen por día para el calendario de tarjetas: si la sucursal abre y
+     * cuántos horarios quedan libres. Así el cajero ve de un vistazo qué días
+     * están cerrados o llenos sin abrir uno por uno.
+     */
+    public function dias(Request $request)
+    {
+        $datos = $request->validate([
+            'producto_id' => ['required', 'integer', 'exists:productos,id'],
+            'desde' => ['required', 'date_format:Y-m-d'],
+            'dias' => ['nullable', 'integer', 'min:1', 'max:31'],
+        ], [
+            'desde.date_format' => 'La fecha debe tener formato AAAA-MM-DD.',
+        ]);
+
+        $sucursal = Sucursal::findOrFail(Auth::user()->sucursal_id);
+        $producto = $this->productoDe($sucursal, $datos['producto_id']);
+
+        if (! $producto) {
+            return response()->json(['error' => 'Ese producto no es de tu sucursal.'], 404);
+        }
+
+        $desde = Carbon::parse($datos['desde'])->startOfDay();
+
+        $dias = collect(range(0, ($datos['dias'] ?? 14) - 1))->map(function (int $i) use ($desde, $producto, $sucursal) {
+            $fecha = $desde->copy()->addDays($i);
+            $rejilla = Disponibilidad::rejillaDelDia($sucursal, $fecha);
+
+            return [
+                'fecha' => $fecha->toDateString(),
+                'abre' => $rejilla !== [],
+                // Misma anticipación 0 que index(): lo que se ve aquí es lo que
+                // luego aparece al abrir el día.
+                'libres' => $rejilla === [] ? 0 : count(Disponibilidad::paraProducto($producto, $sucursal, $fecha, 0)),
+            ];
+        });
+
+        return response()->json(['dias' => $dias->values()]);
+    }
+
+    private function productoDe(Sucursal $sucursal, int $productoId): ?Producto
+    {
+        return Producto::query()
+            ->where('id', $productoId)
+            ->where('sucursal_id', $sucursal->id)
+            ->first();
     }
 }

@@ -183,12 +183,6 @@ async function cobrar({ pagos }) {
             </div>
 
             <div v-if="!carrito.vacio" class="shrink-0 space-y-3 border-t border-noche-700 bg-noche-900/60 p-4">
-                <div>
-                    <label class="etiqueta text-xs">Nombre de la venta <span class="normal-case text-slate-600">(opcional)</span></label>
-                    <input v-model="carrito.cliente.nombre" type="text" class="campo py-2 text-sm"
-                           placeholder="Se usa en los recorridos que no tengan nombre propio">
-                </div>
-
                 <div class="space-y-1 text-sm">
                     <div class="flex justify-between text-slate-400">
                         <span>Subtotal</span>

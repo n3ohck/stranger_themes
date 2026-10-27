@@ -264,10 +264,19 @@ entran por `/pos`, **no** por `/admin`.
    sube después a `empleados/pagos/{pago}/comprobante`. Mientras no la tenga, la
    lista lo marca como "Falta firma" y `CajaController@cerrar` rechaza el corte
    (el precorte lo informa en `pendientes.pagos_sin_firma`).
-9. **Una línea de venta lleva una fecha, una hora y un nombre.** Los recorridos de
-   un paquete se encadenan solos desde la hora elegida (el servidor devuelve los
-   tramos), y `cantidad` es el número de participantes. Antes había un contador de
-   cantidad y otro de personas por reservación que se desincronizaban.
+9. **Una línea de venta lleva un nombre y un número de participantes**
+   (`cantidad`), y una lista de `recorridos`: uno para un tour, uno por cada tour
+   de un paquete. Cada recorrido tiene su propia fecha y hora (un paquete puede
+   repartirse en días distintos); al elegir una hora se sugiere encadenado el
+   siguiente, y una hora que choca con otro recorrido del grupo queda bloqueada.
+   Todos llevan las mismas personas: antes había un contador de cantidad y otro de
+   personas por reservación que se desincronizaban.
+   `RegistrarVentaAction::validarHorarios()` rechaza al cobrar un horario ya
+   ocupado o repetido en la misma venta.
+   La línea que recibe `LineaCarrito` es una copia de `carrito.calculadas`: nada se
+   escribe directo en ella (sin `v-model`), todo pasa por acciones del store.
+   No hay nombre para toda la venta: `ventas.nombre` lo arma `RegistrarVentaAction`
+   con los nombres distintos de las líneas, separados por coma.
 10. **Los horarios salen de `/pos-api/disponibilidad`**, que usa el mismo
    `Disponibilidad` que la tienda, pero con anticipación 0: en mostrador se vende la
    salida que viene enseguida, mientras que el sitio web exige una hora de margen.

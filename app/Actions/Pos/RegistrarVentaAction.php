@@ -8,10 +8,12 @@ use App\Models\Apertura;
 use App\Models\Descuento;
 use App\Models\Producto;
 use App\Models\Reserva;
+use App\Models\Sucursal;
 use App\Models\Venta;
 use App\Models\VentaPago;
 use App\Models\VentaProducto;
 use App\Support\ReglaDescuento;
+use App\Support\Tienda\Disponibilidad;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -48,6 +50,7 @@ class RegistrarVentaAction
         $subtotal = $lineas->sum('subtotal');
 
         $this->validarPagos($datos['pagos'] ?? [], $totalNeto);
+        $this->validarHorarios($lineas);
 
         $venta = Venta::create([
             'user_id' => $this->user->id,
@@ -60,7 +63,7 @@ class RegistrarVentaAction
             'porcentaje_descuento' => $subtotal > 0 ? round(($totalDescuento / $subtotal) * 100, 2) : 0,
             'descuento_id' => $lineas->pluck('descuento_id')->filter()->first(),
             'codigo_descuento' => $lineas->pluck('codigo_descuento')->filter()->unique()->implode(', ') ?: null,
-            'nombre' => $datos['cliente']['nombre'] ?? null,
+            'nombre' => $this->nombreDeVenta($lineas, $datos['cliente']['nombre'] ?? null),
             'telefono' => $datos['cliente']['telefono'] ?? null,
             'email' => $datos['cliente']['email'] ?? null,
             'created_at' => Carbon::now(),
@@ -75,6 +78,59 @@ class RegistrarVentaAction
         $this->crearPagos($venta, $datos['pagos'] ?? [], $totalNeto);
 
         return $venta->fresh(['productos.producto', 'pagos', 'reservaciones.producto', 'sucursal', 'user']);
+    }
+
+    /**
+     * El POS ya no captura un nombre para toda la venta: repetía el que lleva
+     * cada línea. El de la venta (ticket y listado del panel) se arma con los
+     * nombres distintos de las líneas. El de cliente.nombre solo llega de un
+     * POS con el bundle anterior en caché y se respeta si ninguna línea trae.
+     */
+    private function nombreDeVenta(Collection $lineas, ?string $respaldo): ?string
+    {
+        $nombre = $lineas
+            ->pluck('cliente')
+            ->map(fn ($cliente) => trim((string) $cliente))
+            ->filter()
+            ->unique(fn ($cliente) => mb_strtolower($cliente))
+            ->implode(', ');
+
+        return $nombre !== '' ? mb_substr($nombre, 0, 255) : ($respaldo ?: null);
+    }
+
+    /**
+     * Cada horario es de un solo grupo. El POS solo ofrece los libres, pero entre
+     * que el cajero eligió y cobró otro cajero o la tienda en línea pudo tomarlo,
+     * y ahora que cada recorrido de un paquete se elige por separado también
+     * podría repetirse dentro de la misma venta.
+     */
+    private function validarHorarios(Collection $lineas): void
+    {
+        $sucursal = Sucursal::findOrFail($this->sucursalId);
+        $vistos = [];
+
+        foreach ($lineas as $linea) {
+            foreach ($linea['reservaciones'] as $reservacion) {
+                $productoId = (int) ($reservacion['producto_id'] ?? $linea['producto']->id);
+                $inicio = Carbon::parse($reservacion['fecha'] . ' ' . $reservacion['hora']);
+                $clave = $productoId . '|' . $inicio->format('Y-m-d H:i:s');
+
+                $libre = ! isset($vistos[$clave]) && Disponibilidad::tramosSiguenLibres($sucursal, [[
+                    'producto_id' => $productoId,
+                    'inicio' => $inicio->format('Y-m-d H:i:s'),
+                ]]);
+
+                if (! $libre) {
+                    $nombre = optional(Producto::withoutGlobalScopes()->find($productoId))->descripcion ?? 'el recorrido';
+
+                    throw ValidationException::withMessages([
+                        'items' => "El horario de {$nombre} del {$inicio->format('d/m')} a las {$inicio->format('g:i a')} ya está ocupado. Elige otro.",
+                    ]);
+                }
+
+                $vistos[$clave] = true;
+            }
+        }
     }
 
     /**

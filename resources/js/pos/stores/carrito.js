@@ -11,13 +11,54 @@ function hoy() {
     return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
 }
 
+/** Minutos desde medianoche de una hora 'HH:mm'. */
+function minutos(hora) {
+    const [h, m] = hora.split(':').map(Number);
+    return h * 60 + m;
+}
+
+/**
+ * Un recorrido por tour del paquete, o uno solo para un tour. Todos arrancan en
+ * hoy; el selector de fecha los mueve al primer día vendible si hoy no sirve.
+ */
+function recorridosDe(producto) {
+    const tours = producto.tours?.length ? producto.tours : [{ id: producto.id, nombre: producto.nombre }];
+
+    return tours.map((tour) => ({
+        producto_id: tour.id,
+        nombre: tour.nombre,
+        fecha: hoy(),
+        hora: '',
+        horarios: [],
+        intervalo: 30,
+        cargandoHorarios: false,
+        avisoHorarios: '',
+    }));
+}
+
+/**
+ * El mismo grupo no puede estar en dos recorridos a la vez: una hora choca si
+ * otro recorrido de la línea, el mismo día, sale a menos de un intervalo.
+ */
+export function chocaConOtro(linea, indice, inicio) {
+    const propio = linea.recorridos[indice];
+
+    return linea.recorridos.some((otro, i) =>
+        i !== indice
+        && otro.hora
+        && otro.fecha === propio.fecha
+        && Math.abs(minutos(otro.hora) - minutos(inicio)) < Math.max(otro.intervalo || 30, propio.intervalo || 30)
+    );
+}
+
 /**
  * Carrito de la venta en curso.
  *
- * Una línea lleva UNA fecha, UNA hora y UN nombre de cliente. Los recorridos de un
- * paquete se encadenan solos a partir de la hora elegida: el servidor devuelve los
- * tramos junto con el horario, así que el cajero no captura tres veces lo mismo ni
- * puede dejar dos recorridos del mismo paquete a nombre de personas distintas.
+ * Una línea lleva UN nombre de cliente y UN número de participantes. Si requiere
+ * reservación, lleva además una lista de `recorridos`: uno para un tour, uno por
+ * cada tour de un paquete. Cada recorrido tiene su propia fecha y hora, porque un
+ * paquete puede repartirse en días distintos. Al elegir la hora de uno se sugiere
+ * el siguiente encadenado, si está libre, para no capturar de más en el caso común.
  *
  * `cantidad` es el número de participantes. Antes había un contador de cantidad y
  * otro de personas por reservación que se desincronizaban; ahora es un solo valor.
@@ -28,7 +69,6 @@ function hoy() {
 export const useCarrito = defineStore('carrito', {
     state: () => ({
         lineas: [],
-        cliente: { nombre: '' },
         guardando: false,
         // Copia de la última venta cobrada, para el botón de duplicar.
         ultima: null,
@@ -68,9 +108,9 @@ export const useCarrito = defineStore('carrito', {
             return this.calculadas.reduce((suma, l) => suma + l.total, 0);
         },
 
-        /** Líneas que necesitan horario y todavía no lo tienen. */
+        /** Líneas con algún recorrido que todavía no tiene horario. */
         sinHorario(state) {
-            return state.lineas.filter((l) => l.producto.requiere_reservacion && !l.hora);
+            return state.lineas.filter((l) => l.recorridos.some((r) => !r.hora));
         },
 
         puedeCobrar() {
@@ -100,21 +140,14 @@ export const useCarrito = defineStore('carrito', {
                 cliente: '',
                 codigo_descuento: '',
                 descuento: null,
-                fecha: producto.requiere_reservacion ? hoy() : '',
-                hora: '',
-                tramos: [],
-                horarios: [],
-                cargandoHorarios: false,
-                avisoHorarios: '',
+                recorridos: producto.requiere_reservacion ? recorridosDe(producto) : [],
             };
 
             this.lineas.push(linea);
+            linea.recorridos.forEach((_, i) => this.cargarHorarios(linea.uid, i));
 
-            if (linea.producto.requiere_reservacion) {
-                this.cargarHorarios(linea.uid);
-            }
-
-            return linea;
+            // La versión reactiva: duplicar() la modifica después de agregarla.
+            return this.lineas[this.lineas.length - 1];
         },
 
         quitar(uid) {
@@ -129,56 +162,112 @@ export const useCarrito = defineStore('carrito', {
             linea.cantidad = Math.min(maximo, Math.max(1, Math.round(cantidad) || 1));
         },
 
-        cambiarFecha(uid, fecha) {
+        /**
+         * La vista recibe las líneas de `calculadas`, que son copias: escribir el
+         * nombre directo en la copia se perdía al recalcular (cambiar fecha,
+         * personas o descuento) y nunca llegaba al cobro. Por eso pasa por aquí.
+         */
+        cambiarCliente(uid, nombre) {
             const linea = this.lineas.find((l) => l.uid === uid);
-            if (!linea) return;
-
-            linea.fecha = fecha;
-            linea.hora = '';
-            linea.tramos = [];
-            this.cargarHorarios(uid);
+            if (linea) linea.cliente = nombre;
         },
 
-        elegirHorario(uid, inicio) {
+        /**
+         * Los recorridos siguientes que aún no tienen hora acompañan la fecha:
+         * lo normal es que el paquete se haga el mismo día.
+         */
+        cambiarFecha(uid, indice, fecha) {
             const linea = this.lineas.find((l) => l.uid === uid);
             if (!linea) return;
 
-            const horario = linea.horarios.find((h) => h.inicio === inicio);
-            if (!horario || !horario.libre) return;
+            linea.recorridos.forEach((recorrido, i) => {
+                const acompana = i > indice && !recorrido.hora;
+                if ((i !== indice && !acompana) || recorrido.fecha === fecha) return;
 
-            linea.hora = inicio;
-            linea.tramos = horario.tramos;
+                recorrido.fecha = fecha;
+                recorrido.hora = '';
+                this.cargarHorarios(uid, i);
+            });
+        },
+
+        elegirHorario(uid, indice, inicio) {
+            const linea = this.lineas.find((l) => l.uid === uid);
+            const recorrido = linea?.recorridos[indice];
+            if (!recorrido) return;
+
+            const horario = recorrido.horarios.find((h) => h.inicio === inicio);
+            if (!horario || !horario.libre || chocaConOtro(linea, indice, inicio)) return;
+
+            recorrido.hora = inicio;
+            this.sugerirSiguientes(linea, indice);
+        },
+
+        quitarHorario(uid, indice) {
+            const recorrido = this.lineas.find((l) => l.uid === uid)?.recorridos[indice];
+            if (recorrido) recorrido.hora = '';
+        },
+
+        /**
+         * Encadena los recorridos que siguen y no tienen hora: el primer horario
+         * libre del mismo día que empiece al menos un intervalo después del
+         * anterior. Solo sugiere; el cajero puede cambiarlo.
+         */
+        sugerirSiguientes(linea, desde) {
+            for (let i = desde + 1; i < linea.recorridos.length; i++) {
+                const anterior = linea.recorridos[i - 1];
+                const recorrido = linea.recorridos[i];
+
+                if (recorrido.hora || !anterior.hora || recorrido.fecha !== anterior.fecha) return;
+
+                const minimo = minutos(anterior.hora) + (anterior.intervalo || 30);
+                const sugerido = recorrido.horarios.find(
+                    (h) => h.libre && minutos(h.inicio) >= minimo && !chocaConOtro(linea, i, h.inicio)
+                );
+
+                if (!sugerido) return;
+                recorrido.hora = sugerido.inicio;
+            }
         },
 
         /**
          * Horarios que la sucursal tiene configurados para ese día. Vienen del
-         * mismo motor que alimenta la lista de reservas y la tienda en línea.
+         * mismo motor que alimenta la lista de reservas y la tienda en línea, y se
+         * piden por recorrido: cada tour tiene su propia ocupación.
          */
-        async cargarHorarios(uid) {
+        async cargarHorarios(uid, indice) {
             const linea = this.lineas.find((l) => l.uid === uid);
-            if (!linea || !linea.producto.requiere_reservacion || !linea.fecha) return;
+            const recorrido = linea?.recorridos[indice];
+            if (!recorrido?.fecha) return;
 
-            linea.cargandoHorarios = true;
-            linea.avisoHorarios = '';
+            const fecha = recorrido.fecha;
+            recorrido.cargandoHorarios = true;
+            recorrido.avisoHorarios = '';
 
             try {
                 const datos = await api.get(conParametros('disponibilidad', {
-                    producto_id: linea.producto.id,
-                    fecha: linea.fecha,
+                    producto_id: recorrido.producto_id,
+                    fecha,
                 }));
 
-                linea.horarios = datos.horarios;
+                // Si cambió la fecha mientras llegaba la respuesta, esta ya no sirve.
+                if (recorrido.fecha !== fecha) return;
+
+                recorrido.horarios = datos.horarios;
+                recorrido.intervalo = datos.intervalo_minutos;
 
                 if (!datos.abre) {
-                    linea.avisoHorarios = 'La sucursal no abre ese día.';
+                    recorrido.avisoHorarios = 'La sucursal no abre ese día.';
                 } else if (!datos.horarios.some((h) => h.libre)) {
-                    linea.avisoHorarios = 'No quedan horarios libres ese día.';
+                    recorrido.avisoHorarios = 'No quedan horarios libres ese día.';
                 }
+
+                // Llegó después de que se eligió el anterior: sugerirlo ahora.
+                if (indice > 0) this.sugerirSiguientes(linea, indice - 1);
             } catch (e) {
-                linea.horarios = [];
-                linea.avisoHorarios = e.listaErrores?.[0] || e.message;
+                recorrido.horarios = [];
+                recorrido.avisoHorarios = e.listaErrores?.[0] || e.message;
             } finally {
-                linea.cargandoHorarios = false;
+                if (recorrido.fecha === fecha) recorrido.cargandoHorarios = false;
             }
         },
 
@@ -208,7 +297,6 @@ export const useCarrito = defineStore('carrito', {
 
         limpiar() {
             this.lineas = [];
-            this.cliente = { nombre: '' };
         },
 
         /**
@@ -221,7 +309,6 @@ export const useCarrito = defineStore('carrito', {
             if (!this.ultima) return;
 
             this.limpiar();
-            this.cliente = { ...this.ultima.cliente };
 
             this.ultima.lineas.forEach((guardada) => {
                 const producto = useCatalogo().porId(guardada.producto_id);
@@ -229,14 +316,18 @@ export const useCarrito = defineStore('carrito', {
 
                 const linea = this.agregar(producto, guardada.cantidad);
                 linea.cliente = guardada.cliente;
-                linea.fecha = guardada.fecha || linea.fecha;
+
+                // Se conservan las fechas, no las horas: esas se vuelven a elegir.
+                (guardada.fechas || []).forEach((fecha, i) => {
+                    const recorrido = linea.recorridos[i];
+                    if (!recorrido || !fecha || recorrido.fecha === fecha) return;
+
+                    recorrido.fecha = fecha;
+                    this.cargarHorarios(linea.uid, i);
+                });
 
                 if (guardada.codigo_descuento) {
                     this.aplicarDescuento(linea.uid, guardada.codigo_descuento);
-                }
-
-                if (linea.producto.requiere_reservacion) {
-                    this.cargarHorarios(linea.uid);
                 }
             });
         },
@@ -250,15 +341,15 @@ export const useCarrito = defineStore('carrito', {
                         producto_id: linea.producto.id,
                         cantidad: linea.cantidad,
                         codigo_descuento: linea.codigo_descuento || null,
-                        cliente: linea.cliente || this.cliente.nombre || null,
-                        // Un tramo por recorrido, con la misma gente y el mismo
-                        // nombre: el paquete es una sola reservación repartida.
-                        reservaciones: (linea.tramos || []).map((t) => ({
-                            producto_id: t.producto_id,
-                            nombre: linea.cliente || this.cliente.nombre || null,
+                        cliente: linea.cliente || null,
+                        // Una reservación por recorrido, con la misma gente y el
+                        // mismo nombre; cada una con su propia fecha y hora.
+                        reservaciones: linea.recorridos.map((r) => ({
+                            producto_id: r.producto_id,
+                            nombre: linea.cliente || null,
                             personas: linea.cantidad,
-                            fecha: t.inicio.split(' ')[0],
-                            hora: t.inicio.split(' ')[1].slice(0, 5),
+                            fecha: r.fecha,
+                            hora: r.hora,
                         })),
                     })),
                     pagos: pagos
@@ -268,19 +359,17 @@ export const useCarrito = defineStore('carrito', {
                             monto: Number(p.monto),
                             referencia: p.referencia || null,
                         })),
-                    cliente: { nombre: this.cliente.nombre || null },
                 };
 
                 const datos = await api.post('ventas', carga);
 
                 // Se guarda antes de limpiar, para poder duplicarla.
                 this.ultima = {
-                    cliente: { ...this.cliente },
                     lineas: this.lineas.map((l) => ({
                         producto_id: l.producto.id,
                         cantidad: l.cantidad,
                         cliente: l.cliente,
-                        fecha: l.fecha,
+                        fechas: l.recorridos.map((r) => r.fecha),
                         codigo_descuento: l.codigo_descuento,
                     })),
                 };

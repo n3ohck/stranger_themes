@@ -30,6 +30,7 @@ Route::middleware(['jwt.verify', 'pos.user'])->group(function () {
     Route::get('session', [SesionController::class, 'show'])->name('session');
     Route::get('catalogo', [CatalogoController::class, 'index'])->name('catalogo');
     Route::get('disponibilidad', [DisponibilidadController::class, 'index'])->name('disponibilidad');
+    Route::get('disponibilidad/dias', [DisponibilidadController::class, 'dias'])->name('disponibilidad.dias');
 
     // Caja
     Route::post('caja/apertura', [CajaController::class, 'abrir'])->name('caja.abrir');
