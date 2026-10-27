@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, watch } from 'vue';
+import { computed, reactive } from 'vue';
 import { dinero } from '../utils/formato';
 
 const props = defineProps({
@@ -11,8 +11,9 @@ const props = defineProps({
 const emit = defineEmits(['cerrar', 'cobrar']);
 
 /**
- * Un renglón por forma de pago. La mayoría de las ventas se cobran solo con
- * efectivo, así que ese campo arranca enfocado y con el total sugerido.
+ * Un renglón por forma de pago. Todos arrancan vacíos: si el efectivo traía el
+ * total sugerido y el cliente pagaba con tarjeta, el dinero se contaba dos veces
+ * y salía un cambio que no existía hasta borrarlo a mano.
  */
 const pagos = reactive({
     efectivo: '',
@@ -32,19 +33,23 @@ const faltante = computed(() => Math.max(0, props.total - recibido.value));
 const cambio = computed(() => Math.max(0, recibido.value - props.total));
 const puedeCobrar = computed(() => recibido.value + 0.001 >= props.total && props.total >= 0);
 
-// Billetes con los que suele pagar la gente, calculados sobre el total.
-const sugerencias = computed(() => {
-    const base = props.total;
-    const candidatos = [base, Math.ceil(base / 50) * 50, Math.ceil(base / 100) * 100, Math.ceil(base / 500) * 500];
+// Los billetes que circulan, siempre los mismos sin importar qué se cobre. Se
+// suman a lo capturado para cubrir pagos con varios (500 + 200).
+const BILLETES = [20, 50, 100, 200, 500];
 
-    return [...new Set(candidatos)].filter((v) => v > 0).slice(0, 4);
-});
+function sumarBillete(billete) {
+    pagos.efectivo = String(num(pagos.efectivo) + billete);
+}
 
-watch(() => props.total, (valor) => {
-    if (!pagos.tarjeta && !pagos.transferencia) {
-        pagos.efectivo = valor ? String(valor) : '';
-    }
-}, { immediate: true });
+/** Lo que falta por cubrir sin contar lo ya capturado en esa forma de pago. */
+function restanteSin(forma) {
+    return Math.max(0, props.total - (recibido.value - num(pagos[forma])));
+}
+
+function completar(forma) {
+    const monto = restanteSin(forma);
+    pagos[forma] = monto ? String(Math.round(monto * 100) / 100) : '';
+}
 
 function confirmar() {
     if (!puedeCobrar.value) return;
@@ -77,32 +82,57 @@ function confirmar() {
                 </div>
 
                 <div v-if="total > 0">
-                    <label class="etiqueta">Efectivo</label>
+                    <div class="flex items-center justify-between">
+                        <label class="etiqueta">Efectivo</label>
+                        <button v-if="pagos.efectivo" type="button" class="mb-1.5 text-xs text-slate-500 hover:text-slate-300"
+                                @click="pagos.efectivo = ''">Limpiar</button>
+                    </div>
                     <input v-model="pagos.efectivo" type="number" inputmode="decimal" min="0" step="0.01"
                            class="campo tabular text-lg" placeholder="0.00" autofocus>
-                    <div class="mt-2 flex flex-wrap gap-2">
+                    <div class="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
                         <button
-                            v-for="sugerencia in sugerencias"
-                            :key="sugerencia"
                             type="button"
-                            class="btn-neutro min-h-0 px-3 py-1.5 text-sm"
-                            @click="pagos.efectivo = String(sugerencia)"
+                            class="btn-neutro min-h-0 px-2 py-2 text-sm"
+                            :disabled="!restanteSin('efectivo')"
+                            title="Lo que falta, en efectivo y sin cambio"
+                            @click="completar('efectivo')"
                         >
-                            {{ dinero(sugerencia) }}
+                            Exacto
+                        </button>
+                        <button
+                            v-for="billete in BILLETES"
+                            :key="billete"
+                            type="button"
+                            class="btn-neutro tabular min-h-0 px-2 py-2 text-sm"
+                            :title="`Sumar un billete de ${dinero(billete)}`"
+                            @click="sumarBillete(billete)"
+                        >
+                            +{{ billete }}
                         </button>
                     </div>
+                    <p class="mt-1.5 text-xs text-slate-500">Los billetes se suman: 500 y 200 son $700 recibidos.</p>
                 </div>
 
                 <div v-if="total > 0" class="grid gap-4 sm:grid-cols-2">
                     <div>
-                        <label class="etiqueta">Tarjeta</label>
+                        <div class="flex items-center justify-between">
+                            <label class="etiqueta">Tarjeta</label>
+                            <button v-if="restanteSin('tarjeta') && !pagos.tarjeta" type="button"
+                                    class="mb-1.5 text-xs font-semibold text-acento-400 hover:text-acento-500"
+                                    @click="completar('tarjeta')">Completar</button>
+                        </div>
                         <input v-model="pagos.tarjeta" type="number" inputmode="decimal" min="0" step="0.01"
                                class="campo tabular" placeholder="0.00">
                         <input v-if="Number(pagos.tarjeta) > 0" v-model="referencias.tarjeta" type="text"
                                class="campo mt-2 py-2 text-sm" placeholder="Referencia / autorización">
                     </div>
                     <div>
-                        <label class="etiqueta">Transferencia</label>
+                        <div class="flex items-center justify-between">
+                            <label class="etiqueta">Transferencia</label>
+                            <button v-if="restanteSin('transferencia') && !pagos.transferencia" type="button"
+                                    class="mb-1.5 text-xs font-semibold text-acento-400 hover:text-acento-500"
+                                    @click="completar('transferencia')">Completar</button>
+                        </div>
                         <input v-model="pagos.transferencia" type="number" inputmode="decimal" min="0" step="0.01"
                                class="campo tabular" placeholder="0.00">
                         <input v-if="Number(pagos.transferencia) > 0" v-model="referencias.transferencia" type="text"
