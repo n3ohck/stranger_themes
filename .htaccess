@@ -14,6 +14,20 @@ Options -Indexes
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # Una URL con /public/ a la vista se lleva a su forma limpia. THE_REQUEST es
+    # lo que pidió el navegador, antes de cualquier reescritura de este archivo.
+    RewriteCond %{THE_REQUEST} \s/+public/(\S*)\s [NC]
+    RewriteRule ^ /%1 [L,R=301,NE]
+
+    # La diagonal final se quita aquí, antes de mandar a public/. Si lo hacía
+    # public/.htaccess, la petición ya traía /public por dentro y la redirección
+    # lo exponía: /comprar/ terminaba en /comprar/public/comprar. Las carpetas
+    # reales de public/ conservan su diagonal.
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} !-d
+    RewriteCond %{REQUEST_URI} ^(.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
     # Todo entra por public/. La condición evita el bucle infinito: sin ella, la
     # petición reescrita vuelve a entrar aquí y se le antepone public/ otra vez.
     RewriteCond %{REQUEST_URI} !^/public/

@@ -1,8 +1,8 @@
 {
-    "/js/app.js": "/js/app.js",
-    "/js/pos.js": "/js/pos.js",
-    "/js/tienda.js": "/js/tienda.js",
-    "/css/tienda.css": "/css/tienda.css",
-    "/css/pos.css": "/css/pos.css",
-    "/css/app.css": "/css/app.css"
+    "/js/app.js": "/js/app.js?id=b1105b41fd06473fdef91f06f1934234",
+    "/js/pos.js": "/js/pos.js?id=c8561f6179c7b305eed5e140f63396fd",
+    "/js/tienda.js": "/js/tienda.js?id=4105153689f4648b4e4e94f0b704ffc8",
+    "/css/tienda.css": "/css/tienda.css?id=3a3d40b30ff1fd9a74f67265d6073a4d",
+    "/css/pos.css": "/css/pos.css?id=0bbc125e8992f572ae70ab4bb79a305a",
+    "/css/app.css": "/css/app.css?id=68b329da9893e34099c7d8ad5cb9c940"
 }

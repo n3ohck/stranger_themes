@@ -178,7 +178,11 @@ log; la respuesta solo lleva el mensaje.
 SPA de Vue pública, enlazada desde strangerthemes.com. Diseño alineado al del sitio
 (fondo `#1C1C21`, rojo `#B11724`, Montserrat + Jim Nightshade, botones cuadrados).
 
-- **Frontend**: `resources/js/tienda/`, entry propio en `webpack.mix.js`.
+- **Frontend**: `resources/js/tienda/`, entry propio en `webpack.mix.js`. El router
+  usa rutas completas (`/comprar`, `/comprar/gracias/…`) con base `/`: con base
+  `/comprar` la URL quedaba `/comprar/` y en Hostinger la diagonal final redirigía
+  a `/comprar/public/comprar`. El `.htaccess` de la raíz quita esa diagonal antes
+  de mandar a `public/`. Los assets de producción van versionados (`mix.version()`).
 - **Backend**: `routes/tienda.php` bajo `/tienda-api`, sin autenticación.
 - **Pago**: Stripe Checkout alojado. El servidor nunca ve datos de tarjeta.
 
@@ -365,6 +369,10 @@ ejemplo el ticket de corte, que se muestra justo después de refrescar.
 - Los modelos usan `RevisionableTrait` (venturecraft/revisionable) para auditoría.
 
 ## Comandos
+
+Al desplegar: `git pull`, `php artisan migrate --force` y `php artisan optimize:clear`
+(si no, rutas, vistas y configuración en caché siguen siendo las viejas). Si
+Hostinger tiene LiteSpeed Cache activo, purgarlo desde hPanel.
 
 ```bash
 php artisan serve                # o Valet: https://stranger_themes.test

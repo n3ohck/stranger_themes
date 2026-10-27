@@ -34,6 +34,13 @@ mix.js('resources/js/tienda/main.js', 'public/js/tienda.js')
 
 mix.vue();
 
+// En producción cada archivo lleva su huella (tienda.js?id=…): mix() la agrega
+// en las vistas y el navegador baja la versión nueva en cada despliegue en vez
+// de seguir usando la que tenía en caché.
+if (mix.inProduction()) {
+    mix.version();
+}
+
 mix.webpackConfig({
     output: {
         chunkFilename: "js/[name].js?id=[chunkhash]",

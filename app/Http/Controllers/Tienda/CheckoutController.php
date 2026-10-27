@@ -310,7 +310,12 @@ class CheckoutController extends Controller
     {
         $compra = CompraPendiente::with(['producto', 'sucursal', 'venta.reservaciones.producto'])
             ->where('referencia', $referencia)
-            ->firstOrFail();
+            ->first();
+
+        // Mensaje propio: firstOrFail() respondía con el nombre del modelo.
+        if (! $compra) {
+            return response()->json(['error' => 'No encontramos esa compra. Revisa el enlace de tu correo.'], 404);
+        }
 
         return response()->json([
             'estado' => $compra->estado,

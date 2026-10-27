@@ -18,6 +18,9 @@ const rutas = [
     { path: '/reservas', name: 'reservas', component: Reservas, meta: { titulo: 'Reservas' } },
     { path: '/movimientos', name: 'movimientos', component: Movimientos, meta: { titulo: 'Movimientos' } },
     { path: '/corte', name: 'corte', component: Corte, meta: { titulo: 'Corte' } },
+    // Cualquier ruta desconocida (por ejemplo /pos/public/pos, que dejaba la
+    // redirección de diagonal final en Hostinger) regresa al inicio.
+    { path: '/:pathMatch(.*)*', redirect: '/venta' },
 ];
 
 const router = createRouter({
