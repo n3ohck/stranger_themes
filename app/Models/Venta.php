@@ -33,6 +33,7 @@ class Venta extends Model
         'sucursal_id',
         'origen',
         'apertura_id',
+        'venta_original_id',
         'folio',
         'folio_consecutivo',
         'referencia_pago',
@@ -125,6 +126,18 @@ class Venta extends Model
     public function reservaciones(): HasMany
     {
         return $this->hasMany(Reserva::class);
+    }
+
+    /** Venta cuya reservación amplía esta, si es una ampliación. */
+    public function ventaOriginal(): BelongsTo
+    {
+        return $this->belongsTo(Venta::class, 'venta_original_id');
+    }
+
+    /** Cobros de personas que se sumaron después a las reservaciones de esta venta. */
+    public function ampliaciones(): HasMany
+    {
+        return $this->hasMany(Venta::class, 'venta_original_id');
     }
 
     /*

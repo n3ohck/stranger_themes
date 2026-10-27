@@ -48,6 +48,8 @@ Route::middleware(['jwt.verify', 'pos.user'])->group(function () {
     Route::get('reservas', [ReservaController::class, 'index'])->name('reservas');
     Route::get('reservas/dia', [ReservaController::class, 'dia'])->name('reservas.dia');
     Route::put('reservas/{reserva}', [ReservaController::class, 'actualizar'])->name('reservas.actualizar');
+    Route::get('reservas/{reserva}/ampliacion', [VentaController::class, 'cotizarAmpliacion'])->name('reservas.ampliacion.cotizar');
+    Route::post('reservas/{reserva}/ampliacion', [VentaController::class, 'ampliarReserva'])->name('reservas.ampliacion');
 
     // Salidas de dinero del turno
     Route::get('movimientos', [MovimientoController::class, 'index'])->name('movimientos');

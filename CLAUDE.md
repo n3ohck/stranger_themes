@@ -290,11 +290,16 @@ entran por `/pos`, **no** por `/admin`.
 11. **Una venta de total cero se registra sin pagos.** Pasa con los códigos de
    cortesía que cubren el importe completo; `pagos` es `present|array`, no
    `required|min:1`, y `validarPagos` sale temprano cuando el total es cero.
-12. **En la lista de reservas se puede mover, cambiar personas y cambiar recorrido,
-   y la venta NO se toca.** Es decisión del negocio: mantiene cuadrado el corte, a
-   cambio de que los reportes de dinero no reflejen esos ajustes. Mover no valida
-   cupo ni ocupación: se puede juntar un grupo con otro o pasarse de la capacidad.
-   La agenda muestra por horario las personas de cada recorrido contra su cupo.
+12. **En la lista de reservas se puede mover, bajar personas y cambiar recorrido,
+   y la venta NO se toca** (sin reembolso). Mover no valida cupo ni ocupación: se
+   puede juntar un grupo con otro o pasarse de la capacidad. La agenda muestra por
+   horario las personas de cada recorrido contra su cupo.
+   **Subir personas se cobra** (`AmpliarReservaAction`): es una venta nueva del
+   turno ligada a la original por `ventas.venta_original_id`, al precio por persona
+   que se cobró en la venta original (con su descuento). En un paquete se suben
+   todos sus recorridos y se cobra el paquete. `ReservaController@actualizar`
+   rechaza subir personas sin pasar por ahí. Cancelar una ampliación devuelve el
+   dinero en el corte pero no baja las personas: eso se ajusta a mano.
 
 ### Subida de comprobantes: el campo se tiene que llamar `imagen`
 

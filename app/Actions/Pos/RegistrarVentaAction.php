@@ -27,9 +27,10 @@ use Illuminate\Validation\ValidationException;
  */
 class RegistrarVentaAction
 {
-    private $user;
+    // Protegidos para AmpliarReservaAction, que reutiliza pagos y folio.
+    protected $user;
 
-    private $sucursalId;
+    protected $sucursalId;
 
     public function __construct($user)
     {
@@ -210,7 +211,7 @@ class RegistrarVentaAction
      * El cambio se calcula aquí y se guarda solo en el pago en efectivo, que es
      * el único con el que se devuelve dinero.
      */
-    private function crearPagos(Venta $venta, array $pagos, float $totalNeto): void
+    protected function crearPagos(Venta $venta, array $pagos, float $totalNeto): void
     {
         $recibidoEfectivo = collect($pagos)->where('tipo', 'efectivo')->sum('monto');
         $otrosPagos = collect($pagos)->where('tipo', '!=', 'efectivo')->sum('monto');
@@ -234,7 +235,7 @@ class RegistrarVentaAction
         }
     }
 
-    private function validarPagos(array $pagos, float $totalNeto): void
+    protected function validarPagos(array $pagos, float $totalNeto): void
     {
         // Una venta de total cero no lleva pago: pasa con los códigos de cortesía
         // (cumpleañero, 2x1) que cubren el importe completo. Antes se exigía al

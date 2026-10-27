@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Pos;
 
 use App\Actions\ExistenciaAction;
+use App\Actions\Pos\AmpliarReservaAction;
 use App\Actions\Pos\RegistrarVentaAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Pos\RegistrarVentaRequest;
 use App\Models\Apertura;
+use App\Models\Reserva;
 use App\Models\Venta;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -36,12 +38,12 @@ class VentaController extends Controller
 
         $ventas = Venta::query()
             ->where('apertura_id', $apertura->id)
-            ->with(['productos.producto', 'pagos', 'reservaciones.producto'])
+            ->with(['productos.producto', 'pagos', 'reservaciones.producto', 'ventaOriginal'])
             ->orderByDesc('id')
             ->get();
 
         $sucursalId = Auth::user()->sucursal_id;
-        $relaciones = ['productos.producto', 'pagos', 'reservaciones.producto'];
+        $relaciones = ['productos.producto', 'pagos', 'reservaciones.producto', 'ventaOriginal'];
 
         $enLinea = Venta::query()
             ->enLineaEntre($sucursalId, Carbon::parse($apertura->created_at), Carbon::now())
@@ -97,6 +99,85 @@ class VentaController extends Controller
     }
 
     /**
+     * Cuánto cuesta subir las personas de una reservación, antes de cobrar. El
+     * POS lo muestra en la edición y lo usa como total del cobro.
+     */
+    public function cotizarAmpliacion(Request $request, Reserva $reserva)
+    {
+        $datos = $request->validate(['personas' => ['required', 'integer', 'min:1', 'max:99']]);
+
+        if ($error = $this->rechazoAmpliacion($reserva)) {
+            return $error;
+        }
+
+        $cotizacion = (new AmpliarReservaAction(Auth::user()))->cotizar($reserva, (int) $datos['personas']);
+
+        return response()->json([
+            'extra' => $cotizacion['extra'],
+            'producto' => $cotizacion['producto']->descripcion,
+            'total_unitario' => $cotizacion['total_unitario'],
+            'descuento_unitario' => $cotizacion['descuento_unitario'],
+            'codigo_descuento' => optional($cotizacion['linea'])->codigo_descuento,
+            'total' => $cotizacion['total'],
+            'recorridos' => $cotizacion['reservas']->map(fn (Reserva $r) => optional($r->producto)->descripcion)->values(),
+        ]);
+    }
+
+    /**
+     * Cobra las personas extra de una reservación como una venta de ampliación
+     * del turno y sube la reservación (o todos los recorridos del paquete).
+     */
+    public function ampliarReserva(Request $request, Reserva $reserva)
+    {
+        $datos = $request->validate([
+            'personas' => ['required', 'integer', 'min:1', 'max:99'],
+            'pagos' => ['present', 'array'],
+            'pagos.*.tipo' => ['required', 'in:efectivo,tarjeta,transferencia'],
+            'pagos.*.monto' => ['required', 'numeric', 'min:0'],
+            'pagos.*.referencia' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        if ($error = $this->rechazoAmpliacion($reserva)) {
+            return $error;
+        }
+
+        $apertura = Apertura::aperturaActiva(Auth::user());
+
+        if (! $apertura) {
+            return response()->json([
+                'message' => 'No tienes una caja abierta. Realiza la apertura antes de cobrar.',
+            ], 409);
+        }
+
+        $pagos = collect($datos['pagos'])->filter(fn ($p) => (float) $p['monto'] > 0)->values()->all();
+
+        $venta = DB::transaction(fn () => (new AmpliarReservaAction(Auth::user()))
+            ->ampliar($reserva, (int) $datos['personas'], $pagos, $apertura));
+
+        return response()->json([
+            'message' => 'Ampliación cobrada.',
+            'venta' => $this->presentar($venta),
+        ], 201);
+    }
+
+    private function rechazoAmpliacion(Reserva $reserva)
+    {
+        if ((int) $reserva->sucursal_id !== (int) Auth::user()->sucursal_id) {
+            return response()->json(['message' => 'Esa reservación no es de tu sucursal.'], 403);
+        }
+
+        if ($reserva->estado !== 'confirmada') {
+            return response()->json(['message' => 'Solo se pueden ampliar reservaciones confirmadas.'], 422);
+        }
+
+        if ($reserva->venta && $reserva->venta->estatus === 'cancelado') {
+            return response()->json(['message' => 'La venta de esta reservación está cancelada.'], 422);
+        }
+
+        return null;
+    }
+
+    /**
      * Cancelar devuelve existencias y cancela las reservaciones asociadas, para
      * que el horario vuelva a quedar libre en el calendario.
      */
@@ -148,7 +229,7 @@ class VentaController extends Controller
      */
     public function ticket(Venta $venta)
     {
-        $venta->load(['productos.producto', 'pagos', 'reservaciones.producto', 'sucursal', 'user']);
+        $venta->load(['productos.producto', 'pagos', 'reservaciones.producto', 'sucursal', 'user', 'ventaOriginal']);
 
         return response()->json([
             'ticket' => [
@@ -162,6 +243,7 @@ class VentaController extends Controller
                 ],
                 'atendio' => optional($venta->user)->nombre_completo,
                 'cliente' => $venta->nombre,
+                'ampliacion_de' => optional($venta->ventaOriginal)->folio,
                 'lineas' => $venta->productos->map(fn ($linea) => [
                     'producto' => optional($linea->producto)->descripcion,
                     'cantidad' => (float) $linea->cantidad,
@@ -200,6 +282,8 @@ class VentaController extends Controller
             'estatus' => $venta->estatus,
             'origen' => $venta->origen,
             'cliente' => $venta->nombre,
+            // Si es el cobro de personas agregadas a una reservación ya vendida.
+            'ampliacion_de' => optional($venta->ventaOriginal)->folio,
             'total' => (float) $venta->total,
             'descuento' => (float) $venta->descuento,
             'codigo_descuento' => $venta->codigo_descuento,

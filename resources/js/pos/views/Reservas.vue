@@ -1,9 +1,11 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { api, conParametros } from '../api/cliente';
 import { useCatalogo } from '../stores/catalogo';
 import { aIsoFecha, dinero, fechaLarga, sumarDias } from '../utils/formato';
 import Icono from '../components/Icono.vue';
+import ModalCobro from '../components/ModalCobro.vue';
+import TicketVenta from '../components/TicketVenta.vue';
 
 const catalogo = useCatalogo();
 
@@ -23,6 +25,37 @@ const horaEncima = ref('');
 const editando = ref(null);
 const guardando = ref(false);
 const errorEdicion = ref('');
+
+// Subir participantes se cobra como una venta de ampliación del turno; bajarlos
+// solo ajusta la reservación, sin reembolso.
+const cotizacion = ref(null);
+const cotizando = ref(false);
+const cobrando = ref(false);
+const errorCobro = ref('');
+const ticketAmpliacion = ref(null);
+
+const sube = computed(() =>
+    !!editando.value && Number(editando.value.personas) > editando.value.original.personas
+);
+
+let consulta = 0;
+
+watch(() => editando.value && sube.value && Number(editando.value.personas), async (personas) => {
+    cotizacion.value = null;
+    if (!personas) return;
+
+    const esta = ++consulta;
+    cotizando.value = true;
+
+    try {
+        const datos = await api.get(conParametros(`reservas/${editando.value.id}/ampliacion`, { personas }));
+        if (esta === consulta) cotizacion.value = datos;
+    } catch (e) {
+        if (esta === consulta) errorEdicion.value = e.listaErrores?.[0] || e.message;
+    } finally {
+        if (esta === consulta) cotizando.value = false;
+    }
+});
 
 const fechaIso = computed(() => aIsoFecha(dia.value));
 const esHoy = computed(() => fechaIso.value === aIsoFecha(hoy));
@@ -101,6 +134,51 @@ function editar(reservacion) {
         original: reservacion,
     };
     errorEdicion.value = '';
+}
+
+function confirmarEdicion() {
+    if (sube.value) {
+        errorCobro.value = '';
+        cobrando.value = true;
+        return;
+    }
+
+    guardarEdicion();
+}
+
+/** Cobra las personas extra y luego aplica el resto de los cambios, si hubo. */
+async function cobrarAmpliacion({ pagos }) {
+    const e = editando.value;
+    errorCobro.value = '';
+    guardando.value = true;
+
+    try {
+        const datos = await api.post(`reservas/${e.id}/ampliacion`, {
+            personas: Number(e.personas),
+            pagos,
+        });
+
+        const otrosCambios = e.producto_id !== e.original.producto_id
+            || e.hora !== e.original.hora
+            || (e.nombre_cliente || '') !== (e.original.cliente || '');
+
+        if (otrosCambios) {
+            await api.put(`reservas/${e.id}`, {
+                producto_id: e.producto_id,
+                hora: e.hora,
+                nombre_cliente: e.nombre_cliente || null,
+            });
+        }
+
+        cobrando.value = false;
+        editando.value = null;
+        ticketAmpliacion.value = datos.venta;
+        cargar();
+    } catch (err) {
+        errorCobro.value = err.listaErrores?.[0] || err.message;
+    } finally {
+        guardando.value = false;
+    }
 }
 
 async function guardarEdicion() {
@@ -251,7 +329,12 @@ async function aplicar(id, cambios, mensaje) {
                                     </span>
                                 </span>
 
-                                <span class="chip shrink-0 bg-noche-700 text-slate-300">{{ r.personas }}</span>
+                                <span
+                                    class="chip shrink-0 bg-noche-700 text-slate-300"
+                                    :title="r.venta?.ampliaciones?.length ? 'Se agregaron personas y se cobraron aparte' : ''"
+                                >
+                                    {{ r.personas }}<template v-if="r.venta?.ampliaciones?.length">*</template>
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -297,15 +380,40 @@ async function aplicar(id, cambios, mensaje) {
                         </div>
                     </div>
 
+                    <!-- Subir personas se cobra aparte -->
+                    <div v-if="sube" class="rounded-lg border border-acento-500/40 bg-acento-500/10 px-3 py-2 text-sm">
+                        <p v-if="cotizando" class="text-slate-400">Calculando…</p>
+                        <template v-else-if="cotizacion">
+                            <p class="font-semibold text-slate-100">
+                                +{{ cotizacion.extra }} {{ cotizacion.extra === 1 ? 'persona' : 'personas' }}
+                                · {{ dinero(cotizacion.total) }}
+                            </p>
+                            <p class="text-xs text-slate-400">
+                                {{ dinero(cotizacion.total_unitario) }} c/u de {{ cotizacion.producto }}, lo mismo que en la venta original
+                                <template v-if="cotizacion.codigo_descuento"> (con {{ cotizacion.codigo_descuento }})</template>.
+                            </p>
+                            <p v-if="cotizacion.recorridos.length > 1" class="mt-1 text-xs text-slate-400">
+                                Se suman a todos los recorridos del paquete: {{ cotizacion.recorridos.join(', ') }}.
+                            </p>
+                        </template>
+                    </div>
+
                     <div>
                         <label class="etiqueta text-xs">Nombre del cliente</label>
                         <input v-model="editando.nombre_cliente" type="text" class="campo py-2 text-sm">
                     </div>
                 </div>
 
+                <div v-if="editando.original.venta?.ampliaciones?.length" class="mt-4 text-xs text-slate-400">
+                    <p class="etiqueta text-xs">Ampliaciones cobradas</p>
+                    <p v-for="a in editando.original.venta.ampliaciones" :key="a.folio">
+                        {{ a.folio }} · +{{ a.personas }} {{ a.personas === 1 ? 'persona' : 'personas' }} · {{ dinero(a.total) }}
+                    </p>
+                </div>
+
                 <p class="mt-4 rounded-lg bg-noche-900 px-3 py-2 text-xs text-slate-500">
-                    Cambiar participantes o recorrido no modifica la venta: el cobro registrado
-                    sigue siendo el original.
+                    Subir participantes se cobra aparte, como ampliación de la venta. Bajarlos o
+                    cambiar el recorrido no modifica la venta ni devuelve dinero.
                 </p>
 
                 <p v-if="errorEdicion" class="mt-3 rounded-lg bg-sangre-600/15 px-3 py-2 text-sm text-sangre-400">
@@ -314,11 +422,23 @@ async function aplicar(id, cambios, mensaje) {
 
                 <div class="mt-5 flex gap-2">
                     <button type="button" class="btn-neutro flex-1" @click="editando = null">Cancelar</button>
-                    <button type="button" class="btn-primario flex-1" :disabled="guardando" @click="guardarEdicion">
-                        {{ guardando ? 'Guardando…' : 'Guardar' }}
+                    <button type="button" class="btn-primario flex-1"
+                            :disabled="guardando || (sube && !cotizacion)" @click="confirmarEdicion">
+                        {{ guardando ? 'Guardando…' : sube && cotizacion ? `Cobrar ${dinero(cotizacion.total)} y actualizar` : 'Guardar' }}
                     </button>
                 </div>
             </div>
         </div>
+
+        <ModalCobro
+            v-if="cobrando && cotizacion"
+            :total="cotizacion.total"
+            :guardando="guardando"
+            :error="errorCobro"
+            @cerrar="cobrando = false"
+            @cobrar="cobrarAmpliacion"
+        />
+
+        <TicketVenta v-if="ticketAmpliacion" :venta="ticketAmpliacion" @cerrar="ticketAmpliacion = null" />
     </div>
 </template>

@@ -195,6 +195,11 @@ async function verTicket(venta) {
                                 </span>
                                 <span v-if="vieneHoy(venta)" class="chip bg-sky-600/20 text-sky-400">Viene hoy</span>
                                 <span
+                                    v-if="venta.ampliacion_de"
+                                    class="chip bg-acento-600/25 text-acento-400"
+                                    title="Personas agregadas a una reservación ya vendida"
+                                >Ampliación de {{ venta.ampliacion_de }}</span>
+                                <span
                                     v-if="venta.estatus === 'cancelado'"
                                     class="chip bg-sangre-600/20 text-sangre-400"
                                 >Cancelada</span>

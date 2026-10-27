@@ -10,6 +10,7 @@ use App\Support\Tienda\Disponibilidad;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class ReservaController extends Controller
 {
@@ -44,7 +45,7 @@ class ReservaController extends Controller
                 fn ($query) => $query->where('estado', $request->input('estado')),
                 fn ($query) => $query->where('estado', 'confirmada')
             )
-            ->with(['producto', 'venta.pagos'])
+            ->with(['producto', 'venta.pagos', 'venta.ampliaciones.productos'])
             ->orderBy('fecha')
             ->get();
 
@@ -117,7 +118,7 @@ class ReservaController extends Controller
             ->where('sucursal_id', $sucursal->id)
             ->where('estado', 'confirmada')
             ->whereBetween('fecha', [$fecha->copy()->startOfDay(), $fecha->copy()->endOfDay()])
-            ->with(['producto', 'venta.pagos'])
+            ->with(['producto', 'venta.pagos', 'venta.ampliaciones.productos'])
             ->orderBy('fecha')
             ->get();
 
@@ -213,6 +214,14 @@ class ReservaController extends Controller
         // solo lo respeta el sitio web.
         $personas = $datos['personas'] ?? (int) $reserva->cantidad_personas;
 
+        // Subir personas se cobra: pasa por VentaController::ampliarReserva, que
+        // registra la venta de ampliación. Aquí solo se puede bajar o dejar igual.
+        if ($personas > (int) $reserva->cantidad_personas) {
+            throw ValidationException::withMessages([
+                'personas' => 'Para agregar personas hay que cobrarlas. Usa "Cobrar y actualizar".',
+            ]);
+        }
+
         $reserva->update([
             'producto_id' => $producto->id,
             'fecha' => $destino,
@@ -222,7 +231,7 @@ class ReservaController extends Controller
 
         return response()->json([
             'message' => 'Reservación actualizada.',
-            'reservacion' => $this->presentar($reserva->fresh(['producto', 'venta.pagos'])),
+            'reservacion' => $this->presentar($reserva->fresh(['producto', 'venta.pagos', 'venta.ampliaciones.productos'])),
         ]);
     }
 
@@ -250,6 +259,15 @@ class ReservaController extends Controller
                 'telefono' => $venta->telefono,
                 'email' => $venta->email,
                 'formas_pago' => $venta->pagos->pluck('tipo')->unique()->values(),
+                // Personas que se agregaron después y se cobraron aparte.
+                'ampliaciones' => $venta->ampliaciones
+                    ->where('estatus', 'activo')
+                    ->map(fn ($ampliacion) => [
+                        'folio' => $ampliacion->folio,
+                        'personas' => (int) $ampliacion->productos->sum('cantidad'),
+                        'total' => (float) $ampliacion->total,
+                        'fecha' => (string) $ampliacion->created_at,
+                    ])->values(),
             ] : null,
         ];
     }

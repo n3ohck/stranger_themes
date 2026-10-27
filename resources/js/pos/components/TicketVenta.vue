@@ -59,6 +59,9 @@ function imprimir() {
                     <div class="flex justify-between"><span>Fecha</span><span>{{ fechaHora(venta.fecha) }}</span></div>
                     <div class="flex justify-between"><span>Atendió</span><span>{{ sesion.usuario?.nombre }}</span></div>
                     <div v-if="venta.cliente" class="flex justify-between"><span>Cliente</span><span>{{ venta.cliente }}</span></div>
+                    <div v-if="venta.ampliacion_de" class="flex justify-between">
+                        <span>Ampliación de</span><span class="font-bold">{{ venta.ampliacion_de }}</span>
+                    </div>
 
                     <p class="my-1.5 border-t border-dashed border-black"></p>
 
