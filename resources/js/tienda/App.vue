@@ -6,8 +6,9 @@ import { SITIO } from './api';
     <div class="flex min-h-screen flex-col">
         <header class="border-b border-terror-borde">
             <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
-                <a :href="SITIO" class="font-titular text-3xl leading-none text-terror-rojo">
-                    Stranger Themes
+                <a :href="SITIO" class="block shrink-0" aria-label="Stranger Themes">
+                    <img src="/images/logo-stranger-themes.webp" alt="Stranger Themes"
+                         class="h-12 w-auto sm:h-16" width="800" height="314">
                 </a>
                 <a :href="SITIO" class="text-xs font-semibold uppercase tracking-[0.14em] text-terror-texto hover:text-white">
                     Volver al sitio

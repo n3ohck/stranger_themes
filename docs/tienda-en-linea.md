@@ -43,7 +43,8 @@ más: la tienda se sirve sola, con su propio diseño alineado al del sitio.
 ### El horario se aparta mientras se paga
 
 Al pulsar Pagar se crea una **compra pendiente** que bloquea esos horarios durante
-**20 minutos**. Sin eso, dos clientes pueden elegir el mismo horario, pagar los dos y
+**30 minutos** (el mínimo que Stripe acepta para una sesión de pago, que vence junto
+con el apartado). Sin eso, dos clientes pueden elegir el mismo horario, pagar los dos y
 dejar una sobreventa que solo se descubre en mostrador.
 
 Si el cliente abandona el pago, el apartado caduca solo y el horario vuelve a

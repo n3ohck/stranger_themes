@@ -22,8 +22,15 @@ use Illuminate\Validation\ValidationException;
  */
 class ApartarCompraAction
 {
-    /** Tiempo que el cliente tiene para completar el pago antes de perder el horario. */
-    public const MINUTOS_PARA_PAGAR = 20;
+    /**
+     * Tiempo que el cliente tiene para completar el pago antes de perder el horario.
+     *
+     * La sesión de Stripe vence junto con el apartado, y Stripe exige que una
+     * sesión de Checkout dure al menos 30 minutos: con 20 rechazaba todas. El
+     * minuto extra cubre el tiempo entre apartar y crear la sesión. Al cliente se
+     * le dicen 30.
+     */
+    public const MINUTOS_PARA_PAGAR = 31;
 
     public function ejecutar(array $datos): CompraPendiente
     {

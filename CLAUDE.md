@@ -37,7 +37,7 @@ alimentan de `routes/webapi.php`. Todo lo demás es Blade + Backpack.
 | `Apertura` / `Corte` | Apertura y cierre de caja por turno. Un corte cierra su apertura. |
 | `Egreso`, `EmpleadoPago`, `Empleado` | Salidas de efectivo y nómina |
 | `PagoCarta`, `PagoConcepto` | Cartas de pago (con PDF) |
-| `CompraPendiente` | Compra del sitio web que aún no se paga. Aparta horarios 20 min. |
+| `CompraPendiente` | Compra del sitio web que aún no se paga. Aparta horarios 30 min. |
 | `Disputa`, `LogNotificacion` | Cancelación de venta online (requiere la referencia del cobro) y trazabilidad de correos |
 
 ## Reglas de arquitectura importantes
@@ -202,8 +202,9 @@ SPA de Vue pública, enlazada desde strangerthemes.com. Diseño alineado al del 
    **duración real** del recorrido, no con el intervalo: con salidas cada hora y
    recorridos de 25 minutos, la salida de las 21:30 termina 21:55 y sí es vendible.
    Apartar un paquete también bloquea esos recorridos por separado.
-4. **El horario se aparta 20 minutos mientras se paga** (`compras_pendientes`). Sin
-   eso dos clientes pagan el mismo horario. Lo caducado deja de bloquear solo; el
+4. **El horario se aparta 30 minutos mientras se paga** (`compras_pendientes`). Sin
+   eso dos clientes pagan el mismo horario. Son 30 (31 internos) porque la sesión
+   de Stripe vence junto con el apartado y Stripe no acepta menos de 30 minutos. Lo caducado deja de bloquear solo; el
    comando `tienda:limpiar-pendientes` únicamente marca el estado.
 5. **La confirmación del pago es idempotente**: llegan el regreso del cliente y el
    webhook, y los webhooks se reintentan. Ver `ConfirmarCompraAction`.

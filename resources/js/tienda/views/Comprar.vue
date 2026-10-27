@@ -415,7 +415,7 @@ async function pagar() {
 
                 <p class="mt-3 text-center text-xs">
                     Te llevamos a Stripe para completar el pago de forma segura.
-                    Tu horario queda apartado 20 minutos.
+                    Tu horario queda apartado 30 minutos.
                 </p>
             </div>
         </div>
