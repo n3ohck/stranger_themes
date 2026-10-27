@@ -68,6 +68,8 @@ class CatalogoController extends Controller
             'sucursal_id' => ['required', 'integer', 'exists:sucursales,id'],
             'producto_id' => ['required', 'integer', 'exists:productos,id'],
             'fecha' => ['required', 'date_format:Y-m-d'],
+            // Solo se ofrecen horarios donde cabe el grupo completo.
+            'personas' => ['nullable', 'integer', 'min:1', 'max:20'],
         ], [
             'fecha.date_format' => 'La fecha debe tener formato AAAA-MM-DD.',
         ]);
@@ -86,7 +88,7 @@ class CatalogoController extends Controller
         }
 
         $fecha = Carbon::parse($datos['fecha']);
-        $horarios = Disponibilidad::paraProducto($producto, $sucursal, $fecha);
+        $horarios = Disponibilidad::paraProducto($producto, $sucursal, $fecha, null, (int) ($datos['personas'] ?? 1));
 
         return response()->json([
             'fecha' => $fecha->toDateString(),
@@ -96,6 +98,7 @@ class CatalogoController extends Controller
             'horarios' => collect($horarios)->map(fn ($h) => [
                 'inicio' => $h['inicio'],
                 'etiqueta' => $h['etiqueta'],
+                'lugares' => $h['lugares'],
                 'termina' => $this->finDe($h, Disponibilidad::intervaloDe($sucursal, $fecha)),
             ])->values(),
         ]);

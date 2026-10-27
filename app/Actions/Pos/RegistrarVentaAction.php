@@ -8,12 +8,10 @@ use App\Models\Apertura;
 use App\Models\Descuento;
 use App\Models\Producto;
 use App\Models\Reserva;
-use App\Models\Sucursal;
 use App\Models\Venta;
 use App\Models\VentaPago;
 use App\Models\VentaProducto;
 use App\Support\ReglaDescuento;
-use App\Support\Tienda\Disponibilidad;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\ValidationException;
@@ -50,7 +48,6 @@ class RegistrarVentaAction
         $subtotal = $lineas->sum('subtotal');
 
         $this->validarPagos($datos['pagos'] ?? [], $totalNeto);
-        $this->validarHorarios($lineas);
 
         $venta = Venta::create([
             'user_id' => $this->user->id,
@@ -96,41 +93,6 @@ class RegistrarVentaAction
             ->implode(', ');
 
         return $nombre !== '' ? mb_substr($nombre, 0, 255) : ($respaldo ?: null);
-    }
-
-    /**
-     * Cada horario es de un solo grupo. El POS solo ofrece los libres, pero entre
-     * que el cajero eligió y cobró otro cajero o la tienda en línea pudo tomarlo,
-     * y ahora que cada recorrido de un paquete se elige por separado también
-     * podría repetirse dentro de la misma venta.
-     */
-    private function validarHorarios(Collection $lineas): void
-    {
-        $sucursal = Sucursal::findOrFail($this->sucursalId);
-        $vistos = [];
-
-        foreach ($lineas as $linea) {
-            foreach ($linea['reservaciones'] as $reservacion) {
-                $productoId = (int) ($reservacion['producto_id'] ?? $linea['producto']->id);
-                $inicio = Carbon::parse($reservacion['fecha'] . ' ' . $reservacion['hora']);
-                $clave = $productoId . '|' . $inicio->format('Y-m-d H:i:s');
-
-                $libre = ! isset($vistos[$clave]) && Disponibilidad::tramosSiguenLibres($sucursal, [[
-                    'producto_id' => $productoId,
-                    'inicio' => $inicio->format('Y-m-d H:i:s'),
-                ]]);
-
-                if (! $libre) {
-                    $nombre = optional(Producto::withoutGlobalScopes()->find($productoId))->descripcion ?? 'el recorrido';
-
-                    throw ValidationException::withMessages([
-                        'items' => "El horario de {$nombre} del {$inicio->format('d/m')} a las {$inicio->format('g:i a')} ya está ocupado. Elige otro.",
-                    ]);
-                }
-
-                $vistos[$clave] = true;
-            }
-        }
     }
 
     /**

@@ -95,8 +95,14 @@ watch(personas, () => {
         personas.value = producto.value.capacidad;
     }
 });
+// Los horarios dependen del tamaño del grupo: uno con 3 lugares sirve para una
+// pareja pero no para cinco amigos.
+watch(personas, () => { if (fecha.value) cargarHorarios(); });
+
+let consulta = 0;
 
 async function cargarHorarios() {
+    const esta = ++consulta;
     horarios.value = [];
     avisoHorarios.value = '';
 
@@ -109,13 +115,22 @@ async function cargarHorarios() {
             sucursal_id: sucursalId.value,
             producto_id: productoId.value,
             fecha: fecha.value,
+            personas: personas.value,
         });
+
+        // Con los botones de personas llegan varias respuestas; solo vale la última.
+        if (esta !== consulta) return;
 
         horarios.value = datos.horarios;
 
+        // El horario elegido pudo quedarse sin lugar para el grupo nuevo.
+        if (horaElegida.value && !datos.horarios.some((h) => h.inicio === horaElegida.value)) {
+            horaElegida.value = '';
+        }
+
         if (!datos.horarios.length) {
             avisoHorarios.value = datos.abierto
-                ? 'No quedan horarios libres ese día. Prueba con otra fecha.'
+                ? `No quedan lugares para ${personas.value} ${personas.value === 1 ? 'persona' : 'personas'} ese día. Prueba con otra fecha.`
                 : 'Ese día no abrimos. Elige otra fecha.';
         }
     } catch (e) {
@@ -293,9 +308,14 @@ async function pagar() {
                         <div v-else class="grid grid-cols-3 gap-2 sm:grid-cols-4">
                             <button
                                 v-for="h in horarios" :key="h.inicio" type="button"
-                                class="slot" :class="horaElegida === h.inicio ? 'slot-activo' : ''"
+                                class="slot flex flex-col items-center" :class="horaElegida === h.inicio ? 'slot-activo' : ''"
                                 @click="horaElegida = h.inicio"
-                            >{{ h.etiqueta }}</button>
+                            >
+                                <span>{{ h.etiqueta }}</span>
+                                <span v-if="h.lugares !== null" class="text-[10px] font-normal opacity-75">
+                                    {{ h.lugares }} {{ h.lugares === 1 ? 'lugar' : 'lugares' }}
+                                </span>
+                            </button>
                         </div>
                         <p v-if="horaElegida && producto.recorridos.length > 1" class="mt-3 text-xs">
                             Los {{ producto.recorridos.length }} recorridos van uno tras otro a partir de esa hora.

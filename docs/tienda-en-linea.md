@@ -26,15 +26,18 @@ más: la tienda se sirve sola, con su propio diseño alineado al del sitio.
 
 - La rejilla es de **30 minutos**, desde la hora de apertura hasta la de cierre del
   día correspondiente, tomadas de los horarios de la sucursal.
-- **Cada horario es exclusivo del grupo que lo reserva.** Si alguien aparta las 18:00
-  del Manicomio, esas 18:00 desaparecen para todos, aunque vayan 2 personas de las 8
-  que caben. La capacidad del producto solo sirve para rechazar grupos más grandes de
-  lo que cabe.
+- **Un horario se comparte entre grupos y se cuenta por lugares.** Si una pareja
+  aparta las 18:00 del Manicomio (cupo 8), quedan 6 lugares y esas 18:00 se siguen
+  ofreciendo a grupos de hasta 6. `disponibilidad` recibe `personas` y solo devuelve
+  los horarios donde cabe el grupo completo, con `lugares` restantes en cada uno.
+- El punto de venta no respeta el cupo: en mostrador se puede pasar cuando el grupo
+  sí cabe. Por eso un horario puede aparecer con menos lugares de los esperados, o
+  sin lugares, aunque nadie lo haya comprado en línea.
 - Un **paquete ocupa un tramo por cada recorrido**, encadenados. El paquete de 3
   recorridos que empieza a las 18:00 aparta 18:00, 18:30 y 19:00, y solo se ofrece
-  una hora de inicio si los tres tramos están libres y caben antes del cierre.
-- Reservar un paquete **también bloquea esos recorridos por separado**: nadie puede
-  comprar el Escape Room de las 19:00 si un paquete ya lo tomó.
+  una hora de inicio si el grupo cabe en los tres tramos y terminan antes del cierre.
+- Reservar un paquete **también ocupa lugares en esos recorridos por separado**: si un
+  paquete de 4 tomó el Escape Room de las 19:00 (cupo 6), ahí quedan 2 lugares.
 - No se ofrecen horarios con menos de **una hora** de anticipación.
 
 ### El horario se aparta mientras se paga

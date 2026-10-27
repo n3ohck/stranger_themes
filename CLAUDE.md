@@ -184,9 +184,15 @@ SPA de Vue pública, enlazada desde strangerthemes.com. Diseño alineado al del 
 
 ### Reglas propias de la tienda
 
-1. **Cada horario es exclusivo del grupo que lo reserva.** La capacidad del producto
-   no suma grupos: solo rechaza grupos más grandes de lo que cabe. Disponibilidad
-   binaria, no por lugares restantes.
+1. **Un horario se comparte entre grupos y se cuenta por lugares.** La ocupación es
+   la suma de personas (reservas confirmadas + compras apartadas) contra la
+   `capacidad` de cada recorrido. En línea solo se ofrece un horario donde el grupo
+   completo cabe en todos sus tramos, y se muestra cuántos lugares quedan
+   (`Disponibilidad::paraProducto(..., $personas)` y `tramosConCupo()`).
+   **En mostrador el cupo no bloquea**: se meten grupos distintos al mismo horario y
+   se puede pasar de la capacidad (llegan 10 niños a un recorrido de 8 que sí
+   caben); el POS solo avisa. Para eso `paraProducto()` recibe `$personas = null`.
+   Antes la regla era un grupo por horario; el negocio la cambió.
 2. **La cadencia de salidas la define cada sucursal, día por día**
    (`horarios[].intervalo_minutos`). Una sucursal saca recorridos cada 30 minutos y
    otra cada hora. `Disponibilidad` es la única fuente: de ahí leen la tienda, el
@@ -271,8 +277,6 @@ entran por `/pos`, **no** por `/admin`.
    siguiente, y una hora que choca con otro recorrido del grupo queda bloqueada.
    Todos llevan las mismas personas: antes había un contador de cantidad y otro de
    personas por reservación que se desincronizaban.
-   `RegistrarVentaAction::validarHorarios()` rechaza al cobrar un horario ya
-   ocupado o repetido en la misma venta.
    La línea que recibe `LineaCarrito` es una copia de `carrito.calculadas`: nada se
    escribe directo en ella (sin `v-model`), todo pasa por acciones del store.
    No hay nombre para toda la venta: `ventas.nombre` lo arma `RegistrarVentaAction`
@@ -285,8 +289,9 @@ entran por `/pos`, **no** por `/admin`.
    `required|min:1`, y `validarPagos` sale temprano cuando el total es cero.
 12. **En la lista de reservas se puede mover, cambiar personas y cambiar recorrido,
    y la venta NO se toca.** Es decisión del negocio: mantiene cuadrado el corte, a
-   cambio de que los reportes de dinero no reflejen esos ajustes. Mover sí valida
-   que el horario destino esté libre, porque cada horario es de un solo grupo.
+   cambio de que los reportes de dinero no reflejen esos ajustes. Mover no valida
+   cupo ni ocupación: se puede juntar un grupo con otro o pasarse de la capacidad.
+   La agenda muestra por horario las personas de cada recorrido contra su cupo.
 
 ### Subida de comprobantes: el campo se tiene que llamar `imagen`
 

@@ -158,8 +158,9 @@ export const useCarrito = defineStore('carrito', {
             const linea = this.lineas.find((l) => l.uid === uid);
             if (!linea) return;
 
-            const maximo = linea.producto.capacidad || 99;
-            linea.cantidad = Math.min(maximo, Math.max(1, Math.round(cantidad) || 1));
+            // Sin tope de capacidad: en mostrador se puede pasar del cupo cuando el
+            // grupo sí cabe (10 niños en un recorrido de 8). La línea solo avisa.
+            linea.cantidad = Math.min(99, Math.max(1, Math.round(cantidad) || 1));
         },
 
         /**
@@ -258,7 +259,7 @@ export const useCarrito = defineStore('carrito', {
                 if (!datos.abre) {
                     recorrido.avisoHorarios = 'La sucursal no abre ese día.';
                 } else if (!datos.horarios.some((h) => h.libre)) {
-                    recorrido.avisoHorarios = 'No quedan horarios libres ese día.';
+                    recorrido.avisoHorarios = 'Ya no quedan salidas ese día.';
                 }
 
                 // Llegó después de que se eligió el anterior: sugerirlo ahora.

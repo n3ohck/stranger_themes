@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Auth;
  * Sale del mismo motor que la tienda en línea y la lista de reservas, así que los
  * tres muestran exactamente lo mismo: lo que se configura en el horario de la
  * sucursal es lo único que define cuándo sale un recorrido.
+ *
+ * A diferencia de la tienda, aquí el cupo no bloquea: un horario con gente se
+ * sigue vendiendo (entran grupos distintos juntos) y se puede pasar de la
+ * capacidad cuando el grupo sí cabe. Se devuelve la ocupación para que el cajero
+ * lo vea y decida.
  */
 class DisponibilidadController extends Controller
 {
@@ -38,7 +43,8 @@ class DisponibilidadController extends Controller
         $fecha = Carbon::parse($datos['fecha']);
 
         // Sin anticipación: en mostrador se vende la salida que viene enseguida.
-        $libres = Disponibilidad::paraProducto($producto, $sucursal, $fecha, 0);
+        // Sin personas: el cupo no filtra en mostrador.
+        $libres = Disponibilidad::paraProducto($producto, $sucursal, $fecha, 0, null);
         $rejilla = Disponibilidad::rejillaDelDia($sucursal, $fecha);
 
         $porInicio = collect($libres)->keyBy('inicio');
@@ -47,14 +53,21 @@ class DisponibilidadController extends Controller
             'fecha' => $fecha->toDateString(),
             'intervalo_minutos' => Disponibilidad::intervaloDe($sucursal, $fecha),
             'abre' => $rejilla !== [],
-            // Se devuelve la rejilla completa con su estado: el cajero necesita ver
-            // los horarios ocupados para explicarle al cliente por qué no puede.
-            'horarios' => collect($rejilla)->map(fn (string $hora) => [
-                'inicio' => $hora,
-                'etiqueta' => Carbon::parse($hora)->format('g:i a'),
-                'libre' => $porInicio->has($hora),
-                'tramos' => $porInicio->get($hora)['tramos'] ?? [],
-            ])->values(),
+            // La rejilla completa: 'libre' solo es false para lo que ya pasó o no
+            // termina antes del cierre. La ocupación es la del primer tramo, que en
+            // el POS es el único (cada recorrido de un paquete se pide aparte).
+            'horarios' => collect($rejilla)->map(function (string $hora) use ($porInicio) {
+                $tramo = $porInicio->get($hora)['tramos'][0] ?? null;
+
+                return [
+                    'inicio' => $hora,
+                    'etiqueta' => Carbon::parse($hora)->format('g:i a'),
+                    'libre' => $porInicio->has($hora),
+                    'ocupados' => $tramo['ocupados'] ?? 0,
+                    'capacidad' => $tramo['capacidad'] ?? null,
+                    'tramos' => $porInicio->get($hora)['tramos'] ?? [],
+                ];
+            })->values(),
         ]);
     }
 
@@ -91,7 +104,7 @@ class DisponibilidadController extends Controller
                 'abre' => $rejilla !== [],
                 // Misma anticipación 0 que index(): lo que se ve aquí es lo que
                 // luego aparece al abrir el día.
-                'libres' => $rejilla === [] ? 0 : count(Disponibilidad::paraProducto($producto, $sucursal, $fecha, 0)),
+                'libres' => $rejilla === [] ? 0 : count(Disponibilidad::paraProducto($producto, $sucursal, $fecha, 0, null)),
             ];
         });
 

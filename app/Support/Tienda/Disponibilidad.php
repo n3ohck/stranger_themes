@@ -11,16 +11,21 @@ use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 
 /**
- * Calcula qué horarios puede comprar el cliente en el sitio web.
+ * Calcula qué horarios se pueden vender y cuántos lugares les quedan.
  *
- * Cada horario es exclusivo del grupo que lo reserva: si alguien aparta las 18:00
- * del Manicomio, esas 18:00 desaparecen para todos los demás aunque vayan dos
- * personas de las ocho que caben. La disponibilidad es binaria, no por lugares.
+ * Un horario se comparte entre grupos: si una pareja tiene las 17:00 de Winchester
+ * y llegan tres amigos, entran los cinco juntos. La ocupación se cuenta en
+ * personas (reservas confirmadas más compras web apartadas) contra la capacidad
+ * del recorrido.
+ *
+ * El cupo solo se hace respetar en el sitio web. En mostrador se puede meter más
+ * gente: llegan 10 niños a un recorrido de 8 que sí caben, y hay que poder
+ * registrarlos y pasarlos juntos. Por eso paraProducto() recibe las personas del
+ * grupo, o null para no filtrar por cupo.
  *
  * Un paquete ocupa un tramo por cada recorrido que incluye, encadenados uno tras
- * otro. Solo se ofrece una hora de inicio si TODOS sus tramos están libres y caben
- * antes del cierre; de otro modo el cliente compraría un paquete que el negocio no
- * puede operar.
+ * otro. En línea solo se ofrece una hora de inicio si el grupo cabe en TODOS sus
+ * tramos y terminan antes del cierre.
  */
 class Disponibilidad
 {
@@ -35,13 +40,20 @@ class Disponibilidad
     public const ANTICIPACION_MINUTOS = 60;
 
     /**
-     * @return array<int, array{inicio: string, etiqueta: string, tramos: array}>
+     * Cada tramo trae su capacidad y cuántas personas lleva ya; `lugares` es lo
+     * que le queda al tramo más lleno (null si ningún recorrido tiene capacidad).
+     *
+     * @param  int|null  $personas  Tamaño del grupo. Con null no se filtra por cupo
+     *                              (mostrador); con un número solo se devuelven los
+     *                              horarios donde el grupo cabe en todos los tramos.
+     * @return array<int, array{inicio: string, etiqueta: string, lugares: ?int, tramos: array}>
      */
     public static function paraProducto(
         Producto $producto,
         Sucursal $sucursal,
         CarbonInterface $fecha,
-        ?int $anticipacionMinutos = null
+        ?int $anticipacionMinutos = null,
+        ?int $personas = 1
     ): array {
         $recorridos = self::recorridosDe($producto);
 
@@ -57,7 +69,7 @@ class Disponibilidad
 
         [$apertura, $cierre, $intervalo] = $jornada;
 
-        $ocupados = self::horariosOcupados($sucursal, $recorridos->pluck('id')->all(), $fecha);
+        $ocupacion = self::ocupacion($sucursal, $recorridos->pluck('id')->all(), $fecha);
         // El sitio web exige margen para que nadie compre una salida inminente.
         // El mostrador vende la siguiente salida, así que ahí se pasa 0.
         $minimo = Carbon::now()->addMinutes($anticipacionMinutos ?? self::ANTICIPACION_MINUTOS);
@@ -69,7 +81,7 @@ class Disponibilidad
                 continue;
             }
 
-            $tramos = self::armarTramos($recorridos, $inicio, $intervalo);
+            $tramos = self::armarTramos($recorridos, $inicio, $intervalo, $ocupacion);
 
             // El último recorrido tiene que terminar antes del cierre.
             //
@@ -87,40 +99,51 @@ class Disponibilidad
                 break;
             }
 
-            $libre = collect($tramos)->every(
-                fn ($tramo) => ! in_array($tramo['producto_id'] . '|' . $tramo['inicio'], $ocupados, true)
-            );
+            $lugares = self::lugaresDe($tramos);
 
-            if ($libre) {
-                $disponibles[] = [
-                    'inicio' => $inicio->format('H:i'),
-                    'etiqueta' => $inicio->format('g:i a'),
-                    'tramos' => $tramos,
-                ];
+            if ($personas !== null && $lugares !== null && $lugares < $personas) {
+                continue;
             }
+
+            $disponibles[] = [
+                'inicio' => $inicio->format('H:i'),
+                'etiqueta' => $inicio->format('g:i a'),
+                'lugares' => $lugares,
+                'tramos' => $tramos,
+            ];
         }
 
         return $disponibles;
     }
 
     /**
-     * ¿Sigue libre esta combinación exacta de horarios? Se vuelve a preguntar justo
-     * antes de cobrar, porque entre que el cliente eligió y llegó a pagar pudo
-     * habérselo llevado alguien más.
+     * ¿Sigue cabiendo el grupo en estos tramos? Se vuelve a preguntar justo antes
+     * de apartar, porque entre que el cliente eligió y llegó a pagar otros pudieron
+     * llenar el horario. Solo lo usa el sitio web: el mostrador puede pasarse.
      */
-    public static function tramosSiguenLibres(Sucursal $sucursal, array $tramos, ?int $ignorarPendiente = null): bool
+    public static function tramosConCupo(Sucursal $sucursal, array $tramos, int $personas, ?int $ignorarPendiente = null): bool
     {
         if (empty($tramos)) {
             return false;
         }
 
-        $fecha = Carbon::parse($tramos[0]['inicio']);
-        $productoIds = collect($tramos)->pluck('producto_id')->unique()->all();
-        $ocupados = self::horariosOcupados($sucursal, $productoIds, $fecha, $ignorarPendiente);
+        $capacidades = Producto::query()
+            ->withoutGlobalScopes()
+            ->whereIn('id', collect($tramos)->pluck('producto_id')->unique())
+            ->pluck('capacidad', 'id');
 
-        return collect($tramos)->every(
-            fn ($tramo) => ! in_array($tramo['producto_id'] . '|' . $tramo['inicio'], $ocupados, true)
-        );
+        return collect($tramos)->every(function ($tramo) use ($sucursal, $capacidades, $personas, $ignorarPendiente) {
+            $capacidad = (int) ($capacidades[$tramo['producto_id']] ?? 0);
+
+            if ($capacidad <= 0) {
+                return true;
+            }
+
+            $ocupacion = self::ocupacion($sucursal, [$tramo['producto_id']], Carbon::parse($tramo['inicio']), $ignorarPendiente);
+            $ocupados = $ocupacion[$tramo['producto_id'] . '|' . $tramo['inicio']] ?? 0;
+
+            return $ocupados + $personas <= $capacidad;
+        });
     }
 
     /**
@@ -149,48 +172,68 @@ class Disponibilidad
         return $ids->map(fn ($id) => $porId->get($id))->filter()->values();
     }
 
-    private static function armarTramos(Collection $recorridos, CarbonInterface $inicio, int $intervalo): array
+    private static function armarTramos(Collection $recorridos, CarbonInterface $inicio, int $intervalo, array $ocupacion): array
     {
-        return $recorridos->values()->map(fn (Producto $recorrido, int $i) => [
-            'producto_id' => $recorrido->id,
-            'producto' => $recorrido->descripcion,
-            'inicio' => $inicio->copy()->addMinutes($intervalo * $i)->format('Y-m-d H:i:s'),
-        ])->all();
+        return $recorridos->values()->map(function (Producto $recorrido, int $i) use ($inicio, $intervalo, $ocupacion) {
+            $cuando = $inicio->copy()->addMinutes($intervalo * $i)->format('Y-m-d H:i:s');
+
+            return [
+                'producto_id' => $recorrido->id,
+                'producto' => $recorrido->descripcion,
+                'inicio' => $cuando,
+                'capacidad' => $recorrido->capacidad ? (int) $recorrido->capacidad : null,
+                'ocupados' => $ocupacion[$recorrido->id . '|' . $cuando] ?? 0,
+            ];
+        })->all();
+    }
+
+    /** Lugares del tramo más lleno; null si ninguno tiene capacidad capturada. */
+    private static function lugaresDe(array $tramos): ?int
+    {
+        $lugares = collect($tramos)
+            ->filter(fn ($tramo) => $tramo['capacidad'])
+            ->map(fn ($tramo) => $tramo['capacidad'] - $tramo['ocupados']);
+
+        return $lugares->isEmpty() ? null : max(0, $lugares->min());
     }
 
     /**
-     * Claves "producto|fecha hora" que ya no se pueden vender: reservas confirmadas
-     * y apartados de compras que aún están en proceso de pago.
+     * Personas que ya ocupan cada horario, por clave "producto|fecha hora": reservas
+     * confirmadas más los apartados de compras web que aún están en proceso de pago.
+     *
+     * @return array<string, int>
      */
-    private static function horariosOcupados(Sucursal $sucursal, array $productoIds, CarbonInterface $fecha, ?int $ignorarPendiente = null): array
+    private static function ocupacion(Sucursal $sucursal, array $productoIds, CarbonInterface $fecha, ?int $ignorarPendiente = null): array
     {
         $desde = $fecha->copy()->startOfDay();
         $hasta = $fecha->copy()->endOfDay();
+        $porClave = [];
 
-        $reservados = Reserva::query()
+        Reserva::query()
             ->withoutGlobalScopes()
             ->where('sucursal_id', $sucursal->id)
             ->whereIn('producto_id', $productoIds)
             ->where('estado', 'confirmada')
             ->whereBetween('fecha', [$desde, $hasta])
-            ->get(['producto_id', 'fecha'])
-            ->map(fn ($reserva) => $reserva->producto_id . '|' . Carbon::parse($reserva->fecha)->format('Y-m-d H:i:s'))
-            // toBase() es necesario: Eloquent\Collection::map() solo degrada a
-            // colección base si detecta algún elemento que no sea modelo, y con cero
-            // reservas no detecta nada. Quedaría una colección de Eloquent llena de
-            // strings, y su unique() llama getKey() sobre cada uno.
-            ->toBase();
+            ->get(['producto_id', 'fecha', 'cantidad_personas'])
+            ->each(function ($reserva) use (&$porClave) {
+                $clave = $reserva->producto_id . '|' . Carbon::parse($reserva->fecha)->format('Y-m-d H:i:s');
+                $porClave[$clave] = ($porClave[$clave] ?? 0) + max(1, (int) $reserva->cantidad_personas);
+            });
 
-        $apartados = CompraPendiente::query()
+        CompraPendiente::query()
             ->vigentes()
             ->where('sucursal_id', $sucursal->id)
             ->when($ignorarPendiente, fn ($query) => $query->where('id', '!=', $ignorarPendiente))
-            ->get(['id', 'horarios'])
-            ->flatMap(fn (CompraPendiente $pendiente) => collect($pendiente->horarios)
-                ->map(fn ($tramo) => $tramo['producto_id'] . '|' . $tramo['inicio']))
-            ->toBase();
+            ->get(['id', 'horarios', 'personas'])
+            ->each(function (CompraPendiente $pendiente) use (&$porClave) {
+                foreach ($pendiente->horarios ?? [] as $tramo) {
+                    $clave = $tramo['producto_id'] . '|' . $tramo['inicio'];
+                    $porClave[$clave] = ($porClave[$clave] ?? 0) + max(1, (int) $pendiente->personas);
+                }
+            });
 
-        return $reservados->merge($apartados)->unique()->values()->all();
+        return $porClave;
     }
 
     /**

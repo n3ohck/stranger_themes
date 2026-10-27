@@ -58,14 +58,14 @@ class ApartarCompraAction
         // manda el código. Si no aplica, revienta antes de apartar nada.
         $descuento = DescuentoAplicado::resolver($datos['codigo_descuento'] ?? null, $producto, $personas);
 
-        $tramos = $this->tramosDelHorario($producto, $sucursal, $datos['fecha'], $datos['hora']);
+        $tramos = $this->tramosDelHorario($producto, $sucursal, $datos['fecha'], $datos['hora'], $personas);
 
         // El apartado y la comprobación van en la misma transacción para que dos
         // clientes que eligen el mismo horario a la vez no se aparten los dos.
         return DB::transaction(function () use ($producto, $sucursal, $personas, $tramos, $datos, $descuento) {
-            if (! Disponibilidad::tramosSiguenLibres($sucursal, $tramos)) {
+            if (! Disponibilidad::tramosConCupo($sucursal, $tramos, $personas)) {
                 throw ValidationException::withMessages([
-                    'hora' => 'Ese horario acaba de ocuparse. Elige otro, por favor.',
+                    'hora' => 'Ese horario se acaba de llenar. Elige otro, por favor.',
                 ]);
             }
 
@@ -94,10 +94,10 @@ class ApartarCompraAction
      * reconstruirlos con lo que mandó el navegador. Así un horario inventado o ya
      * pasado no puede colarse.
      */
-    private function tramosDelHorario(Producto $producto, Sucursal $sucursal, string $fecha, string $hora): array
+    private function tramosDelHorario(Producto $producto, Sucursal $sucursal, string $fecha, string $hora, int $personas): array
     {
         $dia = Carbon::parse($fecha);
-        $opciones = Disponibilidad::paraProducto($producto, $sucursal, $dia);
+        $opciones = Disponibilidad::paraProducto($producto, $sucursal, $dia, null, $personas);
 
         $elegida = collect($opciones)->firstWhere('inicio', $hora);
 
@@ -107,6 +107,10 @@ class ApartarCompraAction
             ]);
         }
 
-        return $elegida['tramos'];
+        // Solo lo que identifica al tramo: la ocupación es una foto de este momento
+        // y no debe quedar guardada en el apartado.
+        return collect($elegida['tramos'])
+            ->map(fn ($tramo) => collect($tramo)->only(['producto_id', 'producto', 'inicio'])->all())
+            ->all();
     }
 }

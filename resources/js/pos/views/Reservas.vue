@@ -211,7 +211,20 @@ async function aplicar(id, cambios, mensaje) {
                     <div class="min-w-0 flex-1">
                         <p v-if="!h.reservaciones.length" class="py-2 text-xs text-slate-600">Libre</p>
 
-                        <div v-else class="flex flex-wrap gap-2">
+                        <div v-if="h.reservaciones.length" class="mb-1.5 flex flex-wrap gap-1.5">
+                            <span
+                                v-for="o in h.ocupacion" :key="o.producto"
+                                class="chip"
+                                :class="o.capacidad && o.personas > o.capacidad
+                                    ? 'bg-amber-500/15 text-amber-400'
+                                    : 'bg-noche-700 text-slate-400'"
+                                :title="o.grupos > 1 ? `${o.grupos} grupos juntos` : ''"
+                            >
+                                {{ o.producto }} · {{ o.personas }}<template v-if="o.capacidad">/{{ o.capacidad }}</template>
+                            </span>
+                        </div>
+
+                        <div v-if="h.reservaciones.length" class="flex flex-wrap gap-2">
                             <button
                                 v-for="r in h.reservaciones" :key="r.id"
                                 type="button"

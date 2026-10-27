@@ -7,8 +7,8 @@ import Icono from './Icono.vue';
 /**
  * Calendario de tarjetas para elegir la fecha de un recorrido.
  *
- * Muestra dos semanas a la vez con el estado de cada día (cerrado, lleno o con
- * horarios libres) para que el cajero no tenga que abrir día por día hasta dar
+ * Muestra dos semanas a la vez con el estado de cada día (cerrado, sin salidas
+ * o con salidas por vender) para que el cajero no tenga que abrir día por día hasta dar
  * con uno disponible. El estado viene de /pos-api/disponibilidad/dias, que usa
  * el mismo motor que la lista de horarios.
  */
@@ -80,16 +80,16 @@ const resumen = computed(() => {
     const fecha = aFecha(dia.fecha).toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
 
     if (dia.estado === 'cerrado') return `${fecha} · la sucursal no abre`;
-    if (dia.estado === 'lleno') return `${fecha} · sin horarios libres`;
+    if (dia.estado === 'lleno') return `${fecha} · ya no quedan salidas`;
 
-    return `${fecha} · ${dia.libres} ${dia.libres === 1 ? 'horario libre' : 'horarios libres'}`;
+    return `${fecha} · ${dia.libres} ${dia.libres === 1 ? 'salida' : 'salidas'}`;
 });
 
 function ayudaDe(dia) {
     if (dia.estado === 'cerrado') return 'La sucursal no abre ese día';
-    if (dia.estado === 'lleno') return 'Ya no quedan horarios libres';
+    if (dia.estado === 'lleno') return 'Ya no quedan salidas ese día';
 
-    return `${dia.libres} ${dia.libres === 1 ? 'horario libre' : 'horarios libres'}`;
+    return `${dia.libres} ${dia.libres === 1 ? 'salida' : 'salidas'}`;
 }
 
 function elegir(dia) {
@@ -198,8 +198,8 @@ watch(() => props.productoId, cargar);
         <p v-if="resumen" class="mt-2 text-xs first-letter:uppercase text-slate-400">{{ resumen }}</p>
         <p class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-slate-500">
             <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>libre</span>
-            <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>pocos</span>
-            <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-sangre-500"></span>lleno</span>
+            <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>pocas salidas</span>
+            <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-sangre-500"></span>sin salidas</span>
             <span class="flex items-center gap-1"><span class="line-through">00</span>cerrado</span>
         </p>
     </div>

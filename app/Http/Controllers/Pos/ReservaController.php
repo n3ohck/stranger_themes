@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Pos;
 
 use App\Http\Controllers\Controller;
-use App\Models\CompraPendiente;
 use App\Models\Producto;
 use App\Models\Reserva;
 use App\Models\Sucursal;
@@ -11,7 +10,6 @@ use App\Support\Tienda\Disponibilidad;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Validation\ValidationException;
 
 class ReservaController extends Controller
 {
@@ -141,6 +139,18 @@ class ReservaController extends Controller
                 'en_rejilla' => in_array($hora, $rejilla, true),
                 'reservaciones' => ($porHora->get($hora) ?? collect())
                     ->map(fn (Reserva $r) => $this->presentar($r))->values(),
+                // Un horario se comparte entre grupos: cuántas personas lleva cada
+                // recorrido contra su cupo, para ver si se juntaron o se pasaron.
+                'ocupacion' => ($porHora->get($hora) ?? collect())
+                    ->groupBy('producto_id')
+                    ->map(fn ($grupos) => [
+                        'producto' => optional($grupos->first()->producto)->descripcion,
+                        'grupos' => $grupos->count(),
+                        'personas' => (int) $grupos->sum('cantidad_personas'),
+                        'capacidad' => optional($grupos->first()->producto)->capacidad
+                            ? (int) $grupos->first()->producto->capacidad
+                            : null,
+                    ])->values(),
             ])->values(),
             'totales' => [
                 'reservaciones' => $reservas->count(),
@@ -198,21 +208,10 @@ class ReservaController extends Controller
             ($datos['fecha'] ?? $actual->toDateString()) . ' ' . ($datos['hora'] ?? $actual->format('H:i'))
         );
 
+        // Sin tope de cupo ni de grupos: en mostrador un horario se comparte entre
+        // grupos y se puede pasar de la capacidad cuando la gente sí cabe. El cupo
+        // solo lo respeta el sitio web.
         $personas = $datos['personas'] ?? (int) $reserva->cantidad_personas;
-
-        if ($producto->capacidad && $personas > $producto->capacidad) {
-            throw ValidationException::withMessages([
-                'personas' => "{$producto->descripcion} admite hasta {$producto->capacidad} participantes.",
-            ]);
-        }
-
-        // Cada horario es de un solo grupo: mover encima de otro crearía una
-        // sobreventa que solo se descubriría en la puerta.
-        if ($this->ocupado($sucursalId, $producto->id, $destino, $reserva->id)) {
-            throw ValidationException::withMessages([
-                'hora' => 'Ese horario ya está ocupado para ' . $producto->descripcion . '.',
-            ]);
-        }
 
         $reserva->update([
             'producto_id' => $producto->id,
@@ -225,34 +224,6 @@ class ReservaController extends Controller
             'message' => 'Reservación actualizada.',
             'reservacion' => $this->presentar($reserva->fresh(['producto', 'venta.pagos'])),
         ]);
-    }
-
-    /**
-     * ¿Hay algo más en ese horario? Cuenta tanto lo ya reservado como lo que está
-     * apartado por una compra del sitio web en proceso de pago.
-     */
-    private function ocupado(int $sucursalId, int $productoId, Carbon $cuando, int $ignorar): bool
-    {
-        $hayReserva = Reserva::query()
-            ->where('sucursal_id', $sucursalId)
-            ->where('producto_id', $productoId)
-            ->where('estado', 'confirmada')
-            ->where('fecha', $cuando)
-            ->where('id', '!=', $ignorar)
-            ->exists();
-
-        if ($hayReserva) {
-            return true;
-        }
-
-        $clave = $productoId . '|' . $cuando->format('Y-m-d H:i:s');
-
-        return CompraPendiente::query()
-            ->vigentes()
-            ->where('sucursal_id', $sucursalId)
-            ->get(['horarios'])
-            ->contains(fn (CompraPendiente $c) => collect($c->horarios)
-                ->contains(fn ($t) => $t['producto_id'] . '|' . $t['inicio'] === $clave));
     }
 
     private function presentar(Reserva $reserva): array

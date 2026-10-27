@@ -23,7 +23,7 @@ const descuentosAplicables = computed(() =>
     )
 );
 
-const capacidad = computed(() => props.linea.producto.capacidad || 99);
+const capacidad = computed(() => props.linea.producto.capacidad || null);
 
 function elegirDescuento(codigo) {
     errorDescuento.value = carrito.aplicarDescuento(props.linea.uid, codigo) || '';
@@ -54,6 +54,24 @@ function elegirHorario(indice, inicio) {
     carrito.elegirHorario(props.linea.uid, indice, inicio);
     // Se cierra y pasa al siguiente que falte.
     elegido.value = null;
+}
+
+/**
+ * Ocupación de un horario: los que ya van y si con este grupo se pasa del cupo.
+ * En mostrador no bloquea; solo se avisa para que el cajero lo decida.
+ */
+function cupoDe(h) {
+    if (!h.capacidad) return null;
+
+    const total = (h.ocupados || 0) + props.linea.cantidad;
+
+    return {
+        texto: `${h.ocupados || 0}/${h.capacidad}`,
+        sePasa: total > h.capacidad,
+        ayuda: total > h.capacidad
+            ? `Ya van ${h.ocupados || 0}; con este grupo serían ${total} de ${h.capacidad}`
+            : `Ya van ${h.ocupados || 0} de ${h.capacidad}`,
+    };
 }
 
 /** Nombre del recorrido con el que choca esa hora, o null si no choca. */
@@ -127,14 +145,14 @@ function chocaCon(indice, inicio) {
                     <span class="tabular w-10 text-center text-lg font-bold text-slate-100">{{ linea.cantidad }}</span>
                     <button
                         type="button" class="btn-neutro h-10 min-h-0 w-10 px-0"
-                        :disabled="linea.cantidad >= capacidad"
+                        :disabled="linea.cantidad >= 99"
                         aria-label="Agregar una persona"
                         @click="carrito.cambiarCantidad(linea.uid, linea.cantidad + 1)"
                     >
                         <Icono nombre="mas" clase="h-4 w-4" />
                     </button>
-                    <span v-if="linea.producto.capacidad" class="text-xs text-slate-500">
-                        máximo {{ linea.producto.capacidad }}
+                    <span v-if="capacidad" class="text-xs" :class="linea.cantidad > capacidad ? 'text-amber-400' : 'text-slate-500'">
+                        {{ linea.cantidad > capacidad ? `se pasa del cupo de ${capacidad}` : `cupo de ${capacidad}` }}
                     </span>
                 </div>
             </div>
@@ -190,7 +208,7 @@ function chocaCon(indice, inicio) {
                             <div v-else class="grid grid-cols-3 gap-1.5">
                                 <button
                                     v-for="h in recorrido.horarios" :key="h.inicio" type="button"
-                                    class="rounded border px-2 py-2 text-xs font-semibold transition"
+                                    class="flex flex-col items-center rounded border px-2 py-1.5 text-xs font-semibold transition"
                                     :class="recorrido.hora === h.inicio
                                         ? 'border-acento-500 bg-acento-500 text-white'
                                         : !h.libre
@@ -199,9 +217,16 @@ function chocaCon(indice, inicio) {
                                                 ? 'cursor-not-allowed border-dashed border-noche-600 text-slate-600'
                                                 : 'border-noche-600 text-slate-200 hover:border-acento-500'"
                                     :disabled="!h.libre || (!!chocaCon(i, h.inicio) && recorrido.hora !== h.inicio)"
-                                    :title="!h.libre ? 'Ese horario ya está ocupado' : chocaCon(i, h.inicio) ? `A esa hora el grupo está en ${chocaCon(i, h.inicio)}` : ''"
+                                    :title="!h.libre ? 'Esa salida ya pasó o no termina antes del cierre' : chocaCon(i, h.inicio) ? `A esa hora el grupo está en ${chocaCon(i, h.inicio)}` : cupoDe(h)?.ayuda"
                                     @click="elegirHorario(i, h.inicio)"
-                                >{{ h.etiqueta }}</button>
+                                >
+                                    <span>{{ h.etiqueta }}</span>
+                                    <span
+                                        v-if="h.libre && cupoDe(h) && h.ocupados"
+                                        class="tabular text-[10px] font-normal"
+                                        :class="recorrido.hora === h.inicio ? 'text-white/80' : cupoDe(h).sePasa ? 'text-amber-400' : 'text-slate-500'"
+                                    >{{ cupoDe(h).texto }}</span>
+                                </button>
                             </div>
                         </div>
                     </div>
