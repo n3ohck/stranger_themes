@@ -29,6 +29,7 @@ Route::group([
     Route::crud('egreso', 'EgresoCrudController');
     Route::crud('apertura', 'AperturaCrudController');
     Route::crud('corte', 'CorteCrudController');
+    Route::get('corte/{id}/ticket', 'CorteCrudController@ticket')->name('corte.ticket');
     Route::crud('empleado', 'EmpleadoCrudController');
     Route::crud('empleado-pago', 'EmpleadoPagoCrudController');
     Route::post('sucursal-activa', 'SucursalActivaController@cambiar')->name('sucursal-activa.cambiar');

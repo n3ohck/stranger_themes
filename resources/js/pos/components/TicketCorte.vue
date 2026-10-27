@@ -1,6 +1,6 @@
 <script setup>
 import { useSesion } from '../stores/sesion';
-import { dinero, fechaHora } from '../utils/formato';
+import { dinero, fechaHoraDia } from '../utils/formato';
 import Icono from './Icono.vue';
 
 defineProps({
@@ -33,15 +33,15 @@ function imprimir() {
                 <div id="ticket" class="mx-auto bg-white font-ticket text-[10px] leading-tight text-black" style="width: 48mm;">
                     <div class="text-center">
                         <p class="text-sm font-bold uppercase">Corte de Caja</p>
-                        <p>{{ sesion.sucursal?.nombre }}</p>
+                        <p>{{ corte.sucursal || sesion.sucursal?.nombre }}</p>
                     </div>
 
                     <p class="my-1.5 border-t border-dashed border-black"></p>
 
                     <div class="flex justify-between"><span>Corte</span><span class="font-bold">#{{ corte.id }}</span></div>
-                    <div class="flex justify-between"><span>Cajero</span><span>{{ sesion.usuario?.nombre }}</span></div>
-                    <div class="flex justify-between"><span>Desde</span><span>{{ fechaHora(corte.fecha_inicio) }}</span></div>
-                    <div class="flex justify-between"><span>Hasta</span><span>{{ fechaHora(corte.fecha_final) }}</span></div>
+                    <div class="flex justify-between"><span>Cajero</span><span>{{ corte.cajero || sesion.usuario?.nombre }}</span></div>
+                    <div class="flex justify-between"><span>Desde</span><span>{{ fechaHoraDia(corte.fecha_inicio) }}</span></div>
+                    <div class="flex justify-between"><span>Hasta</span><span>{{ fechaHoraDia(corte.fecha_final) }}</span></div>
 
                     <p class="my-1.5 border-t border-dashed border-black"></p>
                     <p class="font-bold uppercase">Ventas</p>
@@ -67,36 +67,35 @@ function imprimir() {
                     <div class="flex justify-between"><span>Transferencia</span><span>{{ dinero(corte.transferencia) }}</span></div>
                     <div v-if="corte.online > 0" class="flex justify-between"><span>En línea</span><span>{{ dinero(corte.online) }}</span></div>
 
-                    <template v-if="corte.detalle?.resultado">
-                        <p class="my-1.5 border-t border-dashed border-black"></p>
-                        <p class="font-bold uppercase">Ganancia</p>
+                    <!-- El panel muestra este mismo bloque (admin/corte/ticket.blade.php). -->
+                    <p class="my-1.5 border-t border-dashed border-black"></p>
+                    <p class="font-bold uppercase">Ganancia</p>
 
-                        <div class="flex justify-between"><span>Ingresos</span><span>{{ dinero(corte.detalle.resultado.ingresos) }}</span></div>
-                        <div class="flex justify-between">
-                            <span>- Egresos</span><span>{{ dinero(corte.detalle.salidas?.egresos ?? 0) }}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span>- Pago empleados</span><span>{{ dinero(corte.detalle.salidas?.pagos_empleados ?? 0) }}</span>
-                        </div>
-                        <div class="mt-1 flex justify-between font-bold">
-                            <span>Ganancia</span><span>{{ dinero(corte.detalle.resultado.ganancia) }}</span>
-                        </div>
-                    </template>
+                    <div class="flex justify-between"><span>Ingresos</span><span>{{ dinero(corte.ingresos) }}</span></div>
+                    <div class="flex justify-between">
+                        <span>- Egresos</span><span>{{ dinero(corte.egresos) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>- Pago empleados</span><span>{{ dinero(corte.pagos_empleados) }}</span>
+                    </div>
+                    <div class="mt-1 flex justify-between font-bold">
+                        <span>Ganancia</span><span>{{ dinero(corte.ganancia) }}</span>
+                    </div>
 
                     <p class="my-1.5 border-t border-dashed border-black"></p>
                     <p class="font-bold uppercase">Caja</p>
 
                     <div class="flex justify-between">
-                        <span>Fondo inicial</span><span>{{ dinero(corte.detalle?.apertura?.fondo_inicial ?? 0) }}</span>
+                        <span>Fondo inicial</span><span>{{ dinero(corte.fondo_inicial ?? 0) }}</span>
                     </div>
                     <div class="flex justify-between">
                         <span>+ Efectivo</span><span>{{ dinero(corte.efectivo) }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span>- Egresos</span><span>{{ dinero(corte.detalle?.salidas?.egresos ?? 0) }}</span>
+                        <span>- Egresos</span><span>{{ dinero(corte.egresos) }}</span>
                     </div>
                     <div class="flex justify-between">
-                        <span>- Pago empleados</span><span>{{ dinero(corte.detalle?.salidas?.pagos_empleados ?? 0) }}</span>
+                        <span>- Pago empleados</span><span>{{ dinero(corte.pagos_empleados) }}</span>
                     </div>
                     <div class="mt-1 flex justify-between font-bold">
                         <span>Esperado</span><span>{{ dinero(corte.efectivo_esperado ?? 0) }}</span>

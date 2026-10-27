@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Scopes\SucursalFilterScope;
+use App\Support\Caja\ResumenCorte;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,9 @@ class Corte extends Model
     */
 
     public $search;
+
+    /** @var array|null */
+    private $salidasCache = null;
     protected $table = 'cortes';
     protected $primaryKey = 'id';
     // public $timestamps = false;
@@ -121,45 +125,48 @@ class Corte extends Model
     | MUTATORS
     |--------------------------------------------------------------------------
     */
+    /**
+     * Egresos y pagos a empleados del turno, con la misma regla que el precorte
+     * del POS y el ticket impreso. Se calcula una vez por instancia: el listado
+     * del panel lee varias columnas que dependen de esto.
+     */
+    public function salidas(): array
+    {
+        if ($this->salidasCache === null) {
+            $apertura = $this->apertura_id
+                ? Apertura::query()->withoutGlobalScopes()->find($this->apertura_id)
+                : null;
+
+            $this->salidasCache = ResumenCorte::salidas(
+                $this->apertura_id ? (int) $this->apertura_id : null,
+                (int) $this->attributes['sucursal_id'],
+                Carbon::parse($apertura->created_at ?? $this->attributes['fecha_inicio']),
+                Carbon::parse($this->attributes['fecha_final'] ?? Carbon::now())
+            );
+        }
+
+        return $this->salidasCache;
+    }
+
+    // Todo egreso del turno es en efectivo; se conserva el nombre por compatibilidad.
     public function getTotalEgresosEfectivoAttribute()
     {
-        $fechaInicio = Carbon::parse($this->attributes['fecha_inicio'])->startOfDay();
-        $fechaFinal = Carbon::parse($this->attributes['fecha_final'])->endOfDay();
-        return Egreso::query()
-            ->select(['monto','fecha_pago','estatus','sucursal_id'])
-            ->whereBetween('fecha_pago', [$fechaInicio, $fechaFinal])
-            ->where('estatus','activo')
-            ->where('sucursal_id', $this->attributes['sucursal_id'])
-            ->where('tipo_pago','efectivo')
-            ->sum('monto');
+        return $this->salidas()['egresos'];
     }
 
     public function getTotalEgresosAttribute()
     {
-        $fechaInicio = Carbon::parse($this->attributes['fecha_inicio'])->startOfDay();
-        $fechaFinal = Carbon::parse($this->attributes['fecha_final'])->endOfDay();
-        return Egreso::query()
-            ->select(['monto','fecha_pago','estatus','sucursal_id'])
-            ->whereBetween('fecha_pago', [$fechaInicio, $fechaFinal])
-            ->where('estatus','activo')
-            ->where('sucursal_id', $this->attributes['sucursal_id'])
-            ->sum('monto') ?? 0;
+        return $this->salidas()['egresos'];
     }
 
     public function getPagoEmpleadosAttribute()
     {
-        $fechaInicio = Carbon::parse($this->apertura->created_at)->startOfDay();
-        $fechaFinal = Carbon::parse($this->attributes['fecha_final'])->endOfDay();
-        return EmpleadoPago::query()
-            ->select(['monto','fecha_pago','estatus'])
-            ->whereBetween('created_at', [$fechaInicio, $fechaFinal])
-            ->where('estatus','activo')
-            ->sum('monto') ?? 0;
+        return $this->salidas()['pagos_empleados'];
     }
 
     public function getEfectivoFondoAttribute()
     {
-        return $this->apertura->monto_apertura + $this->attributes['efectivo'];
+        return (float) optional($this->apertura)->monto_apertura + $this->attributes['efectivo'];
     }
 
     public function getEfectivoEgresoAttribute()
@@ -167,10 +174,12 @@ class Corte extends Model
         return number_format(($this->attributes['efectivo'] - $this->total_egresos), 2, '.', '');
     }
 
+    /** Igual que en el ticket: todo lo que entró menos egresos y pagos a empleados. */
     public function getGananciaAttribute()
     {
-        $totalEgresos =  ($this->pago_empleados + $this->total_egresos);
-        $total = $this->attributes['total'];
-        return number_format(( $total - $totalEgresos), 2, '.', '');
+        $ingresos = (float) $this->attributes['efectivo'] + (float) $this->attributes['tarjeta']
+            + (float) ($this->attributes['transferencia'] ?? 0) + (float) ($this->attributes['total_online'] ?? 0);
+
+        return number_format(ResumenCorte::ganancia($ingresos, $this->salidas()), 2, '.', '');
     }
 }

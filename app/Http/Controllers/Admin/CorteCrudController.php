@@ -11,6 +11,8 @@ use App\Models\Reserva;
 use App\Models\Sucursal;
 use App\Models\User;
 use App\Models\Venta;
+use App\Support\Caja\ResumenCorte;
+use App\Support\Fechas;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 use Carbon\Carbon;
@@ -58,54 +60,29 @@ class CorteCrudController extends CrudController
      */
     protected function setupListOperation()
     {
+        // Mismos números que el ticket impreso del corte: salen de ResumenCorte,
+        // igual que el POS. El detalle completo está en "Ver corte".
         $this->crud->addColumns([
             [
-                'name' => 'apertura_id',
-                'label' => 'Fondo inicial',
-                'type' => 'select',
-                'entity' => 'apertura',
-                'attribute' => 'monto_apertura',
-                'model' => Apertura::class
-            ],
-            [
-                'name' => 'fondo_final',
-                'label' => 'Fondo Final',
-                'type' => 'number',
-                'decimals' => 2
+                'name' => 'fecha_inicio',
+                'label' => 'Fecha',
+                'type' => 'closure',
+                'function' => function ($entry) {
+                    return $entry->fecha_inicio ? Fechas::turno($entry->fecha_inicio, $entry->fecha_final) : '';
+                },
+                'orderable' => true,
+                'orderLogic' => fn ($query, $column, $direccion) => $query->orderBy('fecha_inicio', $direccion),
             ],
             [
                 'name' => 'total',
-                'label' => 'Total Venta',
+                'label' => 'Total venta',
                 'type' => 'number',
-                'decimals' => 2
-            ],
-            [
-                'name' => 'efectivo',
-                'label' => 'Efectivo',
-                'type' => 'number',
-                'decimals' => 2
-            ],
-            [
-                'name' => 'tarjeta',
-                'label' => 'Tarjeta',
-                'type' => 'number',
-                'decimals' => 2
-            ],
-            [
-                'name' => 'total_online',
-                'label' => 'Online',
-                'type' => 'number',
-                'decimals' => 2
-            ],
-            [
-                'name' => 'efectivo_fondo',
-                'label' => 'Efectivo + Fondo',
-                'type' => 'number',
-                'decimals' => 2
+                'decimals' => 2,
+                'thousands_sep' => ',',
             ],
             [
                 'name' => 'pago_empleados',
-                'label' => 'Pago Empleados',
+                'label' => 'Pago empleados',
                 'type' => 'closure',
                 'function' => function ($entry) {
                     $pago_empleados = number_format($entry->pago_empleados, 2, '.', ',');
@@ -114,7 +91,7 @@ class CorteCrudController extends CrudController
             ],
             [
                 'name' => 'total_egresos',
-                'label' => 'Total Egresos',
+                'label' => 'Egresos',
                 'type' => 'closure',
                 'function' => function ($entry) {
                     $total_egresos = number_format($entry->total_egresos, 2, '.', ',');
@@ -122,32 +99,29 @@ class CorteCrudController extends CrudController
                 }
             ],
             [
-                'name' => 'total_caja',
-                'label' => 'Total en caja efectivo',
-                'type' => 'number',
-                'decimals' => 2
-            ],
-            [
                 'name' => 'ganancia',
                 'label' => 'Ganancia',
+                'type' => 'closure',
+                'function' => function ($entry) {
+                    $ganancia = (float) $entry->ganancia;
+                    $texto = number_format($ganancia, 2, '.', ',');
+                    return $ganancia < 0 ? '<span class="text-danger">' . $texto . '</span>' : $texto;
+                }
+            ],
+            [
+                'name' => 'apertura_id',
+                'label' => 'Fondo inicial',
+                'type' => 'closure',
+                'function' => function ($entry) {
+                    return number_format((float) optional($entry->apertura)->monto_apertura, 2, '.', ',');
+                }
+            ],
+            [
+                'name' => 'fondo_final',
+                'label' => 'Fondo final',
                 'type' => 'number',
-                'decimals' => 2
-            ],
-            [
-                'name' => 'fecha_inicio',
-                'label' => 'Fecha Inicio',
-                'type' => 'closure',
-                'function' => function ($entry) {
-                    return $entry->fecha_inicio ? Carbon::parse($entry->fecha_inicio)->locale('es')->translatedFormat('l, d \d\e F H:i:s') : '';
-                }
-            ],
-            [
-                'name' => 'fecha_final',
-                'label' => 'Fecha Final',
-                'type' => 'closure',
-                'function' => function ($entry) {
-                    return $entry->fecha_final ? Carbon::parse($entry->fecha_final)->locale('es')->translatedFormat('l, d \d\e F H:i:s') : '';
-                }
+                'decimals' => 2,
+                'thousands_sep' => ',',
             ],
             [
                 'name' => 'user_id',
@@ -158,6 +132,9 @@ class CorteCrudController extends CrudController
                 'model' => User::class
             ]
         ]);
+
+        $this->crud->addButtonFromView('line', 'ver_corte', 'ver_corte', 'beginning');
+        $this->crud->orderBy('fecha_inicio', 'desc');
 
         $this->crud->addFilter([ // dropdown filter
             'name' => 'sucursal_id',
@@ -257,6 +234,23 @@ class CorteCrudController extends CrudController
     protected function setupUpdateOperation()
     {
         $this->setupCreateOperation();
+    }
+
+    /**
+     * El corte con el mismo formato que el ticket que se imprime al cerrar caja.
+     */
+    public function ticket($id)
+    {
+        if (! backpack_user()->can('cortes.ver')) {
+            abort(403, 'No tienes permisos para ver los cortes');
+        }
+
+        $corte = Corte::query()->with(['sucursal', 'user', 'apertura'])->findOrFail($id);
+
+        return view('admin.corte.ticket', [
+            'corte' => ResumenCorte::deCorte($corte),
+            'titulo' => 'Corte #' . $corte->id,
+        ]);
     }
 
     public function fetch(Request $request)

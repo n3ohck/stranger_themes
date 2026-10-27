@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { api } from '../api/cliente';
 import { useSesion } from '../stores/sesion';
-import { dinero, fechaHora } from '../utils/formato';
+import { dinero, fechaHoraDia } from '../utils/formato';
 import TicketCorte from '../components/TicketCorte.vue';
 import Icono from '../components/Icono.vue';
 
@@ -76,7 +76,7 @@ function terminar() {
             <div class="mb-4">
                 <h1 class="text-2xl font-bold text-slate-100">Corte de Caja</h1>
                 <p v-if="precorte" class="text-sm text-slate-400">
-                    Turno abierto {{ fechaHora(precorte.apertura.abierta_en) }} · fondo inicial
+                    Turno abierto {{ fechaHoraDia(precorte.apertura.abierta_en) }} · fondo inicial
                     {{ dinero(precorte.apertura.fondo_inicial) }}
                 </p>
             </div>

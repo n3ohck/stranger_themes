@@ -58,6 +58,23 @@ export function fechaLarga(texto) {
     return `${DIAS[fecha.getDay()]} ${fecha.getDate()} de ${MESES[fecha.getMonth()]}`;
 }
 
+const DIAS_CORTOS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+/** 'Jue'. Espejo de App\Support\Fechas en el panel. */
+export function diaCorto(texto) {
+    const fecha = aFecha(texto);
+    if (!fecha) return '';
+
+    return DIAS_CORTOS[fecha.getDay()];
+}
+
+/** 'Jue 29 oct 11:46 a.m.': el corte se revisa por día de operación. */
+export function fechaHoraDia(texto) {
+    if (!aFecha(texto)) return '';
+
+    return `${diaCorto(texto)} ${fechaHora(texto)}`;
+}
+
 export function fechaHora(texto) {
     const fecha = aFecha(texto);
     if (!fecha) return '';

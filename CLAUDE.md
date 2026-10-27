@@ -247,9 +247,14 @@ entran por `/pos`, **no** por `/admin`.
    Las ventas en línea no tienen apertura: el corte suma las compradas desde que
    se abrió la caja (`Venta::enLineaEntre`), y el historial muestra esas más las
    que tienen visita hoy (`Venta::enLineaConVisitaEntre`), sin botón de cancelar.
-3. **El corte lo calcula el servidor** (`CajaController::calcularPrecorte`). El
+3. **El corte lo calcula el servidor** (`App\Support\Caja\ResumenCorte`). El
    POS solo declara el efectivo contado; la diferencia contra lo esperado queda
-   registrada.
+   registrada. La misma clase alimenta el precorte, el ticket impreso, los
+   accesores de `Corte` y el listado y la vista "Ver corte" del panel, para que
+   todos muestren lo mismo. Filtra por sucursal explícita: en el panel el usuario
+   puede estar viendo otra. Ganancia = efectivo + tarjeta + transferencia + en
+   línea − egresos − pagos a empleados, sin el fondo. Las fechas del corte llevan
+   el día de la semana (`App\Support\Fechas` y su espejo `diaCorto()` en JS).
 4. **La regla de redondeo de descuentos** vive en `App\Support\ReglaDescuento`
    (autoridad) y su espejo en JavaScript en `resources/js/shared/descuento.js`, que
    comparten el POS y la tienda y solo sirve para mostrar el total antes de cobrar.
