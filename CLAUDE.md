@@ -244,6 +244,9 @@ entran por `/pos`, **no** por `/admin`.
    cliente mandaba los importes ya calculados.
 2. **Las ventas se amarran a la apertura** (`ventas.apertura_id`), no a un rango
    de fechas. Un turno que cruza la medianoche sigue siendo un turno.
+   Las ventas en línea no tienen apertura: el corte suma las compradas desde que
+   se abrió la caja (`Venta::enLineaEntre`), y el historial muestra esas más las
+   que tienen visita hoy (`Venta::enLineaConVisitaEntre`), sin botón de cancelar.
 3. **El corte lo calcula el servidor** (`CajaController::calcularPrecorte`). El
    POS solo declara el efectivo contado; la diferencia contra lo esperado queda
    registrada.

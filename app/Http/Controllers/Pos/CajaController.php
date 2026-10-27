@@ -165,11 +165,8 @@ class CajaController extends Controller
         // Las ventas del sitio web no pasan por este cajón, pero se reportan en
         // el corte porque el negocio las revisa junto con las del turno.
         $online = (float) Venta::query()
-            ->withoutGlobalScopes()
-            ->where('sucursal_id', $user->sucursal_id)
-            ->where('origen', 'web')
+            ->enLineaEntre($user->sucursal_id, $desde, $hasta)
             ->where('estatus', 'activo')
-            ->whereBetween('created_at', [$desde, $hasta])
             ->sum('total');
 
         // Los movimientos capturados en el POS traen apertura_id y cuentan en su
@@ -210,6 +207,13 @@ class CajaController extends Controller
         $fondoInicial = (float) $apertura->monto_apertura;
         $efectivoEsperado = $fondoInicial + $efectivoNeto - $egresosEfectivo - $pagosEmpleados;
 
+        // Ganancia del turno: todo lo que entró, se cobre como se cobre, menos lo
+        // que salió. A diferencia del arqueo no cuenta el fondo, que no es venta.
+        $tarjeta = (float) $pagos->where('tipo', 'tarjeta')->sum('monto');
+        $transferencia = (float) $pagos->where('tipo', 'transferencia')->sum('monto');
+        $ingresos = $efectivoNeto + $tarjeta + $transferencia + $online;
+        $ganancia = $ingresos - $egresosEfectivo - $pagosEmpleados;
+
         return [
             'apertura' => [
                 'id' => $apertura->id,
@@ -228,8 +232,8 @@ class CajaController extends Controller
                 'efectivo' => round($efectivoNeto, 2),
                 'efectivo_recibido' => round($efectivoRecibido, 2),
                 'cambio_entregado' => round($cambioEntregado, 2),
-                'tarjeta' => round((float) $pagos->where('tipo', 'tarjeta')->sum('monto'), 2),
-                'transferencia' => round((float) $pagos->where('tipo', 'transferencia')->sum('monto'), 2),
+                'tarjeta' => round($tarjeta, 2),
+                'transferencia' => round($transferencia, 2),
                 'online' => round($online, 2),
             ],
             'salidas' => [
@@ -239,6 +243,10 @@ class CajaController extends Controller
             ],
             'caja' => [
                 'efectivo_esperado' => round($efectivoEsperado, 2),
+            ],
+            'resultado' => [
+                'ingresos' => round($ingresos, 2),
+                'ganancia' => round($ganancia, 2),
             ],
             'pendientes' => [
                 'pagos_sin_firma' => $pagosSinFirma,

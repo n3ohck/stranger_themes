@@ -128,6 +128,44 @@ function terminar() {
                     </dl>
                 </section>
 
+                <!-- Ganancia: todo lo que entró menos lo que salió, sin el fondo -->
+                <section class="tarjeta p-4">
+                    <h2 class="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Ganancia del turno</h2>
+
+                    <dl class="space-y-1.5 text-sm">
+                        <div class="flex justify-between">
+                            <dt class="text-slate-400">Efectivo</dt>
+                            <dd class="tabular text-slate-200">{{ dinero(precorte.ventas.efectivo) }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-slate-400">+ Tarjeta</dt>
+                            <dd class="tabular text-slate-200">{{ dinero(precorte.ventas.tarjeta) }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-slate-400">+ Transferencia</dt>
+                            <dd class="tabular text-slate-200">{{ dinero(precorte.ventas.transferencia) }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-slate-400">+ En línea</dt>
+                            <dd class="tabular text-slate-200">{{ dinero(precorte.ventas.online) }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-slate-400">− Egresos</dt>
+                            <dd class="tabular text-slate-200">{{ dinero(precorte.salidas.egresos) }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-slate-400">− Pagos a empleados</dt>
+                            <dd class="tabular text-slate-200">{{ dinero(precorte.salidas.pagos_empleados) }}</dd>
+                        </div>
+                        <div class="flex justify-between border-t border-noche-700 pt-2 text-base font-bold">
+                            <dt class="text-slate-300">Ganancia</dt>
+                            <dd class="tabular" :class="precorte.resultado.ganancia < 0 ? 'text-sangre-400' : 'text-emerald-400'">
+                                {{ dinero(precorte.resultado.ganancia) }}
+                            </dd>
+                        </div>
+                    </dl>
+                </section>
+
                 <!-- Arqueo -->
                 <section class="tarjeta p-4">
                     <h2 class="mb-3 text-sm font-bold uppercase tracking-wide text-slate-500">Arqueo de efectivo</h2>

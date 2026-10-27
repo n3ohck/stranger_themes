@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { api } from '../api/cliente';
-import { dinero, horaCorta, fechaHora } from '../utils/formato';
+import { dinero, horaCorta, fechaHora, fechaCorta, aIsoFecha } from '../utils/formato';
 import TicketVenta from '../components/TicketVenta.vue';
 import Icono from '../components/Icono.vue';
 
@@ -45,6 +45,14 @@ function formasDePago(venta) {
     if (!Object.keys(porTipo).length) return [{ tipo: 'cortesia', monto: 0 }];
 
     return Object.entries(porTipo).map(([tipo, monto]) => ({ tipo, monto }));
+}
+
+const hoy = aIsoFecha(new Date());
+
+/** Venta en línea con visita hoy: el cliente va a llegar en este turno. */
+function vieneHoy(venta) {
+    return venta.origen === 'web'
+        && venta.reservaciones.some((r) => r.estado !== 'cancelada' && String(r.fecha).startsWith(hoy));
 }
 
 const visibles = computed(() =>
@@ -122,7 +130,7 @@ async function verTicket(venta) {
                 </div>
             </div>
 
-            <div v-if="resumen" class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div v-if="resumen" class="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5">
                 <div class="tarjeta p-3">
                     <p class="text-xs uppercase tracking-wide text-slate-500">Vendido</p>
                     <p class="tabular text-lg font-bold text-slate-100">{{ dinero(resumen.total) }}</p>
@@ -134,6 +142,18 @@ async function verTicket(venta) {
                 <div class="tarjeta p-3">
                     <p class="text-xs uppercase tracking-wide text-slate-500">Tarjeta</p>
                     <p class="tabular text-lg font-bold text-slate-100">{{ dinero(resumen.tarjeta) }}</p>
+                </div>
+                <div class="tarjeta p-3" title="Compras del sitio web desde que abriste caja. No entran al cajón.">
+                    <p class="text-xs uppercase tracking-wide text-slate-500">En línea</p>
+                    <p class="tabular text-lg font-bold text-amber-400">
+                        {{ dinero(resumen.en_linea) }}
+                        <span v-if="resumen.en_linea_cantidad" class="text-sm font-normal text-slate-500">
+                            · {{ resumen.en_linea_cantidad }}
+                        </span>
+                    </p>
+                    <p v-if="resumen.visitan_hoy" class="text-xs text-sky-400">
+                        {{ resumen.visitan_hoy }} {{ resumen.visitan_hoy === 1 ? 'viene' : 'vienen' }} hoy
+                    </p>
                 </div>
                 <div class="tarjeta p-3">
                     <p class="text-xs uppercase tracking-wide text-slate-500">Tickets</p>
@@ -165,6 +185,15 @@ async function verTicket(venta) {
                         <div class="min-w-0">
                             <div class="flex items-center gap-2">
                                 <span class="font-bold text-slate-100">{{ venta.folio }}</span>
+                                <span
+                                    v-if="venta.origen === 'web'"
+                                    class="chip bg-amber-600/20 text-amber-400"
+                                    title="Comprada en el sitio web"
+                                >
+                                    <Icono nombre="globo" clase="h-3.5 w-3.5" />
+                                    En línea
+                                </span>
+                                <span v-if="vieneHoy(venta)" class="chip bg-sky-600/20 text-sky-400">Viene hoy</span>
                                 <span
                                     v-if="venta.estatus === 'cancelado'"
                                     class="chip bg-sangre-600/20 text-sangre-400"
@@ -209,9 +238,13 @@ async function verTicket(venta) {
                         </li>
                     </ul>
 
-                    <p v-if="venta.reservaciones.length" class="mt-2 text-xs text-acento-400">
-                        {{ venta.reservaciones.length }} reservación(es)
-                    </p>
+                    <!-- Cuándo vienen: en una venta en línea la compra y la visita no son el mismo día. -->
+                    <ul v-if="venta.reservaciones.length" class="mt-2 space-y-0.5 text-xs text-acento-400">
+                        <li v-for="r in venta.reservaciones" :key="r.id" :class="r.estado === 'cancelada' ? 'line-through opacity-60' : ''">
+                            {{ r.producto }} · {{ fechaCorta(r.fecha) }} {{ horaCorta(r.fecha) }} · {{ r.personas }}
+                            {{ r.personas === 1 ? 'persona' : 'personas' }}
+                        </li>
+                    </ul>
 
                     <p v-if="venta.motivo_cancelacion" class="mt-2 text-xs italic text-slate-500">
                         Motivo: {{ venta.motivo_cancelacion }}
@@ -222,8 +255,9 @@ async function verTicket(venta) {
                             <Icono nombre="imprimir" clase="h-4 w-4" />
                             Ticket
                         </button>
+                        <!-- Una venta en línea se cancela con la referencia del cobro, desde el panel. -->
                         <button
-                            v-if="venta.estatus === 'activo'"
+                            v-if="venta.estatus === 'activo' && venta.origen !== 'web'"
                             type="button"
                             class="btn-fantasma min-h-0 px-3 py-2 text-sm text-sangre-400 hover:bg-sangre-600/15"
                             @click="pedirCancelacion(venta)"

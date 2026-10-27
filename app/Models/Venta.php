@@ -132,6 +132,39 @@ class Venta extends Model
     | SCOPES
     |--------------------------------------------------------------------------
     */
+    /**
+     * Ventas del sitio web de una sucursal creadas en una ventana de tiempo. No
+     * pasan por caja (no llevan apertura_id), así que el POS las asocia al turno
+     * por fecha de creación. Lo usan el corte y el historial, para que coincidan.
+     *
+     * Solo quita el scope de sucursal: withoutGlobalScopes() también quitaba el
+     * de SoftDeletes y contaba ventas borradas.
+     */
+    public function scopeEnLineaEntre($query, int $sucursalId, $desde, $hasta)
+    {
+        return $query
+            ->withoutGlobalScope(SucursalFilterScope::class)
+            ->where('sucursal_id', $sucursalId)
+            ->where('origen', 'web')
+            ->whereBetween('created_at', [$desde, $hasta]);
+    }
+
+    /**
+     * Ventas del sitio web de una sucursal con alguna visita en esa ventana,
+     * compradas cuando sea. Es lo que el cajero necesita para recibir a quien
+     * llega hoy con una compra hecha días antes.
+     */
+    public function scopeEnLineaConVisitaEntre($query, int $sucursalId, $desde, $hasta)
+    {
+        return $query
+            ->withoutGlobalScope(SucursalFilterScope::class)
+            ->where('sucursal_id', $sucursalId)
+            ->where('origen', 'web')
+            ->whereHas('reservaciones', fn ($reservas) => $reservas
+                ->withoutGlobalScope(SucursalFilterScope::class)
+                ->whereBetween('fecha', [$desde, $hasta]));
+    }
+
     public function scopeSearch($query, $search)
     {
         $this->search = $search;

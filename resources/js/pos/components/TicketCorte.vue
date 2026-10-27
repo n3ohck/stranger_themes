@@ -67,6 +67,22 @@ function imprimir() {
                     <div class="flex justify-between"><span>Transferencia</span><span>{{ dinero(corte.transferencia) }}</span></div>
                     <div v-if="corte.online > 0" class="flex justify-between"><span>En línea</span><span>{{ dinero(corte.online) }}</span></div>
 
+                    <template v-if="corte.detalle?.resultado">
+                        <p class="my-1.5 border-t border-dashed border-black"></p>
+                        <p class="font-bold uppercase">Ganancia</p>
+
+                        <div class="flex justify-between"><span>Ingresos</span><span>{{ dinero(corte.detalle.resultado.ingresos) }}</span></div>
+                        <div class="flex justify-between">
+                            <span>- Egresos</span><span>{{ dinero(corte.detalle.salidas?.egresos ?? 0) }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>- Pago empleados</span><span>{{ dinero(corte.detalle.salidas?.pagos_empleados ?? 0) }}</span>
+                        </div>
+                        <div class="mt-1 flex justify-between font-bold">
+                            <span>Ganancia</span><span>{{ dinero(corte.detalle.resultado.ganancia) }}</span>
+                        </div>
+                    </template>
+
                     <p class="my-1.5 border-t border-dashed border-black"></p>
                     <p class="font-bold uppercase">Caja</p>
 

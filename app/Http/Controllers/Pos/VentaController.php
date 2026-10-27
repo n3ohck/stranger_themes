@@ -18,8 +18,13 @@ class VentaController extends Controller
 {
     /**
      * Ventas del turno abierto, que es lo que el cajero necesita ver y lo único
-     * que puede cancelar. Se filtra por apertura_id y no por rango de fechas:
-     * un turno que cruza la medianoche seguía siendo un turno.
+     * que puede cancelar. Las de mostrador se filtran por apertura_id y no por
+     * rango de fechas: un turno que cruza la medianoche seguía siendo un turno.
+     *
+     * Las del sitio web no pasan por caja. Se muestran dos grupos: las compradas
+     * desde que se abrió la caja (las mismas que suma el corte) y las que tienen
+     * visita hoy aunque se hayan comprado otro día, para recibir a quien llega.
+     * Van aparte en el resumen: no son dinero del cajón.
      */
     public function delTurno()
     {
@@ -35,14 +40,39 @@ class VentaController extends Controller
             ->orderByDesc('id')
             ->get();
 
+        $sucursalId = Auth::user()->sucursal_id;
+        $relaciones = ['productos.producto', 'pagos', 'reservaciones.producto'];
+
+        $enLinea = Venta::query()
+            ->enLineaEntre($sucursalId, Carbon::parse($apertura->created_at), Carbon::now())
+            ->with($relaciones)
+            ->get();
+
+        $visitanHoy = Venta::query()
+            ->enLineaConVisitaEntre($sucursalId, Carbon::today(), Carbon::today()->endOfDay())
+            ->with($relaciones)
+            ->get();
+
+        // Una compra hecha en el turno para hoy cae en los dos grupos.
+        $todas = $ventas->toBase()
+            ->merge($enLinea->toBase())
+            ->merge($visitanHoy->toBase())
+            ->unique('id')
+            ->sortByDesc(fn (Venta $venta) => (string) $venta->created_at)
+            ->values();
+
         return response()->json([
             'apertura' => [
                 'id' => $apertura->id,
                 'monto_apertura' => (float) $apertura->monto_apertura,
                 'abierta_en' => (string) $apertura->created_at,
             ],
-            'ventas' => $ventas->map(fn (Venta $venta) => $this->presentar($venta))->values(),
-            'resumen' => $this->resumen($ventas),
+            'ventas' => $todas->map(fn (Venta $venta) => $this->presentar($venta))->values(),
+            'resumen' => $this->resumen($ventas) + [
+                'en_linea' => round((float) $enLinea->where('estatus', 'activo')->sum('total'), 2),
+                'en_linea_cantidad' => $enLinea->where('estatus', 'activo')->count(),
+                'visitan_hoy' => $visitanHoy->where('estatus', 'activo')->count(),
+            ],
         ]);
     }
 
@@ -219,6 +249,7 @@ class VentaController extends Controller
         return [
             'cantidad' => 0, 'canceladas' => 0, 'total' => 0,
             'efectivo' => 0, 'tarjeta' => 0, 'transferencia' => 0, 'descuentos' => 0,
+            'en_linea' => 0, 'en_linea_cantidad' => 0, 'visitan_hoy' => 0,
         ];
     }
 }
