@@ -2,6 +2,9 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { api, aIso, aFecha, fechaLarga, dinero, sinAcentos } from '../api';
 import Paso from '../components/Paso.vue';
+import CampoCorreo from '../components/CampoCorreo.vue';
+import CampoTelefono from '../components/CampoTelefono.vue';
+import { correoValido, telefonoValido } from '../validacion';
 
 const cargando = ref(true);
 const errorCarga = ref('');
@@ -78,7 +81,7 @@ const diasDisponibles = computed(() => {
 
 const puedePagar = computed(() =>
     producto.value && fecha.value && horaElegida.value &&
-    cliente.nombre.trim().length >= 3 && /\S+@\S+\.\S+/.test(cliente.email) &&
+    cliente.nombre.trim().length >= 3 && correoValido(cliente.email) && telefonoValido(cliente.telefono) &&
     personas.value >= 1 && personas.value <= capacidad.value
 );
 
@@ -393,14 +396,8 @@ async function pagar() {
                         <label class="etiqueta-terror">Nombre completo</label>
                         <input v-model="cliente.nombre" type="text" class="campo-terror" placeholder="A nombre de quién va la reservación">
                     </div>
-                    <div>
-                        <label class="etiqueta-terror">Correo</label>
-                        <input v-model="cliente.email" type="email" class="campo-terror" placeholder="Ahí llegan tus boletos">
-                    </div>
-                    <div>
-                        <label class="etiqueta-terror">Teléfono <span class="normal-case">(opcional)</span></label>
-                        <input v-model="cliente.telefono" type="tel" class="campo-terror">
-                    </div>
+                    <CampoCorreo v-model="cliente.email" />
+                    <CampoTelefono v-model="cliente.telefono" />
 
                     <div class="sm:col-span-2">
                         <label class="etiqueta-terror">Código de descuento <span class="normal-case">(opcional)</span></label>
