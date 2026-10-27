@@ -25,6 +25,8 @@ const contado = computed(() => Number(efectivoContado.value) || 0);
 const esperado = computed(() => precorte.value?.caja.efectivo_esperado ?? 0);
 const diferencia = computed(() => contado.value - esperado.value);
 const hayDiferencia = computed(() => Math.abs(diferencia.value) >= 0.01);
+// El servidor rechaza el corte mientras falten; aquí solo se avisa antes.
+const pagosSinFirma = computed(() => precorte.value?.pendientes?.pagos_sin_firma ?? 0);
 
 async function cargar() {
     cargando.value = true;
@@ -197,10 +199,22 @@ function terminar() {
                     </div>
                 </section>
 
+                <div v-if="pagosSinFirma" class="flex items-start gap-3 rounded-lg bg-sangre-600/15 px-4 py-3 text-sangre-400">
+                    <Icono nombre="alerta" clase="h-5 w-5 shrink-0" />
+                    <p class="text-sm">
+                        <span class="font-semibold">
+                            {{ pagosSinFirma === 1 ? 'Hay un pago a empleado' : `Hay ${pagosSinFirma} pagos a empleado` }}
+                            sin la foto del ticket firmado.
+                        </span>
+                        No puedes hacer el corte hasta subirla.
+                        <RouterLink :to="{ name: 'movimientos' }" class="font-semibold underline">Ir a movimientos</RouterLink>
+                    </p>
+                </div>
+
                 <button
                     type="button"
                     class="btn-primario w-full text-lg"
-                    :disabled="efectivoContado === ''"
+                    :disabled="efectivoContado === '' || pagosSinFirma > 0"
                     @click="confirmando = true"
                 >
                     Realizar corte y cerrar caja

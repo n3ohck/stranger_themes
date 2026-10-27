@@ -53,4 +53,5 @@ Route::middleware(['jwt.verify', 'pos.user'])->group(function () {
     Route::get('empleados', [MovimientoController::class, 'empleados'])->name('empleados');
     Route::post('egresos', [MovimientoController::class, 'registrarEgreso'])->name('egresos.store');
     Route::post('empleados/pagos', [MovimientoController::class, 'registrarPagoEmpleado'])->name('empleados.pagos.store');
+    Route::post('empleados/pagos/{pago}/comprobante', [MovimientoController::class, 'subirComprobantePago'])->name('empleados.pagos.comprobante');
 });

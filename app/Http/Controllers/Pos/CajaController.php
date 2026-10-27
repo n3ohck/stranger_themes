@@ -89,6 +89,18 @@ class CajaController extends Controller
 
         $precorte = $this->calcularPrecorte($apertura);
 
+        // El ticket firmado es la única constancia de que el empleado recibió el
+        // dinero; una vez cerrado el turno ya no se puede subir desde el POS.
+        $sinFirma = $precorte['pendientes']['pagos_sin_firma'];
+
+        if ($sinFirma > 0) {
+            return response()->json([
+                'message' => $sinFirma === 1
+                    ? 'Hay un pago a empleado sin la foto del ticket firmado. Súbela en Movimientos antes de hacer el corte.'
+                    : "Hay {$sinFirma} pagos a empleado sin la foto del ticket firmado. Súbelas en Movimientos antes de hacer el corte.",
+            ], 422);
+        }
+
         $corte = DB::transaction(function () use ($request, $apertura, $precorte, $user) {
             $corte = Corte::create([
                 'total' => $precorte['ventas']['total'],
@@ -187,6 +199,14 @@ class CajaController extends Controller
             })
             ->sum('monto');
 
+        // Solo los capturados en este turno: los del panel exigen la imagen al
+        // registrarse, y el POS la sube después de imprimir el ticket.
+        $pagosSinFirma = EmpleadoPago::query()
+            ->where('apertura_id', $apertura->id)
+            ->where('estatus', 'activo')
+            ->where(fn ($query) => $query->whereNull('imagen')->orWhere('imagen', ''))
+            ->count();
+
         $fondoInicial = (float) $apertura->monto_apertura;
         $efectivoEsperado = $fondoInicial + $efectivoNeto - $egresosEfectivo - $pagosEmpleados;
 
@@ -219,6 +239,9 @@ class CajaController extends Controller
             ],
             'caja' => [
                 'efectivo_esperado' => round($efectivoEsperado, 2),
+            ],
+            'pendientes' => [
+                'pagos_sin_firma' => $pagosSinFirma,
             ],
         ];
     }

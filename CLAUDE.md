@@ -259,6 +259,11 @@ entran por `/pos`, **no** por `/admin`.
    por ventana de fechas cuando no (los capturados desde el panel).
    **Los egresos del POS son siempre en efectivo**: lo pagado con tarjeta o
    transferencia de la empresa no toca la caja del turno y se captura en el panel.
+   **Un pago a empleado se registra sin comprobante**: al guardarlo se imprime un
+   ticket con el folio para que el empleado lo firme, y la foto de ese ticket se
+   sube después a `empleados/pagos/{pago}/comprobante`. Mientras no la tenga, la
+   lista lo marca como "Falta firma" y `CajaController@cerrar` rechaza el corte
+   (el precorte lo informa en `pendientes.pagos_sin_firma`).
 9. **Una línea de venta lleva una fecha, una hora y un nombre.** Los recorridos de
    un paquete se encadenan solos desde la hora elegida (el servidor devuelve los
    tramos), y `cantidad` es el número de participantes. Antes había un contador de

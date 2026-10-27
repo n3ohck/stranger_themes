@@ -5,6 +5,7 @@ import Icono from './Icono.vue';
 const props = defineProps({
     modelValue: { type: [File, null], default: null },
     requerido: { type: Boolean, default: false },
+    etiqueta: { type: String, default: 'Comprobante' },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -136,7 +137,7 @@ function quitar() {
 <template>
     <div>
         <label class="etiqueta">
-            Comprobante
+            {{ etiqueta }}
             <span v-if="requerido" class="text-sangre-400">*</span>
             <span v-else class="font-normal text-slate-600">(opcional)</span>
         </label>

@@ -1,9 +1,10 @@
 <script setup>
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { api } from '../api/cliente';
 import { dinero, horaCorta } from '../utils/formato';
 import CampoComprobante from '../components/CampoComprobante.vue';
 import Icono from '../components/Icono.vue';
+import TicketPagoEmpleado from '../components/TicketPagoEmpleado.vue';
 
 const pestana = ref('egresos');
 
@@ -21,11 +22,28 @@ const formEgreso = reactive({
     comprobante: null,
 });
 
+// Sin comprobante aquí: el comprobante es la foto del ticket firmado, y ese
+// ticket se imprime después de registrar el pago.
 const formPago = reactive({
     empleado_id: '',
     monto: '',
-    comprobante: null,
 });
+
+// Recibo de pago abierto. Recién registrado se imprime solo para que el
+// empleado lo firme; luego se sube la foto del ticket firmado.
+const ticketPago = ref(null);
+const autoImprimir = ref(false);
+
+function abrirTicketPago(pago, imprimirAlAbrir = false) {
+    autoImprimir.value = imprimirAlAbrir;
+    ticketPago.value = pago;
+}
+
+async function alGuardarFirma() {
+    ticketPago.value = null;
+    exito.value = 'Ticket firmado guardado.';
+    await cargar();
+}
 
 const guardando = ref(false);
 const errorForm = ref('');
@@ -83,21 +101,45 @@ async function guardarEgreso() {
     }
 }
 
+// Pagos que ya se le hicieron en este turno al empleado elegido. Pagarle dos
+// veces puede ser legítimo (un adelanto y luego el resto), pero también es el
+// error típico de registrar el mismo pago dos veces, así que se pide confirmar.
+const pagosPrevios = computed(() =>
+    pagos.value.filter((pago) => String(pago.empleado_id) === String(formPago.empleado_id))
+);
+const confirmandoRepetido = ref(false);
+
+function intentarPago() {
+    limpiarAviso();
+
+    if (pagosPrevios.value.length) {
+        confirmandoRepetido.value = true;
+        return;
+    }
+
+    guardarPago();
+}
+
+async function confirmarRepetido() {
+    confirmandoRepetido.value = false;
+    await guardarPago();
+}
+
 async function guardarPago() {
     limpiarAviso();
     guardando.value = true;
 
     try {
-        await api.subir('empleados/pagos', {
+        const respuesta = await api.post('empleados/pagos', {
             empleado_id: formPago.empleado_id,
             monto: formPago.monto,
-            imagen: formPago.comprobante,
         });
 
-        Object.assign(formPago, { empleado_id: '', monto: '', comprobante: null });
+        Object.assign(formPago, { empleado_id: '', monto: '' });
 
         exito.value = 'Pago registrado.';
         await cargar();
+        abrirTicketPago(respuesta.pago, true);
     } catch (e) {
         errorForm.value = e.listaErrores?.[0] || e.message || 'No se pudo registrar el pago.';
     } finally {
@@ -189,7 +231,7 @@ async function guardarPago() {
                         </button>
                     </form>
 
-                    <form v-else class="space-y-4" novalidate @submit.prevent="guardarPago">
+                    <form v-else class="space-y-4" novalidate @submit.prevent="intentarPago">
                         <div>
                             <label class="etiqueta">Empleado</label>
                             <select v-model="formPago.empleado_id" class="campo">
@@ -212,9 +254,10 @@ async function guardarPago() {
                             </div>
                         </div>
 
-                        <CampoComprobante v-model="formPago.comprobante" requerido />
                         <p class="text-xs text-slate-500">
-                            El comprobante es obligatorio: administración lo revisa para autorizar la nómina.
+                            Al registrarlo se imprime un ticket para que el empleado lo firme. Después
+                            sube la foto del ticket firmado: administración la revisa para autorizar la nómina,
+                            y el corte no se puede hacer mientras falte alguna.
                         </p>
 
                         <p v-if="errorForm" class="rounded-lg bg-sangre-600/15 px-3 py-2 text-sm text-sangre-400">{{ errorForm }}</p>
@@ -223,7 +266,7 @@ async function guardarPago() {
                         </p>
 
                         <button type="submit" class="btn-primario w-full"
-                                :disabled="guardando || !formPago.empleado_id || !formPago.monto || !formPago.comprobante">
+                                :disabled="guardando || !formPago.empleado_id || !formPago.monto">
                             {{ guardando ? 'Guardando…' : 'Registrar pago' }}
                         </button>
                     </form>
@@ -277,17 +320,68 @@ async function guardarPago() {
 
                                 <div class="min-w-0 flex-1">
                                     <p class="truncate text-sm font-semibold text-slate-100">{{ pago.empleado }}</p>
-                                    <p class="text-xs text-slate-500">{{ horaCorta(pago.fecha) }}</p>
+                                    <p class="text-xs text-slate-500">
+                                        {{ horaCorta(pago.fecha) }}
+                                        <span v-if="!pago.comprobante" class="chip ml-1 bg-amber-500/15 text-amber-400">Falta firma</span>
+                                    </p>
                                 </div>
 
                                 <span class="tabular shrink-0 text-lg font-bold text-amber-400">
                                     −{{ dinero(pago.monto) }}
                                 </span>
+
+                                <button v-if="pago.comprobante" type="button" class="btn-fantasma min-h-0 shrink-0 px-2.5 py-2"
+                                        title="Ver o reimprimir ticket" @click="abrirTicketPago(pago)">
+                                    <Icono nombre="imprimir" clase="h-5 w-5" />
+                                </button>
+                                <button v-else type="button" class="btn-primario min-h-0 shrink-0 px-3 py-2 text-sm"
+                                        @click="abrirTicketPago(pago)">
+                                    Subir firma
+                                </button>
                             </li>
                         </ul>
                     </template>
                 </section>
             </div>
         </div>
+
+        <!-- Confirmación de pago repetido -->
+        <div v-if="confirmandoRepetido" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+            <div class="tarjeta w-full max-w-md p-5">
+                <h2 class="flex items-center gap-2 text-lg font-bold text-amber-400">
+                    <Icono nombre="alerta" clase="h-6 w-6" />
+                    ¿Otro pago a la misma persona?
+                </h2>
+                <p class="mt-2 text-sm text-slate-300">
+                    En este turno ya le pagaste a
+                    <span class="font-semibold text-slate-100">{{ pagosPrevios[0]?.empleado }}</span>:
+                </p>
+
+                <ul class="mt-3 space-y-1 rounded-lg bg-noche-700 px-3 py-2 text-sm">
+                    <li v-for="pago in pagosPrevios" :key="pago.id" class="flex justify-between">
+                        <span class="text-slate-400">{{ horaCorta(pago.fecha) }} · folio #{{ pago.id }}</span>
+                        <span class="tabular font-semibold text-slate-200">{{ dinero(pago.monto) }}</span>
+                    </li>
+                </ul>
+
+                <p class="mt-3 text-sm text-slate-300">
+                    ¿Seguro que quieres registrar otro pago de
+                    <span class="tabular font-semibold text-amber-400">{{ dinero(formPago.monto) }}</span>?
+                </p>
+
+                <div class="mt-5 flex gap-2">
+                    <button type="button" class="btn-neutro flex-1" @click="confirmandoRepetido = false">Cancelar</button>
+                    <button type="button" class="btn-primario flex-1" @click="confirmarRepetido">Sí, registrar</button>
+                </div>
+            </div>
+        </div>
+
+        <TicketPagoEmpleado
+            v-if="ticketPago"
+            :pago="ticketPago"
+            :auto-imprimir="autoImprimir"
+            @cerrar="ticketPago = null"
+            @guardado="alGuardarFirma"
+        />
     </div>
 </template>

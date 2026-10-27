@@ -53,6 +53,7 @@ class MovimientoController extends Controller
 
             'pagos' => $pagos->map(fn (EmpleadoPago $pago) => [
                 'id' => $pago->id,
+                'empleado_id' => $pago->empleado_id,
                 'monto' => (float) $pago->monto,
                 'empleado' => trim(optional($pago->empleado)->nombres . ' ' . optional($pago->empleado)->apellidos),
                 'fecha' => (string) $pago->fecha_pago,
@@ -65,6 +66,7 @@ class MovimientoController extends Controller
                 'egresos' => round((float) $egresos->sum('monto'), 2),
                 'pagos_empleados' => round((float) $pagos->sum('monto'), 2),
                 'salida_efectivo' => round((float) $egresos->sum('monto') + (float) $pagos->sum('monto'), 2),
+                'pagos_sin_firma' => $pagos->whereNull('imagen')->count(),
             ],
         ]);
     }
@@ -140,22 +142,20 @@ class MovimientoController extends Controller
     }
 
     /**
-     * El comprobante es obligatorio: el panel de administración tiene un reporte
-     * que revisa justamente esas imágenes para autorizar la nómina.
+     * Se registra sin comprobante a propósito. El comprobante es la foto del
+     * ticket firmado por el empleado, y ese ticket solo existe después de
+     * registrar el pago: se imprime con el folio y se sube con
+     * subirComprobantePago(). Mientras falte, el pago queda pendiente de firma.
      */
     public function registrarPagoEmpleado(Request $request)
     {
         $datos = $request->validate([
             'empleado_id' => ['required', 'integer', 'exists:empleados,id'],
             'monto' => ['required', 'numeric', 'min:0.01'],
-            'imagen' => ['required', 'image', 'max:5120'],
         ], [
             'empleado_id.required' => 'Selecciona al empleado.',
             'monto.required' => 'Indica el monto del pago.',
             'monto.min' => 'El monto debe ser mayor a cero.',
-            'imagen.required' => 'El comprobante del pago es obligatorio.',
-            'imagen.image' => 'El comprobante debe ser una imagen.',
-            'imagen.max' => 'El comprobante no puede pesar más de 5 MB.',
         ]);
 
         $user = Auth::user();
@@ -183,9 +183,6 @@ class MovimientoController extends Controller
             'monto' => $datos['monto'],
             'estatus' => 'activo',
             'fecha_pago' => Carbon::now(),
-            // Igual que en el egreso: el mutator del modelo hace la subida y lee
-            // el archivo directamente de request()->file('imagen').
-            'imagen' => $request->file('imagen'),
             'created_at' => Carbon::now(),
         ]);
 
@@ -196,9 +193,58 @@ class MovimientoController extends Controller
                 'monto' => (float) $pago->monto,
                 'empleado' => trim($empleado->nombres . ' ' . $empleado->apellidos),
                 'fecha' => (string) $pago->fecha_pago,
-                'comprobante' => $this->urlComprobante($pago->imagen),
+                'comprobante' => null,
             ],
         ], 201);
+    }
+
+    /**
+     * Foto del ticket ya firmado. Se puede reemplazar mientras el turno siga
+     * abierto, por si la foto salió movida; el mutator borra la anterior.
+     */
+    public function subirComprobantePago(Request $request, int $pago)
+    {
+        $request->validate([
+            'imagen' => ['required', 'image', 'max:5120'],
+        ], [
+            'imagen.required' => 'Sube la foto del ticket firmado.',
+            'imagen.image' => 'El comprobante debe ser una imagen.',
+            'imagen.max' => 'El comprobante no puede pesar más de 5 MB.',
+        ]);
+
+        $apertura = Apertura::aperturaActiva(Auth::user());
+
+        if (! $apertura) {
+            return response()->json(['message' => 'No tienes una caja abierta.'], 409);
+        }
+
+        // Solo pagos del turno en curso: uno de otro turno ya quedó en su corte.
+        $pago = EmpleadoPago::query()
+            ->where('id', $pago)
+            ->where('apertura_id', $apertura->id)
+            ->where('estatus', 'activo')
+            ->with('empleado')
+            ->first();
+
+        if (! $pago) {
+            return response()->json(['message' => 'Ese pago no es de tu turno.'], 404);
+        }
+
+        // Igual que en el egreso: el mutator del modelo hace la subida y lee
+        // el archivo directamente de request()->file('imagen').
+        $pago->imagen = $request->file('imagen');
+        $pago->save();
+
+        return response()->json([
+            'message' => 'Ticket firmado guardado.',
+            'pago' => [
+                'id' => $pago->id,
+                'monto' => (float) $pago->monto,
+                'empleado' => trim(optional($pago->empleado)->nombres . ' ' . optional($pago->empleado)->apellidos),
+                'fecha' => (string) $pago->fecha_pago,
+                'comprobante' => $this->urlComprobante($pago->imagen),
+            ],
+        ]);
     }
 
     /**

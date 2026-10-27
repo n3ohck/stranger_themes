@@ -89,3 +89,46 @@ export function inicioDeSemana(fecha) {
     d.setDate(d.getDate() - d.getDay());
     return d;
 }
+
+const MENORES = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve',
+    'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho',
+    'diecinueve', 'veinte', 'veintiún', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco',
+    'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve'];
+const DECENAS = ['', '', '', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa'];
+const CENTENAS = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos',
+    'seiscientos', 'setecientos', 'ochocientos', 'novecientos'];
+
+function hastaMil(n) {
+    if (n === 100) return 'cien';
+
+    const resto = n % 100;
+    const decenas = resto < 30
+        ? MENORES[resto]
+        : DECENAS[Math.floor(resto / 10)] + (resto % 10 ? ` y ${MENORES[resto % 10]}` : '');
+
+    return [CENTENAS[Math.floor(n / 100)], decenas].filter(Boolean).join(' ');
+}
+
+/**
+ * Monto con letra al estilo de los recibos: 'CIEN PESOS 00/100 M.N.'. Lo lleva
+ * el ticket de pago a empleado, que se firma de recibido.
+ */
+export function montoConLetra(valor) {
+    const centavos = Math.round((Number(valor) || 0) * 100);
+    const entero = Math.floor(centavos / 100);
+
+    const millones = Math.floor(entero / 1000000);
+    const miles = Math.floor((entero % 1000000) / 1000);
+    const unidades = entero % 1000;
+
+    const partes = [];
+    if (millones) partes.push(millones === 1 ? 'un millón' : `${hastaMil(millones)} millones`);
+    if (miles) partes.push(miles === 1 ? 'mil' : `${hastaMil(miles)} mil`);
+    if (unidades) partes.push(hastaMil(unidades));
+
+    let texto = partes.join(' ') || 'cero';
+    if (millones && !miles && !unidades) texto += ' de';
+    texto += entero === 1 ? ' peso' : ' pesos';
+
+    return `${texto} ${String(centavos % 100).padStart(2, '0')}/100 M.N.`.toUpperCase();
+}
