@@ -44,7 +44,7 @@ class ApartarCompraAction
             ->withoutGlobalScopes()
             ->where('id', $datos['producto_id'])
             ->where('sucursal_id', $sucursal->id)
-            ->where('visible_en_tienda', true)
+            ->vendibleEnLinea()
             ->first();
 
         if (! $producto) {

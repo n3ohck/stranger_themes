@@ -73,7 +73,9 @@ return [
     // ------
 
     // Menu logo. You can replace this with an <img> tag if you have a logo.
-    'project_logo'   => '<img src="https://strangerthemes.com/wp-content/uploads/2024/07/lOGO-BLANCO-ST-sombra-grande-2048x802.png" style="width: 73.5%">',
+    // Archivo local: antes apuntaba a una imagen del WordPress de
+    // strangerthemes.com, que ahora responde 403 y dejaba el encabezado vacío.
+    'project_logo'   => '<img src="/images/logo-stranger-themes-correo.png" alt="Stranger Themes" style="width: 73.5%; max-height: 48px; object-fit: contain;">',
 
     // Show / hide breadcrumbs on admin panel pages.
     'breadcrumbs' => true,

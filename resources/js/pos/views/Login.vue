@@ -11,6 +11,17 @@ const contrasena = ref('');
 const error = ref('');
 const enviando = ref(false);
 
+/*
+ * La caja la comparten varios cajeros, así que el navegador no debe guardar ni
+ * autocompletar la cuenta de nadie. `autocomplete="off"` no basta: Chrome lo
+ * ignora en formularios de acceso y ofrece guardar en cuanto ve un campo
+ * type="password". Donde se puede, la contraseña va en un campo de texto que se
+ * enmascara por CSS, y sin campo de contraseña el navegador no reconoce un login
+ * que guardar. Donde no hay `-webkit-text-security` se queda como password con
+ * "new-password", que al menos evita que rellene una cuenta guardada.
+ */
+const enmascararPorCss = typeof CSS !== 'undefined' && CSS.supports('-webkit-text-security', 'disc');
+
 async function entrar() {
     error.value = '';
     enviando.value = true;
@@ -36,16 +47,21 @@ async function entrar() {
                 <p class="mt-1 text-sm text-slate-500">Ingresa con tu cuenta de operación</p>
             </div>
 
-            <form class="tarjeta space-y-4 p-6" novalidate @submit.prevent="entrar">
+            <form class="tarjeta space-y-4 p-6" novalidate autocomplete="off" @submit.prevent="entrar">
                 <div>
                     <label for="cuenta" class="etiqueta">Usuario o correo</label>
                     <input
                         id="cuenta"
                         v-model="cuenta"
                         type="text"
+                        name="pos-cuenta"
                         class="campo"
-                        autocomplete="username"
+                        autocomplete="off"
                         autocapitalize="none"
+                        autocorrect="off"
+                        spellcheck="false"
+                        data-lpignore="true"
+                        data-1p-ignore
                         autofocus
                         required
                     >
@@ -56,9 +72,16 @@ async function entrar() {
                     <input
                         id="contrasena"
                         v-model="contrasena"
-                        type="password"
+                        :type="enmascararPorCss ? 'text' : 'password'"
+                        name="pos-clave"
                         class="campo"
-                        autocomplete="current-password"
+                        :class="{ 'campo-enmascarado': enmascararPorCss }"
+                        :autocomplete="enmascararPorCss ? 'off' : 'new-password'"
+                        autocapitalize="none"
+                        autocorrect="off"
+                        spellcheck="false"
+                        data-lpignore="true"
+                        data-1p-ignore
                         required
                     >
                 </div>
@@ -83,3 +106,9 @@ async function entrar() {
         </div>
     </div>
 </template>
+
+<style scoped>
+.campo-enmascarado {
+    -webkit-text-security: disc;
+}
+</style>

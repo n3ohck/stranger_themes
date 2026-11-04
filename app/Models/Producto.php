@@ -62,6 +62,14 @@ class Producto extends Model
     protected static function booted()
     {
         static::addGlobalScope(new SucursalFilterScope);
+
+        // Una diferencia se cobra en mostrador, nunca en línea, aunque alguien
+        // marque la casilla en el panel.
+        static::saving(function (Producto $producto) {
+            if (in_array($producto->getAttributes()['tipo'] ?? null, self::TIPOS_SOLO_MOSTRADOR, true)) {
+                $producto->visible_en_tienda = false;
+            }
+        });
     }
 
     /*
@@ -80,6 +88,20 @@ class Producto extends Model
     */
     /** Tipos válidos de la columna enum `tipo`. */
     public const TIPOS = ['articulo', 'tour', 'tour_paquete', 'diferencias'];
+
+    /**
+     * Tipos que solo se venden en mostrador. Las diferencias son el ajuste que
+     * cobra el cajero en persona, así que no aparecen en ningún canal en línea.
+     */
+    public const TIPOS_SOLO_MOSTRADOR = ['diferencias'];
+
+    /** Lo que se puede comprar en línea: marcado para la tienda y de un tipo que se vende ahí. */
+    public function scopeVendibleEnLinea($query)
+    {
+        return $query
+            ->where('visible_en_tienda', true)
+            ->whereNotIn('tipo', self::TIPOS_SOLO_MOSTRADOR);
+    }
 
     /**
      * Sin tipo devuelve el catálogo completo. Antes hacía `return $type` cuando

@@ -21,7 +21,7 @@ class CatalogoController extends Controller
 
         $productos = Producto::query()
             ->withoutGlobalScopes()
-            ->where('visible_en_tienda', true)
+            ->vendibleEnLinea()
             ->orderByRaw("FIELD(tipo,'tour','tour_paquete')")
             ->orderBy('precio')
             ->get();
@@ -83,7 +83,7 @@ class CatalogoController extends Controller
             ->withoutGlobalScopes()
             ->where('id', $datos['producto_id'])
             ->where('sucursal_id', $sucursal->id)
-            ->where('visible_en_tienda', true)
+            ->vendibleEnLinea()
             ->first();
 
         if (! $producto) {
@@ -126,7 +126,7 @@ class CatalogoController extends Controller
         $producto = Producto::query()
             ->withoutGlobalScopes()
             ->where('id', $datos['producto_id'])
-            ->where('visible_en_tienda', true)
+            ->vendibleEnLinea()
             ->first();
 
         if (! $producto) {

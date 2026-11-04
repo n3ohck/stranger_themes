@@ -171,7 +171,7 @@ class ProductoCrudController extends CrudController
                 'name' => 'visible_en_tienda',
                 'type' => 'checkbox',
                 'label' => 'Vender en la tienda en línea',
-                'hint' => 'Si se marca, aparece en /comprar para que el público lo compre desde el sitio web. Requiere capacidad y duración.',
+                'hint' => 'Si se marca, aparece en /comprar para que el público lo compre desde el sitio web. Requiere capacidad y duración. Las diferencias nunca se venden en línea.',
                 'wrapper' => ['class' => 'form-group col-md-4'],
             ],
             [
@@ -300,6 +300,8 @@ class ProductoCrudController extends CrudController
 
             $productos = Producto::query()
                 ->FilterByType($tipo,$sucursalId)
+                // Sin usuario es el sitio web: ahí no se venden las diferencias.
+                ->when(! backpack_user(), fn ($q) => $q->whereNotIn('tipo', Producto::TIPOS_SOLO_MOSTRADOR))
                 ->orderBy('descripcion','asc')
                 ->get();
 

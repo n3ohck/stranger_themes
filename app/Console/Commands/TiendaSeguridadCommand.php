@@ -41,7 +41,7 @@ class TiendaSeguridadCommand extends Command
         $this->info("Probando {$this->base}");
 
         $sucursal = Sucursal::query()->value('id') ?? 1;
-        $producto = Producto::query()->withoutGlobalScopes()->where('visible_en_tienda', true)->value('id') ?? 1;
+        $producto = Producto::query()->withoutGlobalScopes()->vendibleEnLinea()->value('id') ?? 1;
         $fecha = Carbon::tomorrow()->toDateString();
 
         // Un checkout que pasaría la validación salvo por lo que cada prueba rompe.
