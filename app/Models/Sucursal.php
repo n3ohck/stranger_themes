@@ -58,8 +58,13 @@ class Sucursal extends Model
     public static function boot()
     {
         parent::boot();
-        static::deleted(function ($obj) {
-            Storage::disk('public')->delete($obj->logotipo);
+        // Solo al borrado definitivo: con SoftDeletes, `deleted` también corre al
+        // borrado lógico y la sucursal restaurada se quedaría sin logo.
+        static::forceDeleted(function ($obj) {
+            // Ruta cruda: el accessor le antepone `storage/` y así no existe en el disco.
+            if ($ruta = $obj->getRawOriginal('logotipo')) {
+                Storage::disk('public')->delete($ruta);
+            }
         });
     }
     /*
@@ -132,28 +137,42 @@ class Sucursal extends Model
     | ACCESSORS
     |--------------------------------------------------------------------------
     */
+    /**
+     * Guarda el logotipo que manda el campo `image` de Backpack (base64).
+     *
+     * Se lee la ruta cruda de `$this->attributes`, no `$this->logotipo`: el
+     * accessor le antepone `storage/` y esa ruta no existe en el disco, y en una
+     * sucursal nueva la llave ni siquiera está (por eso fallaba el alta).
+     */
     public function setLogotipoAttribute($value)
     {
-        $filename = str_replace(' ', '_', strip_tags($this->attributes['razon_social'])) . Carbon::now()->format('Y_m_d_h_i_s');
-        $attribute_name = "logotipo";
         $disk = 'public';
         $destination_path = "uploads/logotipos";
+        $anterior = $this->attributes['logotipo'] ?? null;
 
-        // if the image was erased
-        if ($value == null) {
-            Storage::disk($disk)->delete($this->{$attribute_name});
-            $this->attributes[$attribute_name] = null;
+        // Se quitó la imagen
+        if (empty($value)) {
+            if ($anterior) {
+                Storage::disk($disk)->delete($anterior);
+            }
+            $this->attributes['logotipo'] = null;
+            return;
         }
 
-        // if a base64 was sent, store it in the db
+        // Llegó una imagen nueva en base64. Cualquier otro valor es la ruta que
+        // ya estaba guardada y se deja como está.
         if (Str::startsWith($value, 'data:image')) {
-            $image = Image::make($value)->encode('jpg', 90);
-            $filename = $filename . '.jpg';
-            Storage::disk($disk)->put($destination_path . '/' . $filename, $image->stream());
-            Storage::disk($disk)->delete($this->{$attribute_name});
+            $nombre = Str::slug(strip_tags($this->attributes['razon_social'] ?? 'sucursal'), '_')
+                . Carbon::now()->format('Y_m_d_h_i_s') . '.jpg';
 
-            $public_destination_path = Str::replaceFirst('public/', '', $destination_path);
-            $this->attributes[$attribute_name] = $public_destination_path . '/' . $filename;
+            $image = Image::make($value)->encode('jpg', 90);
+            Storage::disk($disk)->put($destination_path . '/' . $nombre, $image->stream());
+
+            if ($anterior) {
+                Storage::disk($disk)->delete($anterior);
+            }
+
+            $this->attributes['logotipo'] = $destination_path . '/' . $nombre;
         }
     }
     /*
@@ -163,6 +182,8 @@ class Sucursal extends Model
     */
     public function getLogotipoAttribute()
     {
-        return ( !$this->attributes['logotipo'] ) ? null : 'storage/'.$this->attributes['logotipo'];
+        $ruta = $this->attributes['logotipo'] ?? null;
+
+        return $ruta ? 'storage/' . $ruta : null;
     }
 }
