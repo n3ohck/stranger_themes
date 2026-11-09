@@ -439,6 +439,12 @@ async function aplicar(id, cambios, mensaje) {
             @cobrar="cobrarAmpliacion"
         />
 
-        <TicketVenta v-if="ticketAmpliacion" :venta="ticketAmpliacion" @cerrar="ticketAmpliacion = null" />
+        <TicketVenta
+            v-if="ticketAmpliacion"
+            :key="ticketAmpliacion.folio"
+            :venta="ticketAmpliacion"
+            solo-imprimir
+            @cerrar="ticketAmpliacion = null"
+        />
     </div>
 </template>

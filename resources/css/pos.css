@@ -64,6 +64,17 @@
 }
 
 /*
+ * Ticket que se imprime sin mostrarse (venta recién cobrada). Fuera de la
+ * pantalla en vez de display:none, que también lo ocultaría al imprimir.
+ */
+.ticket-oculto {
+    position: fixed;
+    top: 0;
+    left: -10000px;
+    pointer-events: none;
+}
+
+/*
  * Impresión térmica de 58mm.
  *
  * El área imprimible real de una impresora de 58mm ronda los 48mm; el resto es
@@ -92,6 +103,10 @@
         font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
         font-size: 9pt;
         line-height: 1.35;
+    }
+
+    .ticket-oculto {
+        left: 0;
     }
 
     #ticket .no-imprimir {

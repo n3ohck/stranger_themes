@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useCatalogo } from '../stores/catalogo';
 import { useCarrito } from '../stores/carrito';
 import { dinero } from '../utils/formato';
@@ -17,9 +17,12 @@ const busqueda = ref('');
 const cobrando = ref(false);
 const errorCobro = ref('');
 const ventaRecien = ref(null);
+const avisoVenta = ref(null);
 const carritoAbierto = ref(false);
+let temporizadorAviso = null;
 
 onMounted(() => catalogo.cargar());
+onBeforeUnmount(() => clearTimeout(temporizadorAviso));
 
 const productosVisibles = computed(() => {
     const grupo = catalogo.grupos.find((g) => g.clave === grupoActivo.value);
@@ -56,7 +59,12 @@ async function cobrar({ pagos }) {
         const venta = await carrito.cobrar(pagos);
         cobrando.value = false;
         carritoAbierto.value = false;
+        // El ticket se imprime solo; el aviso sustituye la confirmación que
+        // antes daba el modal del ticket.
         ventaRecien.value = venta;
+        avisoVenta.value = venta.folio;
+        clearTimeout(temporizadorAviso);
+        temporizadorAviso = setTimeout(() => { avisoVenta.value = null; }, 4000);
     } catch (e) {
         errorCobro.value = e.listaErrores?.[0] || e.message || 'No se pudo registrar la venta.';
     }
@@ -229,8 +237,19 @@ async function cobrar({ pagos }) {
 
         <TicketVenta
             v-if="ventaRecien"
+            :key="ventaRecien.folio"
             :venta="ventaRecien"
+            solo-imprimir
             @cerrar="ventaRecien = null"
         />
+
+        <div
+            v-if="avisoVenta"
+            class="no-imprimir fixed inset-x-0 top-4 z-50 mx-auto flex w-fit items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-lg"
+            role="status"
+        >
+            <Icono nombre="check" clase="h-5 w-5" />
+            Venta registrada · {{ avisoVenta }}
+        </div>
     </div>
 </template>

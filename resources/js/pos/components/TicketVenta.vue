@@ -1,14 +1,21 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted } from 'vue';
 import { useSesion } from '../stores/sesion';
 import { dinero, fechaHora, horaCorta, fechaCorta } from '../utils/formato';
 import Icono from './Icono.vue';
 
+/**
+ * Ticket de una venta. Recién cobrada se usa con `solo-imprimir`: el ticket no
+ * se muestra, se manda directo a la impresora y el componente avisa `cerrar`
+ * cuando termina, para que el cajero siga con la siguiente venta. Desde el
+ * historial se abre como modal para verlo y reimprimirlo.
+ */
 const props = defineProps({
     venta: { type: Object, required: true },
+    soloImprimir: { type: Boolean, default: false },
 });
 
-defineEmits(['cerrar']);
+const emit = defineEmits(['cerrar']);
 
 const sesion = useSesion();
 
@@ -25,12 +32,31 @@ const cambio = computed(() => props.venta.pagos.reduce((suma, p) => suma + (p.ca
 function imprimir() {
     window.print();
 }
+
+function terminar() {
+    emit('cerrar');
+}
+
+onMounted(async () => {
+    if (!props.soloImprimir) return;
+
+    // Esperar a que el ticket esté pintado: imprimir antes deja la hoja en blanco.
+    await nextTick();
+    requestAnimationFrame(() => {
+        // Si el componente siguiera montado después de imprimir, su #ticket
+        // saldría junto con el siguiente que se imprima (corte, reimpresión).
+        window.addEventListener('afterprint', terminar, { once: true });
+        imprimir();
+    });
+});
+
+onBeforeUnmount(() => window.removeEventListener('afterprint', terminar));
 </script>
 
 <template>
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
+    <div :class="soloImprimir ? 'ticket-oculto' : 'fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4'">
         <div class="flex max-h-full w-full max-w-sm flex-col">
-            <div class="no-imprimir mb-3 flex items-center justify-between">
+            <div v-if="!soloImprimir" class="no-imprimir mb-3 flex items-center justify-between">
                 <div class="flex items-center gap-2 text-emerald-400">
                     <Icono nombre="check" />
                     <span class="font-semibold">Venta registrada</span>
@@ -119,7 +145,7 @@ function imprimir() {
                 </div>
             </div>
 
-            <div class="no-imprimir mt-3 flex gap-2">
+            <div v-if="!soloImprimir" class="no-imprimir mt-3 flex gap-2">
                 <button type="button" class="btn-neutro flex-1" @click="$emit('cerrar')">Nueva venta</button>
                 <button type="button" class="btn-primario flex-1" @click="imprimir">
                     <Icono nombre="imprimir" clase="h-5 w-5" />
