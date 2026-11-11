@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Producto;
 use App\Models\Sucursal;
+use App\Scopes\SucursalFilterScope;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Http\Client\PendingRequest;
@@ -41,7 +42,7 @@ class TiendaSeguridadCommand extends Command
         $this->info("Probando {$this->base}");
 
         $sucursal = Sucursal::query()->value('id') ?? 1;
-        $producto = Producto::query()->withoutGlobalScopes()->vendibleEnLinea()->value('id') ?? 1;
+        $producto = Producto::query()->withoutGlobalScope(SucursalFilterScope::class)->vendibleEnLinea()->value('id') ?? 1;
         $fecha = Carbon::tomorrow()->toDateString();
 
         // Un checkout que pasaría la validación salvo por lo que cada prueba rompe.

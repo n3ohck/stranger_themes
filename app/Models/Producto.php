@@ -95,10 +95,19 @@ class Producto extends Model
      */
     public const TIPOS_SOLO_MOSTRADOR = ['diferencias'];
 
-    /** Lo que se puede comprar en línea: marcado para la tienda y de un tipo que se vende ahí. */
+    /**
+     * Lo que se puede comprar en línea: marcado para la tienda, de un tipo que se
+     * vende ahí y sin borrar.
+     *
+     * El filtro de borrado va explícito porque los llamadores públicos quitan el
+     * scope de sucursal, y withoutGlobalScopes() también quita el de SoftDeletes:
+     * así se colaban en /comprar los paquetes "DIFERENCIA" borrados en 2024 que
+     * habían quedado con la casilla marcada.
+     */
     public function scopeVendibleEnLinea($query)
     {
         return $query
+            ->whereNull($this->getQualifiedDeletedAtColumn())
             ->where('visible_en_tienda', true)
             ->whereNotIn('tipo', self::TIPOS_SOLO_MOSTRADOR);
     }

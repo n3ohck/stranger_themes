@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Tienda;
 use App\Http\Controllers\Controller;
 use App\Models\Producto;
 use App\Models\Sucursal;
+use App\Scopes\SucursalFilterScope;
 use App\Support\Tienda\DescuentoAplicado;
 use App\Support\Tienda\Disponibilidad;
 use Carbon\Carbon;
@@ -20,7 +21,7 @@ class CatalogoController extends Controller
         $sucursales = Sucursal::query()->orderBy('razon_social')->get();
 
         $productos = Producto::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope(SucursalFilterScope::class)
             ->vendibleEnLinea()
             ->orderByRaw("FIELD(tipo,'tour','tour_paquete')")
             ->orderBy('precio')
@@ -80,7 +81,7 @@ class CatalogoController extends Controller
         $sucursal = Sucursal::findOrFail($datos['sucursal_id']);
 
         $producto = Producto::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope(SucursalFilterScope::class)
             ->where('id', $datos['producto_id'])
             ->where('sucursal_id', $sucursal->id)
             ->vendibleEnLinea()
@@ -91,11 +92,29 @@ class CatalogoController extends Controller
         }
 
         $fecha = Carbon::parse($datos['fecha']);
-        $horarios = Disponibilidad::paraProducto($producto, $sucursal, $fecha, null, (int) ($datos['personas'] ?? 1));
+        $personas = (int) ($datos['personas'] ?? 1);
+        $horarios = Disponibilidad::paraProducto($producto, $sucursal, $fecha, null, $personas);
+
+        // Horarios de cada recorrido por separado: en un paquete el cliente elige
+        // la hora de cada uno. Se calculan sobre el recorrido suelto, con su propio
+        // cupo y su propia duración, aunque ese recorrido no se venda solo en línea.
+        $recorridos = Disponibilidad::recorridosDe($producto)->map(fn (Producto $r) => [
+            'id' => $r->id,
+            'nombre' => $r->descripcion,
+            'horarios' => collect(Disponibilidad::paraProducto($r, $sucursal, $fecha, null, $personas))
+                ->map(fn ($h) => [
+                    'inicio' => $h['inicio'],
+                    'etiqueta' => $h['etiqueta'],
+                    'lugares' => $h['lugares'],
+                ])->values(),
+        ])->values();
 
         return response()->json([
             'fecha' => $fecha->toDateString(),
             'abierto' => $horarios !== [] || $this->abreEseDia($sucursal, $fecha),
+            // Para que la pantalla sepa qué horas del mismo grupo chocan entre sí.
+            'intervalo' => Disponibilidad::intervaloDe($sucursal, $fecha),
+            'recorridos' => $recorridos,
             // Solo la hora de inicio: los tramos internos del paquete los resuelve
             // el servidor al apartar, para que el navegador no pueda proponerlos.
             'horarios' => collect($horarios)->map(fn ($h) => [
@@ -124,7 +143,7 @@ class CatalogoController extends Controller
         ]);
 
         $producto = Producto::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope(SucursalFilterScope::class)
             ->where('id', $datos['producto_id'])
             ->vendibleEnLinea()
             ->first();

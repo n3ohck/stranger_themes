@@ -18,6 +18,11 @@ const personas = ref(2);
 
 const horarios = ref([]);
 const horaElegida = ref('');
+// En un paquete el cliente elige la hora de cada recorrido: `recorridosDia` trae
+// los horarios de cada uno y `horas` lo elegido, en el orden del paquete.
+const recorridosDia = ref([]);
+const horas = ref([]);
+const intervalo = ref(30);
 const buscandoHorarios = ref(false);
 const avisoHorarios = ref('');
 
@@ -79,8 +84,81 @@ const diasDisponibles = computed(() => {
     return dias;
 });
 
+const esPaquete = computed(() => (producto.value?.recorridos?.length || 0) > 1);
+
+/** Ya hay hora para todo: la del tour, o la de cada recorrido del paquete. */
+const horarioCompleto = computed(() =>
+    esPaquete.value
+        ? recorridosDia.value.length > 0 && recorridosDia.value.every((_, i) => !!horas.value[i])
+        : !!horaElegida.value
+);
+
+/** Recorridos del paquete con su hora elegida, en orden de hora, para el resumen. */
+const itinerario = computed(() =>
+    recorridosDia.value
+        .map((r, i) => ({
+            nombre: r.nombre,
+            inicio: horas.value[i],
+            etiqueta: r.horarios.find((h) => h.inicio === horas.value[i])?.etiqueta,
+        }))
+        .filter((r) => r.inicio)
+        .sort((a, b) => minutos(a.inicio) - minutos(b.inicio))
+);
+
+function minutos(hora) {
+    const [h, m] = String(hora).split(':').map(Number);
+    return h * 60 + m;
+}
+
+/**
+ * El grupo no puede estar en dos recorridos a la vez: una hora choca si otro
+ * recorrido ya elegido sale a menos de un intervalo. Devuelve con cuál choca.
+ * Es la misma regla del punto de venta, y el servidor la vuelve a revisar.
+ */
+function chocaCon(indice, inicio) {
+    const otro = recorridosDia.value.findIndex((_, i) =>
+        i !== indice && horas.value[i] && Math.abs(minutos(horas.value[i]) - minutos(inicio)) < intervalo.value
+    );
+
+    return otro === -1 ? null : recorridosDia.value[otro].nombre;
+}
+
+function elegirHora(indice, inicio) {
+    if (chocaCon(indice, inicio)) return;
+
+    const nuevas = [...horas.value];
+    // Tocar la hora elegida la quita, para poder acomodar las demás.
+    nuevas[indice] = nuevas[indice] === inicio ? '' : inicio;
+    horas.value = nuevas;
+
+    if (nuevas[indice]) sugerirSiguientes(indice);
+}
+
+/**
+ * Encadena los recorridos que siguen y no tienen hora: el primer horario libre
+ * que empiece al menos un intervalo después del anterior. Solo sugiere; el
+ * cliente puede cambiarlo.
+ */
+function sugerirSiguientes(desde) {
+    for (let i = desde + 1; i < recorridosDia.value.length; i++) {
+        const anterior = horas.value[i - 1];
+        if (horas.value[i] || !anterior) return;
+
+        const minimo = minutos(anterior) + intervalo.value;
+        const sugerido = recorridosDia.value[i].horarios.find(
+            (h) => minutos(h.inicio) >= minimo && !chocaCon(i, h.inicio)
+        );
+
+        if (!sugerido) return;
+
+        const nuevas = [...horas.value];
+        nuevas[i] = sugerido.inicio;
+        horas.value = nuevas;
+    }
+}
+
 const puedePagar = computed(() =>
-    producto.value && fecha.value && horaElegida.value &&
+    producto.value && fecha.value && horarioCompleto.value &&
     cliente.nombre.trim().length >= 3 && correoValido(cliente.email) && telefonoValido(cliente.telefono) &&
     personas.value >= 1 && personas.value <= capacidad.value
 );
@@ -101,13 +179,18 @@ onMounted(async () => {
 
 // Cambiar de sucursal o de recorrido invalida lo elegido después, para que nadie
 // termine pagando un horario que ya no corresponde a lo que ve en pantalla.
-watch(sucursalId, () => { productoId.value = null; fecha.value = ''; horaElegida.value = ''; horarios.value = []; quitarCodigo(); });
+watch(sucursalId, () => { productoId.value = null; fecha.value = ''; quitarHoras(); horarios.value = []; recorridosDia.value = []; quitarCodigo(); });
 // El código depende del producto y del número de personas, así que al cambiar
 // cualquiera de los dos se revalida contra el servidor en vez de arrastrar
 // importes que ya no corresponden.
-watch(productoId, () => { horaElegida.value = ''; revalidarCodigo(); if (fecha.value) cargarHorarios(); });
+watch(productoId, () => { quitarHoras(); recorridosDia.value = []; revalidarCodigo(); if (fecha.value) cargarHorarios(); });
 watch(personas, () => revalidarCodigo());
-watch(fecha, () => { horaElegida.value = ''; cargarHorarios(); });
+watch(fecha, () => { quitarHoras(); cargarHorarios(); });
+
+function quitarHoras() {
+    horaElegida.value = '';
+    horas.value = [];
+}
 watch(personas, () => {
     if (producto.value?.capacidad && personas.value > producto.value.capacidad) {
         personas.value = producto.value.capacidad;
@@ -140,16 +223,28 @@ async function cargarHorarios() {
         if (esta !== consulta) return;
 
         horarios.value = datos.horarios;
+        recorridosDia.value = datos.recorridos || [];
+        intervalo.value = datos.intervalo || 30;
 
         // El horario elegido pudo quedarse sin lugar para el grupo nuevo.
         if (horaElegida.value && !datos.horarios.some((h) => h.inicio === horaElegida.value)) {
             horaElegida.value = '';
         }
+        horas.value = recorridosDia.value.map((r, i) =>
+            r.horarios.some((h) => h.inicio === horas.value[i]) ? horas.value[i] : ''
+        );
 
-        if (!datos.horarios.length) {
-            avisoHorarios.value = datos.abierto
-                ? `No quedan lugares para ${personas.value} ${personas.value === 1 ? 'persona' : 'personas'} ese día. Prueba con otra fecha.`
-                : 'Ese día no abrimos. Elige otra fecha.';
+        const grupo = `${personas.value} ${personas.value === 1 ? 'persona' : 'personas'}`;
+        const sinLugar = esPaquete.value
+            ? recorridosDia.value.find((r) => !r.horarios.length)
+            : null;
+
+        if (!datos.abierto) {
+            avisoHorarios.value = 'Ese día no abrimos. Elige otra fecha.';
+        } else if (sinLugar) {
+            avisoHorarios.value = `No quedan lugares para ${grupo} en ${sinLugar.nombre} ese día. Prueba con otra fecha.`;
+        } else if (!esPaquete.value && !datos.horarios.length) {
+            avisoHorarios.value = `No quedan lugares para ${grupo} ese día. Prueba con otra fecha.`;
         }
     } catch (e) {
         avisoHorarios.value = e.primero;
@@ -235,7 +330,8 @@ async function pagar() {
         producto_id: productoId.value,
         personas: personas.value,
         fecha: fecha.value,
-        hora: horaElegida.value,
+        // Un paquete manda la hora de cada recorrido, en el orden del paquete.
+        ...(esPaquete.value ? { horas: [...horas.value] } : { hora: horaElegida.value }),
         nombre: cliente.nombre.trim(),
         email: cliente.email.trim(),
         telefono: cliente.telefono.trim() || null,
@@ -362,7 +458,38 @@ async function pagar() {
                         </p>
                     </div>
 
-                    <div v-if="fecha">
+                    <div v-if="fecha && esPaquete">
+                        <p v-if="buscandoHorarios" class="text-sm">Buscando horarios…</p>
+                        <p v-else-if="avisoHorarios" class="text-sm text-terror-rojoClaro">{{ avisoHorarios }}</p>
+                        <template v-else>
+                            <p class="mb-4 text-xs">
+                                Elige la hora de cada recorrido. Al elegir una te sugerimos la siguiente; puedes cambiarla.
+                            </p>
+                            <div v-for="(r, i) in recorridosDia" :key="r.id" class="mb-5 last:mb-0">
+                                <label class="etiqueta-terror">{{ i + 1 }}. {{ r.nombre }}</label>
+                                <div class="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                                    <button
+                                        v-for="h in r.horarios" :key="h.inicio" type="button"
+                                        class="slot flex flex-col items-center"
+                                        :class="horas[i] === h.inicio ? 'slot-activo' : ''"
+                                        :disabled="!!chocaCon(i, h.inicio)"
+                                        :title="chocaCon(i, h.inicio) ? `A esa hora estarán en ${chocaCon(i, h.inicio)}` : ''"
+                                        @click="elegirHora(i, h.inicio)"
+                                    >
+                                        <span>{{ h.etiqueta }}</span>
+                                        <span v-if="chocaCon(i, h.inicio)" class="text-[10px] font-normal">
+                                            en {{ chocaCon(i, h.inicio) }}
+                                        </span>
+                                        <span v-else-if="h.lugares !== null" class="text-[10px] font-normal opacity-75">
+                                            {{ h.lugares }} {{ h.lugares === 1 ? 'lugar' : 'lugares' }}
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div v-else-if="fecha">
                         <label class="etiqueta-terror">Horario de inicio</label>
                         <p v-if="buscandoHorarios" class="text-sm">Buscando horarios…</p>
                         <p v-else-if="avisoHorarios" class="text-sm text-terror-rojoClaro">{{ avisoHorarios }}</p>
@@ -378,15 +505,12 @@ async function pagar() {
                                 </span>
                             </button>
                         </div>
-                        <p v-if="horaElegida && producto.recorridos.length > 1" class="mt-3 text-xs">
-                            Los {{ producto.recorridos.length }} recorridos van uno tras otro a partir de esa hora.
-                        </p>
                     </div>
                 </template>
                 <p v-else class="text-sm">Elige primero un recorrido.</p>
             </Paso>
 
-            <Paso :numero="sucursales.length > 1 ? 4 : 3" titulo="Tus datos" :activo="!!horaElegida">
+            <Paso :numero="sucursales.length > 1 ? 4 : 3" titulo="Tus datos" :activo="horarioCompleto">
                 <div class="grid gap-4 sm:grid-cols-2">
                     <!-- Campo trampa: fuera de pantalla, sin tabulación ni autocompletado. -->
                     <div aria-hidden="true" style="position:absolute; left:-10000px; width:1px; height:1px; overflow:hidden;">
@@ -440,7 +564,13 @@ async function pagar() {
                     <div class="flex justify-between gap-3">
                         <dt>Cuándo</dt>
                         <dd class="text-right text-white">
-                            <span v-if="fecha && horaElegida">
+                            <span v-if="fecha && esPaquete && itinerario.length">
+                                {{ fechaLarga(fecha) }}
+                                <span v-for="r in itinerario" :key="r.inicio + r.nombre" class="block text-xs text-terror-texto">
+                                    {{ r.etiqueta }} · <span class="text-white">{{ r.nombre }}</span>
+                                </span>
+                            </span>
+                            <span v-else-if="fecha && !esPaquete && horaElegida">
                                 {{ fechaLarga(fecha) }}, {{ horarios.find(h => h.inicio === horaElegida)?.etiqueta }}
                             </span>
                             <span v-else>—</span>

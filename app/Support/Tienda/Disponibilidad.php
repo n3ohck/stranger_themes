@@ -6,6 +6,7 @@ use App\Models\CompraPendiente;
 use App\Models\Producto;
 use App\Models\Reserva;
 use App\Models\Sucursal;
+use App\Scopes\SucursalFilterScope;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -128,7 +129,7 @@ class Disponibilidad
         }
 
         $capacidades = Producto::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope(SucursalFilterScope::class)
             ->whereIn('id', collect($tramos)->pluck('producto_id')->unique())
             ->pluck('capacidad', 'id');
 
@@ -210,7 +211,7 @@ class Disponibilidad
         $porClave = [];
 
         Reserva::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope(SucursalFilterScope::class)
             ->where('sucursal_id', $sucursal->id)
             ->whereIn('producto_id', $productoIds)
             ->where('estado', 'confirmada')

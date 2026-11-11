@@ -103,7 +103,7 @@ function hora(iso) {
                 </div>
 
                 <p class="mt-6 border-t border-terror-borde pt-5 text-xs">
-                    Llega 15 minutos antes. Presenta este folio o el correo de confirmación.
+                    Llega 10 minutos antes. Presenta este folio o el correo de confirmación.
                 </p>
             </div>
 

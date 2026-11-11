@@ -33,9 +33,14 @@ más: la tienda se sirve sola, con su propio diseño alineado al del sitio.
 - El punto de venta no respeta el cupo: en mostrador se puede pasar cuando el grupo
   sí cabe. Por eso un horario puede aparecer con menos lugares de los esperados, o
   sin lugares, aunque nadie lo haya comprado en línea.
-- Un **paquete ocupa un tramo por cada recorrido**, encadenados. El paquete de 3
-  recorridos que empieza a las 18:00 aparta 18:00, 18:30 y 19:00, y solo se ofrece
-  una hora de inicio si el grupo cabe en los tres tramos y terminan antes del cierre.
+- En un **paquete el cliente elige la hora de cada recorrido**, el mismo día y en el
+  orden que quiera. Al elegir una se sugiere la siguiente salida para el recorrido
+  que sigue, y las horas a menos de un intervalo de otro recorrido del grupo quedan
+  bloqueadas (el grupo no puede estar en dos a la vez). Cada recorrido se ofrece con
+  su propio cupo y su propia duración antes del cierre. `disponibilidad` devuelve
+  esos horarios en `recorridos[]` junto con el `intervalo` del día, y `checkout`
+  recibe `horas` (una por recorrido, en el orden del paquete) en lugar de `hora`.
+  Sin `horas`, el paquete se encadena desde `hora` como antes.
 - Reservar un paquete **también ocupa lugares en esos recorridos por separado**: si un
   paquete de 4 tomó el Escape Room de las 19:00 (cupo 6), ahí quedan 2 lugares.
 - No se ofrecen horarios con menos de **una hora** de anticipación.

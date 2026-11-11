@@ -5,6 +5,7 @@ namespace App\Actions\Tienda;
 use App\Models\CompraPendiente;
 use App\Models\Producto;
 use App\Models\Sucursal;
+use App\Scopes\SucursalFilterScope;
 use App\Support\Tienda\DescuentoAplicado;
 use App\Support\Tienda\Disponibilidad;
 use Carbon\Carbon;
@@ -41,7 +42,7 @@ class ApartarCompraAction
         }
 
         $producto = Producto::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope(SucursalFilterScope::class)
             ->where('id', $datos['producto_id'])
             ->where('sucursal_id', $sucursal->id)
             ->vendibleEnLinea()
@@ -65,7 +66,9 @@ class ApartarCompraAction
         // manda el código. Si no aplica, revienta antes de apartar nada.
         $descuento = DescuentoAplicado::resolver($datos['codigo_descuento'] ?? null, $producto, $personas);
 
-        $tramos = $this->tramosDelHorario($producto, $sucursal, $datos['fecha'], $datos['hora'], $personas);
+        $tramos = empty($datos['horas'])
+            ? $this->tramosDelHorario($producto, $sucursal, $datos['fecha'], $datos['hora'], $personas)
+            : $this->tramosElegidos($producto, $sucursal, $datos['fecha'], $datos['horas'], $personas);
 
         // El apartado y la comprobación van en la misma transacción para que dos
         // clientes que eligen el mismo horario a la vez no se aparten los dos.
@@ -115,10 +118,69 @@ class ApartarCompraAction
             ]);
         }
 
-        // Solo lo que identifica al tramo: la ocupación es una foto de este momento
-        // y no debe quedar guardada en el apartado.
-        return collect($elegida['tramos'])
+        return $this->limpiarTramos($elegida['tramos']);
+    }
+
+    /**
+     * Una hora por recorrido, elegida por el cliente. Igual que arriba, cada hora
+     * se busca en la disponibilidad del propio recorrido en vez de confiar en lo
+     * que mandó el navegador: así respeta cupo, anticipación y cierre de ese
+     * recorrido. Además el grupo no puede estar en dos recorridos a la vez, la
+     * misma regla que aplica el punto de venta.
+     *
+     * Los tramos se guardan en orden de hora, no en el del paquete: el primero es
+     * el que fecha la compra en Stripe y en la venta.
+     */
+    private function tramosElegidos(Producto $producto, Sucursal $sucursal, string $fecha, array $horas, int $personas): array
+    {
+        $dia = Carbon::parse($fecha);
+        $recorridos = Disponibilidad::recorridosDe($producto)->toBase()->values();
+
+        if (count($horas) !== $recorridos->count()) {
+            throw ValidationException::withMessages([
+                'horas' => 'Elige un horario para cada recorrido.',
+            ]);
+        }
+
+        $tramos = $recorridos->map(function (Producto $recorrido, int $i) use ($sucursal, $dia, $horas, $personas) {
+            $elegida = collect(Disponibilidad::paraProducto($recorrido, $sucursal, $dia, null, $personas))
+                ->firstWhere('inicio', $horas[$i]);
+
+            if (! $elegida) {
+                throw ValidationException::withMessages([
+                    'horas' => "El horario de {$recorrido->descripcion} ya no está disponible. Elige otro, por favor.",
+                ]);
+            }
+
+            return $elegida['tramos'][0];
+        });
+
+        $intervalo = Disponibilidad::intervaloDe($sucursal, $dia);
+
+        foreach ($tramos as $i => $tramo) {
+            foreach ($tramos->slice($i + 1) as $otro) {
+                $separacion = abs(Carbon::parse($tramo['inicio'])->diffInMinutes(Carbon::parse($otro['inicio']), false));
+
+                if ($separacion < $intervalo) {
+                    throw ValidationException::withMessages([
+                        'horas' => "{$tramo['producto']} y {$otro['producto']} quedan a la misma hora. Deja al menos {$intervalo} minutos entre recorridos.",
+                    ]);
+                }
+            }
+        }
+
+        return $this->limpiarTramos($tramos->sortBy('inicio')->values()->all());
+    }
+
+    /**
+     * Solo lo que identifica al tramo: la ocupación es una foto de este momento y
+     * no debe quedar guardada en el apartado.
+     */
+    private function limpiarTramos(array $tramos): array
+    {
+        return collect($tramos)
             ->map(fn ($tramo) => collect($tramo)->only(['producto_id', 'producto', 'inicio'])->all())
+            ->values()
             ->all();
     }
 }

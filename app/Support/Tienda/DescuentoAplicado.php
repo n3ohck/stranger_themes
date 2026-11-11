@@ -4,6 +4,7 @@ namespace App\Support\Tienda;
 
 use App\Models\Descuento;
 use App\Models\Producto;
+use App\Scopes\SucursalFilterScope;
 use App\Support\ReglaDescuento;
 use Illuminate\Validation\ValidationException;
 
@@ -49,7 +50,7 @@ class DescuentoAplicado
         }
 
         $descuento = Descuento::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope(SucursalFilterScope::class)
             ->where('codigo', $codigo)
             ->where('sucursal_id', $producto->sucursal_id)
             ->where('estatus', 'activo')

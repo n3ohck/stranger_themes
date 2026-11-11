@@ -201,9 +201,14 @@ SPA de Vue pública, enlazada desde strangerthemes.com. Diseño alineado al del 
    (`horarios[].intervalo_minutos`). Una sucursal saca recorridos cada 30 minutos y
    otra cada hora. `Disponibilidad` es la única fuente: de ahí leen la tienda, el
    punto de venta y la lista de reservas, así que no pueden desincronizarse.
-3. **Un paquete ocupa un tramo por recorrido**, encadenados según ese intervalo, y
-   solo se ofrece si todos caben antes del cierre. El último tramo se mide con la
-   **duración real** del recorrido, no con el intervalo: con salidas cada hora y
+3. **Un paquete ocupa un tramo por recorrido, y el cliente elige la hora de cada
+   uno** (mismo día, cualquier orden), como en el POS: se sugiere encadenado el
+   siguiente y una hora a menos de un intervalo de otro recorrido del grupo queda
+   bloqueada. `ApartarCompraAction::tramosElegidos` lo revisa en el servidor contra
+   la disponibilidad de cada recorrido suelto y guarda los tramos en orden de hora
+   (el primero fecha la compra). Sin `horas` en el checkout se encadena desde `hora`,
+   para que una pantalla vieja en caché siga funcionando. El final de un recorrido
+   se mide con su **duración real**, no con el intervalo: con salidas cada hora y
    recorridos de 25 minutos, la salida de las 21:30 termina 21:55 y sí es vendible.
    Apartar un paquete también bloquea esos recorridos por separado.
 4. **El horario se aparta 30 minutos mientras se paga** (`compras_pendientes`). Sin
@@ -389,6 +394,14 @@ que fija `DB_CONNECTION` a sqlite está comentada, así que los tests corren
 contra la base de desarrollo real. Un test con `RefreshDatabase` la borraría.
 
 ## Cosas a tener en cuenta
+
+- **Para saltarte el filtro de sucursal usa `withoutGlobalScope(SucursalFilterScope::class)`,
+  no `withoutGlobalScopes()`.** El plural también quita el scope de SoftDeletes y
+  devuelve registros borrados. Así aparecían en `/comprar` dos paquetes "DIFERENCIA
+  Winchester" (ids 12 y 16) borrados en 2024 con la casilla de tienda marcada, y la
+  tienda aceptaba códigos de descuento borrados. `Producto::scopeVendibleEnLinea`
+  además excluye los borrados por su cuenta. El plural solo tiene sentido cuando
+  sí quieres los borrados (p. ej. el anti-duplicado por `referencia_pago`).
 
 - **Nunca uses `Auth::loginUsingId()` para que `backpack_user()` deje de ser null.**
   `ProductoCrudController`, `DescuentoCrudController` y `ReservaCrudController` lo hacían

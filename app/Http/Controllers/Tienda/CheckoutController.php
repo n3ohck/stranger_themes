@@ -43,7 +43,12 @@ class CheckoutController extends Controller
             'producto_id' => ['required', 'integer', 'exists:productos,id'],
             'personas' => ['required', 'integer', 'min:1', 'max:20'],
             'fecha' => ['required', 'date_format:Y-m-d'],
-            'hora' => ['required', 'date_format:H:i'],
+            // Un tour manda `hora`. Un paquete manda `horas`: una por recorrido, en
+            // el orden del paquete. Sin `horas`, el paquete se encadena desde `hora`
+            // (así seguía funcionando la pantalla anterior que quede en caché).
+            'hora' => ['required_without:horas', 'nullable', 'date_format:H:i'],
+            'horas' => ['nullable', 'array', 'max:10'],
+            'horas.*' => ['required', 'date_format:H:i'],
             // Solo letras, espacios, apóstrofo, punto y guion: el nombre viaja al
             // correo, al panel, al POS y a Stripe, y no tiene por qué traer < > ni
             // comillas. Blade y Vue ya escapan; esto es una segunda barrera.

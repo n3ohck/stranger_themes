@@ -61,4 +61,9 @@
     .slot-activo {
         @apply border-terror-rojo bg-terror-rojo text-white;
     }
+
+    /* Hora que choca con otro recorrido del mismo grupo. */
+    .slot:disabled {
+        @apply cursor-not-allowed border-terror-borde bg-transparent text-terror-texto opacity-40;
+    }
 }
