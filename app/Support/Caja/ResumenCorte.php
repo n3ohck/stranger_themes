@@ -4,10 +4,11 @@ namespace App\Support\Caja;
 
 use App\Models\Apertura;
 use App\Models\Corte;
-use App\Scopes\SucursalFilterScope;
 use App\Models\Egreso;
 use App\Models\EmpleadoPago;
 use App\Models\Venta;
+use App\Models\VentaPago;
+use App\Scopes\SucursalFilterScope;
 use Carbon\Carbon;
 
 /**
@@ -54,10 +55,15 @@ class ResumenCorte
         // el corte porque el negocio las revisa junto con las del turno. Cuentan
         // por la hora de su primera visita, no por cuándo se compraron.
         $desdeEnLinea = self::inicioEnLinea($apertura, $sucursalId);
-        $online = (float) Venta::query()
-            ->enLineaConVisitaEntre($sucursalId, $desdeEnLinea, $hasta)
-            ->where('estatus', 'activo')
-            ->sum('total');
+        // Se suma lo cobrado en línea, no ventas.total: el sitio anterior guardaba
+        // ahí el total bruto (antes del descuento) y la tienda nueva el neto.
+        $online = (float) VentaPago::query()
+            ->where('tipo', 'online')
+            ->whereIn('venta_id', Venta::query()
+                ->enLineaConVisitaEntre($sucursalId, $desdeEnLinea, $hasta)
+                ->where('estatus', 'activo')
+                ->select('ventas.id'))
+            ->sum('monto');
 
         $salidas = self::salidas($apertura->id, $sucursalId, $desde, $hasta);
 
@@ -163,6 +169,7 @@ class ResumenCorte
         };
 
         $egresos = Egreso::query()
+            ->withoutGlobalScope(SucursalFilterScope::class)
             ->where('sucursal_id', $sucursalId)
             ->where('estatus', 'activo')
             ->tap(fn ($query) => $delTurno($query, 'fecha_pago'))
@@ -175,7 +182,11 @@ class ResumenCorte
             ->withoutGlobalScopes()
             ->whereNull('deleted_at')
             ->where('estatus', 'activo')
-            ->whereHas('empleado', fn ($empleado) => $empleado->where('sucursal_id', $sucursalId))
+            // El empleado también se filtra por la sucursal activa: se quita para
+            // que mande la sucursal explícita del corte.
+            ->whereHas('empleado', fn ($empleado) => $empleado
+                ->withoutGlobalScope(SucursalFilterScope::class)
+                ->where('sucursal_id', $sucursalId))
             ->tap(fn ($query) => $delTurno($query, 'created_at'))
             ->sum('monto');
 

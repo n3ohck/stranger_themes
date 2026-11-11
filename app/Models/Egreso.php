@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Scopes\SucursalFilterScope;
+use App\Support\SucursalActiva;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -55,8 +57,13 @@ class Egreso extends Model
     public static function boot()
     {
         parent::boot();
+        static::addGlobalScope(new SucursalFilterScope);
+
+        // Se guarda en la sucursal que el usuario está viendo (la del selector del
+        // panel; en el POS, la del cajero). Antes era siempre la de su ficha, así
+        // que un administrador viendo otra sucursal capturaba en la suya.
         static::creating(function ($obj) {
-            $obj->sucursal_id = backpack_user()->sucursal_id;
+            $obj->sucursal_id = SucursalActiva::id() ?? $obj->sucursal_id;
         });
         static::deleting(function ($obj) {
             \Storage::disk('pagos')->delete($obj->imagen);

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\EgresoRequest;
 use App\Models\Egreso;
-use App\Models\Sucursal;
 use App\Models\User;
 use App\Traits\DateTrait;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
@@ -113,19 +112,6 @@ class EgresoCrudController extends CrudController
         ]);
 
         $this->crud->addFilter([ // dropdown filter
-            'name' => 'sucursal_id',
-            'type' => 'dropdown',
-            'label' => 'Sucursal'
-        ], Sucursal::query()
-            ->select('id', 'razon_social')
-            ->get()
-            ->pluck('razon_social', 'id')
-            ->filter()
-            ->toArray(), function ($value) { // if the filter is active
-            $this->crud->addClause('where', 'sucursal_id', $value);
-        });
-
-        $this->crud->addFilter([ // dropdown filter
             'name' => 'user_id',
             'type' => 'dropdown',
             'label' => 'Usuario'
@@ -172,7 +158,7 @@ class EgresoCrudController extends CrudController
     protected function setupCreateOperation()
     {
         CRUD::setValidation(EgresoRequest::class);
-        request()->merge(['sucursal_id' => backpack_user()->sucursal_id]);
+        request()->merge(['sucursal_id' => \App\Support\SucursalActiva::id()]);
         $this->crud->addFields([
             [   // 1-n relationship
                 'label' => "Usuario que realizo el egreso", // Table column heading
@@ -275,7 +261,7 @@ class EgresoCrudController extends CrudController
                 'referencia' => $request->has('referencia') ? $request->referencia : 'N/A',
                 'imagen' => $request->has('imagen') ? $request->file('imagen')->store('egresos', 'pagos') : null,
                 'fecha_pago' => $fechaPago,
-                'sucursal_id' => backpack_user()->sucursal_id
+                'sucursal_id' => \App\Support\SucursalActiva::id()
             ]);
             DB::commit();
             return response()->json([

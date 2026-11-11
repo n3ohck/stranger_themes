@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\SucursalActiva;
 use App\Http\Requests\ReservaRequest;
 use App\Models\Reserva;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
@@ -146,7 +147,7 @@ class ReservaCrudController extends CrudController
             if (!$request->has('datetime') || !$request->has('product_id')) {
                 return response()->json(['error' => 'Faltan datos fecha o producto_id'], 400);
             }
-            $sucursalId = backpack_user()->sucursal_id;
+            $sucursalId = SucursalActiva::id();
             $reservas = Reserva::query()
                 ->where('fecha', Carbon::parse($request->datetime))
                 ->where('producto_id', $request->product_id)
@@ -174,7 +175,7 @@ class ReservaCrudController extends CrudController
                 throw new \Exception('No hay una sesión válida para crear la reservación');
             }
 
-            $sucursalId = backpack_user()->sucursal_id;
+            $sucursalId = SucursalActiva::id();
             $reserva = Reserva::create([
                 'producto_id' => $request->product_id,
                 'nombre_cliente' => $request->name,

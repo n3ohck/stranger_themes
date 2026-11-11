@@ -1,3 +1,7 @@
+{{-- En pantallas chicas la barra superior oculta el selector de sucursal: va aquí. --}}
+<li class="nav-item d-lg-none" style="max-width: 100%; min-width: 0;">
+    @include(backpack_view('inc.selector_sucursal'), ['variante' => 'lateral'])
+</li>
 @can('ventas.ver')
     <li class='nav-item'><a class='nav-link' href='{{ backpack_url('venta') }}'><i class='nav-icon la la-list'></i> Ventas</a></li>
 @endcan

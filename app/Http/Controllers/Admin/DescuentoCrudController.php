@@ -95,19 +95,6 @@ class DescuentoCrudController extends CrudController
        ]);
 
         $this->crud->addFilter([ // dropdown filter
-            'name' => 'sucursal_id',
-            'type' => 'dropdown',
-            'label' => 'Sucursal'
-        ],Sucursal::query()
-            ->select('id','razon_social')
-            ->get()
-            ->pluck('razon_social','id')
-            ->filter()
-            ->toArray(), function ($value) { // if the filter is active
-            $this->crud->addClause('where', 'sucursal_id', $value);
-        });
-
-        $this->crud->addFilter([ // dropdown filter
             'name' => 'producto_tipo',
             'type' => 'dropdown',
             'label' => 'Producto Tipo'
@@ -149,6 +136,8 @@ class DescuentoCrudController extends CrudController
             ],
             [
                 'name' => 'sucursal_id',
+                // Se propone la sucursal que se está viendo en el selector del header.
+                'default' => \App\Support\SucursalActiva::id(),
                 'label' => 'Sucursal',
                 'type' => 'select2',
                 'entity' => 'sucursal',
@@ -228,6 +217,5 @@ class DescuentoCrudController extends CrudController
             return response()->json(['error' => $e->getMessage()], 500);
         }
     }
-
 
 }

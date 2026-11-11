@@ -6,7 +6,6 @@ use App\Http\Requests\PagoCartaRequest;
 use App\Models\Configuracion;
 use App\Models\PagoCarta;
 use App\Models\PagoConcepto;
-use App\Models\Sucursal;
 use App\Models\User;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
@@ -94,19 +93,6 @@ class PagoCartaCrudController extends CrudController
         ]);
 
         $this->crud->addFilter([ // dropdown filter
-            'name' => 'sucursal_id',
-            'type' => 'dropdown',
-            'label' => 'Sucursal'
-        ], Sucursal::query()
-            ->select('id', 'razon_social')
-            ->get()
-            ->pluck('razon_social', 'id')
-            ->filter()
-            ->toArray(), function ($value) { // if the filter is active
-            $this->crud->addClause('where', 'sucursal_id', $value);
-        });
-
-        $this->crud->addFilter([ // dropdown filter
             'name' => 'pago_concepto_id',
             'type' => 'dropdown',
             'label' => 'Concepto'
@@ -178,7 +164,6 @@ class PagoCartaCrudController extends CrudController
 
     }
 
-
     /**
      * Define what happens when the Create operation is loaded.
      *
@@ -190,7 +175,7 @@ class PagoCartaCrudController extends CrudController
         CRUD::setValidation(PagoCartaRequest::class);
         request()
             ->merge([
-                'sucursal_id' => backpack_user()->sucursal_id,
+                'sucursal_id' => \App\Support\SucursalActiva::id(),
             ]);
 
         $this->crud->addFields([

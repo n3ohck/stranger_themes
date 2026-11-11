@@ -5,7 +5,7 @@
                 <div class="card">
                     <div class="card-body pt-0">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="block">
                                     <el-divider>Rango de fechas</el-divider>
                                     <el-date-picker
@@ -19,21 +19,7 @@
                                     </el-date-picker>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="block">
-                                    <el-divider>Sucursal</el-divider>
-                                    <el-select v-model="query.sucursal" placeholder="Selecciona una sucursal" @change="handleGet"
-                                               style="width: 100%;">
-                                        <el-option
-                                            v-for="item in sucursales"
-                                            :key="item.id"
-                                            :label="item.nombre"
-                                            :value="item.id">
-                                        </el-option>
-                                    </el-select>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="block">
                                     <el-divider>Estatus</el-divider>
                                     <el-select v-model="query.estatus" placeholder="Selecciona un estatus" @change="handleGet"
@@ -47,7 +33,7 @@
                                     </el-select>
                                 </div>
                             </div>
-                            <div class="col-md-3 pull-right">
+                            <div class="col-md-4 pull-right">
                                 <el-divider>Buscar</el-divider>
                                 <div class="block">
                                     <el-input v-model="query.search" placeholder="Buscar por folio"></el-input>
@@ -329,10 +315,6 @@ export default {
             required: true,
             default: 0
         },
-        sucursales: {
-            type: Array,
-            required: true
-        },
         estatus: {
             type: Array,
             required: true,
@@ -354,8 +336,7 @@ export default {
         query: {
             search: '',
             dates: null,
-            estatus: null,
-            sucursal: null
+            estatus: null
         },
         cantidadVentas:0,
         cantidadReservas:0,

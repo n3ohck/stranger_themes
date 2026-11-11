@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Scopes\SucursalFilterScope;
 use App\Actions\ExistenciaAction;
 use App\Http\Controllers\Controller;
 use App\Jobs\DisputaJob;
@@ -44,7 +45,7 @@ class DisputasController extends Controller
         ], 404);
 
         $venta = Venta::query()
-            ->withoutGlobalScopes()
+            ->withoutGlobalScope(SucursalFilterScope::class)
             ->where('id', $datos['venta_id'])
             ->where('origen', 'web')
             ->first();

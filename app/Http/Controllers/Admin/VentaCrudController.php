@@ -110,15 +110,6 @@ class VentaCrudController extends CrudController
         $this->crud->removeColumn('user_id_cancelacion');
         $this->crud->orderBy('created_at', 'desc');
         $this->crud->enableExportButtons();
-        $this->crud->addFilter([
-            'name' => 'sucursal_id',
-            'type' => 'select2',
-            'label' => 'Sucursal'
-        ], function () {
-            return Sucursal::pluck('razon_social', 'id')->toArray();
-        }, function ($query, $value) {
-            $query->where('sucursal_id', $value);
-        });
 
         $this->crud->addFilter([
             'name' => 'user_id',
@@ -177,7 +168,6 @@ class VentaCrudController extends CrudController
         $this->setupCreateOperation();
     }
 
-
     public function fetch(Request $request)
     {
         try {
@@ -215,11 +205,12 @@ class VentaCrudController extends CrudController
 
             $start = Carbon::parse($search->start_date)->startOfDay();
             $end = Carbon::parse($start)->endOfDay();
-            // withoutGlobalScopes es necesario porque estas ventas se crean con
-            // user_id = 1, pero hay que reponer el filtro de sucursal a mano: sin
-            // él la consulta devuelve las ventas en línea de todas las sucursales.
+            // Se quita solo el scope de sucursal (no withoutGlobalScopes(), que
+            // también quitaba SoftDeletes y traía ventas borradas) y se repone a
+            // mano: sin él la consulta devuelve las ventas en línea de todas las
+            // sucursales.
             $ventasOnlineExtra = Venta::query()
-                ->withoutGlobalScopes()
+                ->withoutGlobalScope(SucursalFilterScope::class)
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
                 ->whereHas('reservaciones', fn($q) => $q->whereBetween('fecha', [$start, $end]))
                 ->when(SucursalActiva::id(), fn($q, $sucursalId) => $q->where('sucursal_id', $sucursalId))
@@ -294,7 +285,6 @@ class VentaCrudController extends CrudController
         }
     }
 
-
     public function cancel(Request $request)
     {
         try {
@@ -314,7 +304,10 @@ class VentaCrudController extends CrudController
     {
         try {
             $tz = config('app.display_timezone', 'America/Chihuahua');
-            $params = $request->all();
+            // La sucursal no se recibe de la pantalla: la pone el selector del
+            // header a través del scope. Un filtro propio se sumaba al del header y,
+            // con otra sucursal, el reporte salía vacío.
+            $params = $request->except('sucursal');
 
             if (!isset($params['dates'])) {
                 $startLocal = Carbon::now($tz)->startOfDay();
@@ -432,17 +425,14 @@ class VentaCrudController extends CrudController
                 ];
             };
 
-            // Sucursal del reporte: la que se eligió en el filtro de la pantalla y,
-            // si no viene, la sucursal activa del usuario. Antes esta consulta usaba
-            // la sucursal del usuario mientras el resto del reporte usaba la del
-            // filtro, así que al consultar otra sucursal las ventas en línea seguían
-            // siendo las propias.
-            $sucursalReporte = $params['sucursal'] ?? SucursalActiva::id();
+            // Las ventas en línea se buscan sin scopes, así que la sucursal del
+            // header se repone a mano para que coincidan con el resto del reporte.
+            $sucursalReporte = SucursalActiva::id();
 
             // 1) Ventas en línea: se buscan aparte porque su created_at es la fecha
             //    de compra y el reporte las ubica por la fecha de la experiencia.
             $ventasOnlineExtra = Venta::query()
-                ->withoutGlobalScopes()
+                ->withoutGlobalScope(SucursalFilterScope::class)
                 ->whereHas('pagos', fn($q) => $q->where('tipo', 'online'))
                 ->whereHas('reservaciones', fn($q) => $q->whereBetween('fecha', [$startLocal, $endLocal]))
                 ->when($sucursalReporte, fn($q) => $q->where('sucursal_id', $sucursalReporte))
@@ -466,7 +456,10 @@ class VentaCrudController extends CrudController
                     'productos.descuentoEntity',
                     'productos'
                 ])
-                ->whereHas('pagos', fn($q) => $q->where('tipo', '!=', 'online'))
+                // Todo lo que no se pagó en línea, incluidas las de total cero (códigos
+                // de cortesía), que se registran sin pagos: con whereHas('pagos')
+                // desaparecían de la lista aunque sus reservaciones sí se contaban.
+                ->whereDoesntHave('pagos', fn($q) => $q->where('tipo', 'online'))
                 ->Filters($params)
                 ->get();
 
@@ -477,7 +470,11 @@ class VentaCrudController extends CrudController
 
                 // Total según tu lógica anterior
                 if ($hasOnline) {
-                    $totalVenta = ($venta->total - ($venta->descuento ?? 0));
+                    // Lo que se cobró, no el total guardado: el sitio anterior guardaba
+                    // el total bruto y la tienda nueva el neto. Restar el descuento
+                    // servía para el primero y al segundo se lo restaba dos veces
+                    // (una venta de $35 con $315 de descuento salía en −$280).
+                    $totalVenta = (float) $venta->pagos->where('tipo', 'online')->sum('monto');
                     $venta->created_at = optional($venta->reservaciones->first())->created_at ?? $venta->created_at;
                 } else {
                     $totalVenta = $venta->total;
@@ -505,8 +502,12 @@ class VentaCrudController extends CrudController
                 ];
             };
 
-            $ventasFinal = $ventas->map($mapVenta)
-                ->merge($ventasOnlineExtra->map($mapVenta))
+            // toBase(): sobre una colección de Eloquent VACÍA map() no degrada a
+            // colección base, y merge() con filas que son arreglos revienta con
+            // "getKey() on array". Pasaba con un día sin ventas de mostrador pero
+            // con ventas en línea: el Dashboard respondía 500 y se quedaba en ceros.
+            $ventasFinal = $ventas->toBase()->map($mapVenta)
+                ->merge($ventasOnlineExtra->toBase()->map($mapVenta))
                 ->sortByDesc('created_at')
                 ->values();
 
@@ -536,7 +537,7 @@ class VentaCrudController extends CrudController
     public function resumenProductos(Request $request)
     {
         try {
-            $params = $request->all();
+            $params = $request->except('sucursal');
             $tz = config('app.display_timezone', 'America/Chihuahua');
             if (!isset($params['dates'])) {
                 $startLocal = Carbon::now($tz)->startOfDay();
@@ -551,11 +552,7 @@ class VentaCrudController extends CrudController
             $params['dates'] = [$startLocal, $endLocal];
 
             $productos = VentaProducto::query()
-                ->whereHas('venta', function ($query) use ($params) {
-                    $query
-                        ->where('estatus', 'activo')
-                        ->Filters($params);
-                })
+                ->tap(fn ($query) => $this->lineasDelPeriodo($query, $params, $startLocal, $endLocal))
                 ->with([
                     'producto'
                 ])
@@ -581,7 +578,7 @@ class VentaCrudController extends CrudController
     public function resumenProductosDescuentos(Request $request)
     {
         try {
-            $params = $request->all();
+            $params = $request->except('sucursal');
             $tz = config('app.display_timezone', 'America/Chihuahua');
 
             if (!isset($params['dates'])) {
@@ -622,11 +619,7 @@ class VentaCrudController extends CrudController
             };
 
             $productos = VentaProducto::query()
-                ->whereHas('venta', function ($query) use ($params) {
-                    $query
-                        ->where('estatus', 'activo')
-                        ->Filters($params);
-                })
+                ->tap(fn ($query) => $this->lineasDelPeriodo($query, $params, $startLocal, $endLocal))
                 ->with([
                     'venta.pagos',
                     'producto',
@@ -737,5 +730,27 @@ class VentaCrudController extends CrudController
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Líneas de las ventas activas del periodo, con la misma regla que el resumen
+     * de ventas: las de mostrador por su fecha de registro y las de la tienda por
+     * la fecha de su visita. Antes estas pestañas tomaban las de la tienda por la
+     * fecha de compra y no cuadraban con "Resumen Ventas" en el mismo rango.
+     */
+    private function lineasDelPeriodo($query, array $params, $desde, $hasta): void
+    {
+        $enLinea = Venta::query()
+            ->where('estatus', 'activo')
+            ->whereHas('pagos', fn ($q) => $q->where('tipo', 'online'))
+            ->whereHas('reservaciones', fn ($q) => $q->whereBetween('fecha', [$desde, $hasta]))
+            ->select('ventas.id');
+
+        $query->where(fn ($query) => $query
+            ->whereHas('venta', fn ($venta) => $venta
+                ->where('estatus', 'activo')
+                ->whereDoesntHave('pagos', fn ($q) => $q->where('tipo', 'online'))
+                ->Filters($params))
+            ->orWhereIn('venta_id', $enLinea));
     }
 }

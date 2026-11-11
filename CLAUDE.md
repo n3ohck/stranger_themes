@@ -44,8 +44,8 @@ alimentan de `routes/webapi.php`. Todo lo demás es Blade + Backpack.
 
 ### 1. Multi-tenancy por scope global
 `App\Scopes\SucursalFilterScope` está aplicado en `Venta`, `Reserva`, `Producto`,
-`Descuento`, `Corte`, `Apertura`, `PagoCarta`, `PagoConcepto`. La sucursal por la que
-filtra la resuelve `App\Support\SucursalActiva`:
+`Descuento`, `Corte`, `Apertura`, `PagoCarta`, `PagoConcepto`, `Egreso` y `Empleado`.
+La sucursal por la que filtra la resuelve `App\Support\SucursalActiva`:
 
 - Cajeros y consulta: siempre la sucursal de su ficha.
 - Administración y gerencia: la que hayan elegido en el selector del panel; si no han
@@ -57,7 +57,23 @@ Si `backpack_user()` es null (rutas públicas), **el scope no filtra nada**. Por
 endpoints `public/*` exigen `sucursal_id` explícito.
 
 `EmpleadoPago` usa su propio closure de scope, no la clase, porque hereda la sucursal
-del empleado.
+del empleado. Ojo: un `whereHas('empleado')` también aplica el scope de `Empleado`;
+donde se quiera una sucursal explícita (como en `ResumenCorte`) hay que quitarlo
+también dentro del `whereHas`.
+
+**El selector del header es el único selector de sucursal del panel.** Las pantallas
+no llevan filtro "Sucursal" propio: se sumaba al del header y, al elegir otra
+sucursal, la lista salía vacía (y Reportes llegaba a mezclar egresos de una sucursal
+con pagos de otra). Los endpoints del Dashboard y Reportes ignoran cualquier
+`sucursal`/`branch` que llegue en la petición y usan `SucursalActiva::id()`.
+La única excepción es **Usuarios**, que conserva su filtro: `User` no tiene scope
+porque dar de alta usuarios es una tarea de todas las sucursales.
+
+Lo que se captura en el panel va a la sucursal del header, no a la de la ficha del
+usuario: usa `SucursalActiva::id()` y nunca `backpack_user()->sucursal_id` para
+decidir dónde se guarda o qué se consulta. En el POS ambas coinciden (no hay sesión),
+así que el cambio no afecta a los cajeros. Los formularios de alta proponen la
+sucursal del header como valor por omisión.
 
 **Los nombres de rol son sensibles a mayúsculas.** Usa siempre `App\Support\Roles`:
 el rol se llama `Administrador`, y el scope preguntaba por `'administrador'`, así que
@@ -108,9 +124,22 @@ Las existencias se mueven vía `App\Actions\ExistenciaAction` (solo productos `t
 
 ### 5. Ventas online: tratamiento especial en reportes
 Se crean con `user_id = 1` y su `created_at` es la fecha de compra, no la de la
-experiencia. Por eso los reportes las consultan aparte, con `withoutGlobalScopes()` y
-filtrando por `reservaciones.fecha` en lugar de `ventas.created_at`, y luego hacen merge
-+ `unique('id')`. Ver `VentaCrudController@fetch` y `@resumen`.
+experiencia. Por eso los reportes las consultan aparte, quitando solo el scope de
+sucursal (`withoutGlobalScope(SucursalFilterScope::class)`, nunca
+`withoutGlobalScopes()`, que trae las borradas) y filtrando por `reservaciones.fecha`
+en lugar de `ventas.created_at`, y luego hacen merge + `unique('id')`. Ver
+`VentaCrudController@fetch`, `@resumen` y `lineasDelPeriodo()` (las pestañas de
+productos usan la misma regla para cuadrar con el resumen).
+
+**El importe de una venta en línea es lo cobrado (`venta_pagos.monto` con tipo
+`online`), no `ventas.total`.** El sitio anterior guardaba en `total` el importe
+bruto y la tienda nueva guarda el neto: restar el descuento servía para el primero
+y al segundo se lo restaba dos veces (una venta de $35 salía en −$280). El
+Dashboard y `ResumenCorte` suman lo cobrado.
+
+Al juntar colecciones en un reporte, `toBase()` antes de `map()`: un día sin ventas
+de mostrador pero con ventas en línea hacía que `merge()` reventara con `getKey() on
+array` y el Dashboard respondía 500.
 
 ### 6. Regla de redondeo de descuentos (negocio)
 Aplica **solo al descuento unitario**, nunca a precios ni cantidades:
@@ -393,6 +422,17 @@ php artisan tienda:seguridad [--url=…]  # suite de seguridad de la tienda por 
 que fija `DB_CONNECTION` a sqlite está comentada, así que los tests corren
 contra la base de desarrollo real. Un test con `RefreshDatabase` la borraría.
 
+`tests/Feature/DosSucursalesTest.php` es la prueba de punta a punta: crea dos
+sucursales con su cajero, opera el POS (ventas, cancelación, egresos, pagos a
+empleados con comprobante, precorte y corte), compra en la tienda en línea y
+revisa que el panel (Dashboard, resumen de productos, reporte de pagos y
+listados) cuadre por sucursal. Usa `DatabaseTransactions`: todo se revierte al
+terminar. Se corre sola:
+
+```bash
+vendor/bin/phpunit --filter DosSucursalesTest
+```
+
 ## Cosas a tener en cuenta
 
 - **Para saltarte el filtro de sucursal usa `withoutGlobalScope(SucursalFilterScope::class)`,
@@ -421,7 +461,7 @@ contra la base de desarrollo real. Un test con `RefreshDatabase` la borraría.
 - **`vendor/` está en `.gitignore` pero `vendor/backpack/crud/src/app/Models/Traits/CrudTrait.php`
   está trackeado individualmente** con un parche local. Cualquier `composer install` lo
   revierte silenciosamente.
-- No hay cobertura de tests. `tests/` solo tiene los `ExampleTest` de Laravel.
+- Fuera de `DosSucursalesTest` no hay cobertura de tests.
 - `POST /api/register` está abierto y roto (usa un campo `name` inexistente en `User` y
   `JWTAuth` sin importar). No es un endpoint en uso.
 - Los binarios `wkhtmltopdf.exe` / `wkhtmltoimage.exe` (Windows, ~60 MB) están commiteados

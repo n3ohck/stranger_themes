@@ -8,7 +8,6 @@ use App\Models\Corte;
 use App\Models\Egreso;
 use App\Models\EmpleadoPago;
 use App\Models\Reserva;
-use App\Models\Sucursal;
 use App\Models\User;
 use App\Models\Venta;
 use App\Support\Caja\ResumenCorte;
@@ -135,19 +134,6 @@ class CorteCrudController extends CrudController
 
         $this->crud->addButtonFromView('line', 'ver_corte', 'ver_corte', 'beginning');
         $this->crud->orderBy('fecha_inicio', 'desc');
-
-        $this->crud->addFilter([ // dropdown filter
-            'name' => 'sucursal_id',
-            'type' => 'dropdown',
-            'label' => 'Sucursal'
-        ], Sucursal::query()
-            ->select('id', 'razon_social')
-            ->get()
-            ->pluck('razon_social', 'id')
-            ->filter()
-            ->toArray(), function ($value) { // if the filter is active
-            $this->crud->addClause('where', 'sucursal_id', $value);
-        });
 
         $this->crud->addFilter([ // dropdown filter
             'name' => 'user_id',
@@ -324,7 +310,8 @@ class CorteCrudController extends CrudController
                 'fecha_inicio' => $this->makeDate($request->get('fecha_inicio')),
                 'fecha_final' => $this->makeDate($request->get('fecha_final')),
                 'user_id' => backpack_user()->id,
-                'sucursal_id' => backpack_user()->sucursal_id,
+                // El corte es de la sucursal de su apertura.
+                'sucursal_id' => $apertura->sucursal_id,
                 'apertura_id' => $apertura->id,
                 'fondo_final' => $request->get('fondo_final') ?? 0,
             ]);

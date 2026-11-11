@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Scopes\SucursalFilterScope;
 use App\Models\Reserva;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ class ReservasController extends Controller
             $startDate = Carbon::parse($date)->startOfDay();
             $endDate = Carbon::parse($date)->endOfDay();
             $reservas = Reserva::query()
-                ->withoutGlobalScopes()
+                ->withoutGlobalScope(SucursalFilterScope::class)
                 ->where('sucursal_id', $sucursalId)
                 ->where('producto_id', $productoId)
                 ->whereBetween('fecha', [

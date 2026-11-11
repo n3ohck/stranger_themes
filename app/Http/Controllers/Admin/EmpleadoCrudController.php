@@ -104,18 +104,6 @@ class EmpleadoCrudController extends CrudController
             ]
         ]);
         $this->crud->enableExportButtons();
-        $this->crud->addFilter([ // dropdown filter
-            'name' => 'sucursal_id',
-            'type' => 'dropdown',
-            'label' => 'Sucursal'
-        ], Sucursal::query()
-            ->select('id', 'razon_social')
-            ->get()
-            ->pluck('razon_social', 'id')
-            ->filter()
-            ->toArray(), function ($value) { // if the filter is active
-            $this->crud->addClause('where', 'sucursal_id', $value);
-        });
     }
 
     /**
@@ -164,6 +152,8 @@ class EmpleadoCrudController extends CrudController
             ],
             [   // select2_from_array
                 'name' => 'sucursal_id',
+                // Se propone la sucursal que se está viendo en el selector del header.
+                'default' => \App\Support\SucursalActiva::id(),
                 'label' => "Sucursal",
                 'type' => 'select2_from_array',
                 'options' => Sucursal::query()->select(['id', 'razon_social'])->pluck('razon_social', 'id')->toArray(),

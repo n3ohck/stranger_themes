@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Scopes\SucursalFilterScope;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,11 @@ use Venturecraft\Revisionable\RevisionableTrait;
 class Empleado extends Model
 {
     use CrudTrait, RevisionableTrait, SoftDeletes;
+
+    protected static function booted()
+    {
+        static::addGlobalScope(new SucursalFilterScope);
+    }
 
     /*
     |--------------------------------------------------------------------------

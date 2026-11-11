@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Requests\EmpleadoPagoRequest;
 use App\Models\Empleado;
 use App\Models\EmpleadoPago;
-use App\Models\Sucursal;
 use App\Traits\DateTrait;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
@@ -101,19 +100,6 @@ class EmpleadoPagoCrudController extends CrudController
             ->filter()
             ->toArray(), function ($value) { // if the filter is active
             $this->crud->addClause('where', 'empleado_id', $value);
-        });
-
-        $this->crud->addFilter([ // dropdown filter
-            'name' => 'id',
-            'type' => 'dropdown',
-            'label' => 'Sucursal'
-        ], Sucursal::query()
-            ->select('id','razon_social')
-            ->get()
-            ->pluck('razon_social', 'id')
-            ->filter()
-            ->toArray(), function ($value) { // if the filter is active
-            $this->crud->addClause('BySucursal', $value);
         });
 
         $this->crud->addFilter([

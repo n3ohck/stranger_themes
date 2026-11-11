@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Corte;
 use App\Models\Egreso;
 use App\Models\EmpleadoPago;
+use App\Support\SucursalActiva;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -34,13 +35,12 @@ class PaymentReportController extends Controller
                 'origin' => $ultimoSegmento,
                 'startDate' => $startDate->format('Y-m-d'),
                 'endDate' => $endDate->format('Y-m-d'),
-                'branch' => $corte->sucursal_id,
             ]);
         }
         return Inertia::render('Reportes/index');
     }
 
-    public function egreso($startDate, $endDate, int $branch)
+    public function egreso($startDate, $endDate, ?int $branch)
     {
         return Egreso::query()
             ->select(['monto', 'fecha_pago', 'estatus', 'sucursal_id','imagen','user_id'])
@@ -49,7 +49,7 @@ class PaymentReportController extends Controller
             ->where(function ($query) use ($startDate, $endDate, $branch) {
                 $query
                     ->whereBetween('fecha_pago', [$startDate, $endDate])
-                    ->where('sucursal_id', $branch)
+                    ->when($branch, fn ($query) => $query->where('sucursal_id', $branch))
                     ->where('estatus', 'activo');
             })
             ->get()
@@ -65,12 +65,12 @@ class PaymentReportController extends Controller
             });
     }
 
-    public function pagoEmpleado($startDate, $endDate, int $branch)
+    public function pagoEmpleado($startDate, $endDate, ?int $branch)
     {
         return EmpleadoPago::query()
             ->with(['empleado:id,nombres,apellidos', 'empleado.sucursal:id,razon_social'])
             ->whereHas('empleado', function ($q) use ($branch) {
-                $q->where('sucursal_id', $branch);
+                $q->when($branch, fn ($q) => $q->where('sucursal_id', $branch));
             })
             ->where(function ($query) use ($startDate, $endDate, $branch) {
                 $query
@@ -95,7 +95,6 @@ class PaymentReportController extends Controller
     {
         try {
             $validated = $request->validate([
-                'branch' => 'required|integer|exists:sucursales,id',
                 'dates' => 'required|array|size:2',
                 'dates.0' => 'required|date',
                 'dates.1' => 'required|date|after_or_equal:dates.0',
@@ -105,7 +104,10 @@ class PaymentReportController extends Controller
 
             $dates = $request->input('dates');
             $origins = $request->input('origins');
-            $branch = $request->input('branch');
+            // La sucursal es la del selector del header, no un filtro de la pantalla:
+            // antes los egresos usaban la del filtro y los pagos a empleados la del
+            // header, y el reporte podía mezclar dos sucursales.
+            $branch = SucursalActiva::id();
 
             $startDate = Carbon::parse($dates[0])->startOfDay()->format('Y-m-d H:i:s');
             $endDate = Carbon::parse($dates[1])->endOfDay()->format('Y-m-d H:i:s');

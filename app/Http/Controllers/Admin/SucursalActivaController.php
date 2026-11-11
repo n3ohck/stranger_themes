@@ -27,6 +27,9 @@ class SucursalActivaController extends Controller
             return back();
         }
 
+        $nombre = optional(\App\Models\Sucursal::find($request->input('sucursal_id')))->razon_social;
+        \Alert::success("Ahora estás viendo {$nombre}.")->flash();
+
         return back();
     }
 }

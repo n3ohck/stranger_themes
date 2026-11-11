@@ -5,7 +5,7 @@
                 <div class="card">
                     <div class="card-body pt-0">
                         <div class="row">
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="block">
                                     <el-divider>Rango de fechas</el-divider>
                                     <el-date-picker
@@ -18,13 +18,7 @@
                                     </el-date-picker>
                                 </div>
                             </div>
-                            <div class="col-md-3">
-                                <div class="block">
-                                    <el-divider>Sucursal</el-divider>
-                                    <branch-selector v-model="query.branch"></branch-selector>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
+                            <div class="col-md-4">
                                 <div class="block">
                                     <el-divider>Origen</el-divider>
                                     <el-select v-model="query.origins" placeholder="Selecciona un origen"
@@ -39,7 +33,7 @@
                                     </el-select>
                                 </div>
                             </div>
-                            <div class="col-md-3 pull-right">
+                            <div class="col-md-4 pull-right">
                                <el-button type="info" class="mt-5 w-100" plain @click="handleGet">Buscar</el-button>
                             </div>
                         </div>
@@ -92,16 +86,10 @@
 </template>
 
 <script type="text/javascript">
-import BranchSelector from "../Components/branchSelector.vue";
-
 export default {
     name: "PaymentReport",
-    components: {BranchSelector},
+    components: {},
     props: {
-        branch: {
-            type: Number,
-            required: false
-        },
         origin:{
             type: String,
             required: false
@@ -132,8 +120,7 @@ export default {
         },
         query: {
             dates: [],
-            origins: [],
-            branch: null
+            origins: []
         }
     }),
     computed: {
@@ -157,11 +144,6 @@ export default {
                 return;
             }
 
-            if( !this.query.branch ){
-                this.$message.error('Debes seleccionar una sucursal');
-                return;
-            }
-
             if( !this.query.origins ){
                 this.$message.error('Debes seleccionar un origen');
                 return;
@@ -181,9 +163,6 @@ export default {
         }
     },
     created() {
-        if(this.branch) {
-            this.query.branch = this.branch;
-        }
         if(this.origin) {
             if (this.origin === 'empleado'){
                 this.query.origins.push('pagoEmpleado');
@@ -194,11 +173,6 @@ export default {
         if (this.startDate){
             this.query.dates = [this.startDate, this.endDate];
             this.handleGet()
-        }
-    },
-    watch: {
-        'query.branch': function (newVal) {
-            console.log('Sucursal seleccionada:', newVal);
         }
     }
 };
