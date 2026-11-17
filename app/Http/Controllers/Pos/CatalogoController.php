@@ -54,6 +54,10 @@ class CatalogoController extends Controller
                 'codigo' => $producto->codigo,
                 'nombre' => $producto->descripcion,
                 'precio' => (float) $producto->precio,
+                // Precio por persona según el tamaño del grupo. El POS lo usa para
+                // mostrar el total; al cobrar, el servidor lo vuelve a calcular.
+                'rangos_precio' => $producto->rangosDePrecio(),
+                'precio_desde' => $producto->precioMinimo(),
                 'tipo' => $producto->tipo,
                 'existencia' => (int) $producto->existencia,
                 // Solo los artículos manejan inventario; un tour nunca se agota por stock.

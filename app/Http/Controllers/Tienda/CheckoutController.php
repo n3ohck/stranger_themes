@@ -8,7 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Models\CompraPendiente;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
@@ -185,8 +187,16 @@ class CheckoutController extends Controller
                 // Stripe expira la sesión junto con el apartado, para que no quede
                 // un enlace de pago vivo cuando el horario ya se liberó.
                 'expires_at' => $compra->expira_en->timestamp,
+                // Stripe no deja poner un reloj en su página: se avisa la hora
+                // límite junto al botón de pagar. La cuenta regresiva en vivo la
+                // ve el cliente si regresa a la tienda.
+                'custom_text' => [
+                    'submit' => ['message' => $this->avisoDeApartado($compra)],
+                ],
                 'success_url' => route('tienda.retorno') . '?compra=' . $compra->referencia . '&session_id={CHECKOUT_SESSION_ID}',
-                'cancel_url' => url('/comprar?cancelado=1'),
+                // Con la referencia, la tienda muestra cuánto le queda al apartado
+                // y deja retomar el pago o soltar el horario.
+                'cancel_url' => url('/comprar?cancelado=1&compra=' . $compra->referencia),
             ], [
                 // Si stripe-php reintenta por red, Stripe devuelve la misma sesión
                 // en lugar de crear otra para la misma compra.
@@ -308,6 +318,128 @@ class CheckoutController extends Controller
         }
 
         return response()->json(['recibido' => true]);
+    }
+
+    /**
+     * Estado del apartado para la cuenta regresiva de la tienda.
+     *
+     * Los segundos restantes los calcula el servidor: el reloj del cliente puede
+     * estar adelantado o atrasado y la pantalla mostraría un tiempo que no es.
+     * La referencia es un UUID que solo conoce quien inició la compra, igual que
+     * en el comprobante.
+     */
+    public function apartado(string $referencia)
+    {
+        $compra = CompraPendiente::with('producto')->where('referencia', $referencia)->first();
+
+        if (! $compra) {
+            return response()->json(['error' => 'No encontramos ese apartado.'], 404);
+        }
+
+        $vigente = $compra->estado === 'apartada' && ! $compra->venta_id && $compra->expira_en->isFuture();
+
+        return response()->json([
+            'referencia' => $compra->referencia,
+            'estado' => $compra->venta_id ? 'pagada' : ($compra->expirada() ? 'expirada' : $compra->estado),
+            'vigente' => $vigente,
+            // Sin el minuto de margen interno: al cliente se le prometen 30.
+            'segundos_restantes' => $vigente ? max(0, (int) Carbon::now()->diffInSeconds($compra->expira_en) - 60) : 0,
+            'expira_en' => $compra->expira_en->toIso8601String(),
+            'producto' => optional($compra->producto)->descripcion,
+            'personas' => $compra->personas,
+            'total' => $compra->total,
+            'horarios' => collect($compra->horarios)->map(fn ($tramo) => [
+                'producto' => $tramo['producto'] ?? null,
+                'inicio' => $tramo['inicio'],
+            ])->values(),
+            'url_pago' => $vigente ? $this->urlDePagoAbierta($compra) : null,
+        ]);
+    }
+
+    /**
+     * Suelta el horario antes de que venza el apartado.
+     *
+     * Primero se expira la sesión de Stripe: si el horario se liberara con el
+     * enlace de pago vivo, el cliente podría pagar un lugar que ya se vendió a
+     * otro. Si Stripe no deja expirarla (ya se pagó), no se libera nada.
+     */
+    public function liberar(string $referencia)
+    {
+        $compra = CompraPendiente::where('referencia', $referencia)->first();
+
+        if (! $compra) {
+            return response()->json(['error' => 'No encontramos ese apartado.'], 404);
+        }
+
+        if ($compra->estado !== 'apartada' || $compra->venta_id) {
+            return response()->json(['liberada' => $compra->estado !== 'pagada' && ! $compra->venta_id]);
+        }
+
+        if ($compra->stripe_session_id && $compra->expira_en->isFuture()) {
+            try {
+                $sesion = $this->stripe()->checkout->sessions->retrieve($compra->stripe_session_id);
+
+                if ($sesion->status === 'complete') {
+                    return response()->json([
+                        'error' => 'Ese pago ya se completó. Revisa tu correo para ver tus boletos.',
+                    ], 409);
+                }
+
+                if ($sesion->status === 'open') {
+                    $this->stripe()->checkout->sessions->expire($compra->stripe_session_id);
+                }
+            } catch (\Throwable $e) {
+                Log::warning('No se pudo expirar la sesión al liberar un apartado', [
+                    'compra' => $compra->referencia,
+                    'mensaje' => $e->getMessage(),
+                ]);
+
+                return response()->json(['error' => 'No pudimos liberar el horario. Intenta de nuevo.'], 502);
+            }
+        }
+
+        // Con candado: el webhook pudo confirmar el pago mientras se expiraba.
+        $liberada = DB::transaction(function () use ($compra) {
+            $fila = CompraPendiente::query()->lockForUpdate()->find($compra->id);
+
+            if ($fila->estado !== 'apartada' || $fila->venta_id) {
+                return false;
+            }
+
+            $fila->forceFill(['estado' => 'liberada'])->save();
+
+            return true;
+        });
+
+        return response()->json(['liberada' => $liberada]);
+    }
+
+    /** URL de la sesión de Stripe si todavía se puede pagar en ella. */
+    private function urlDePagoAbierta(CompraPendiente $compra): ?string
+    {
+        if (! $compra->stripe_session_id || ! $this->stripeConfigurado()) {
+            return null;
+        }
+
+        try {
+            $sesion = $this->stripe()->checkout->sessions->retrieve($compra->stripe_session_id);
+
+            return $sesion->status === 'open' ? $sesion->url : null;
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo consultar la sesión de un apartado', [
+                'compra' => $compra->referencia,
+                'mensaje' => $e->getMessage(),
+            ]);
+
+            return null;
+        }
+    }
+
+    private function avisoDeApartado(CompraPendiente $compra): string
+    {
+        // MINUTOS_PARA_PAGAR lleva uno de margen interno; al cliente se le dice 30.
+        return 'Tu horario está apartado hasta las ' . $compra->expira_en->copy()->subMinute()->format('g:i a')
+            . ' (hora de la sucursal). Si no completas el pago antes, se libera para otras personas.';
     }
 
     /** Datos del comprobante para la pantalla de gracias. */

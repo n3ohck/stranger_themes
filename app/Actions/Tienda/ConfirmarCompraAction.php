@@ -126,7 +126,10 @@ class ConfirmarCompraAction
         VentaProducto::create([
             'venta_id' => $venta->id,
             'producto_id' => $producto->id,
-            'precio' => $producto->precio,
+            // El precio por persona que se apartó, no el de catálogo: con rangos
+            // por personas depende del grupo, y el catálogo pudo cambiar mientras
+            // el cliente pagaba. total + descuento = precio × personas.
+            'precio' => round(((float) $compra->total + (float) $compra->descuento) / max(1, (int) $compra->personas), 2),
             'cantidad' => $compra->personas,
             'total' => $compra->total,
             'descuento' => $compra->descuento,

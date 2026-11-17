@@ -81,8 +81,11 @@ class ProductoCrudController extends CrudController
             ],
             [
                 'name' => 'precio',
-                'type' => 'text',
-                'label' => 'Precio'
+                'type' => 'closure',
+                'label' => 'Precio',
+                // Con rangos se muestra el precio base y que hay precios por grupo.
+                'function' => fn (Producto $p) => e($p->precio) . ($p->rangosDePrecio() ? ' <small class="text-muted">+ por personas</small>' : ''),
+                'escaped' => false,
             ],
             [
                 'name' => 'existencia',
@@ -181,6 +184,7 @@ class ProductoCrudController extends CrudController
                 'name' => 'precio',
                 'type' => 'number',
                 'label' => 'Precio del producto',
+                'hint' => 'Precio por persona. Si capturas rangos por número de personas, este es el que se cobra cuando el grupo no cae en ninguno.',
                 'attributes' => [
                     'placeholder' => 'Precio del producto',
                     'class'       => 'form-control',
@@ -189,6 +193,40 @@ class ProductoCrudController extends CrudController
                 'wrapper'   => [
                     'class'      => 'form-group col-md-4'
                 ], // change the HTML attributes for the field wrapper - mostly for resizing fields
+            ],
+            [   // repeatable
+                'name'  => 'precios_por_personas',
+                'label' => 'Precio por número de personas (opcional)',
+                'type'  => 'repeatable',
+                'hint' => 'El rango en el que cae el grupo fija el precio de todas sus personas: con 1 a 3 a $350 y 4 a 6 a $250, un grupo de 5 paga 5 × $250. Deja "Hasta" vacío en el último rango para decir "en adelante". Si el grupo no cae en ningún rango se cobra el precio del producto. Aplica en el punto de venta y en la tienda en línea.',
+                'fields' => [
+                    [
+                        'name' => 'desde',
+                        'label' => 'Desde (personas)',
+                        'type' => 'number',
+                        'attributes' => ['min' => 1, 'step' => 1],
+                        'wrapper' => ['class' => 'form-group col-md-4'],
+                    ],
+                    [
+                        'name' => 'hasta',
+                        'label' => 'Hasta (personas)',
+                        'type' => 'number',
+                        'attributes' => ['min' => 1, 'step' => 1, 'placeholder' => 'En adelante'],
+                        'wrapper' => ['class' => 'form-group col-md-4'],
+                    ],
+                    [
+                        'name' => 'precio',
+                        'label' => 'Precio por persona',
+                        'type' => 'number',
+                        'attributes' => ['min' => 0, 'step' => '0.01'],
+                        'prefix' => '$',
+                        'wrapper' => ['class' => 'form-group col-md-4'],
+                    ],
+                ],
+                'new_item_label'  => 'Añadir rango',
+                'init_rows' => 0,
+                'min_rows' => 0,
+                'max_rows' => 10,
             ],
             [
                 'name' => 'existencia',

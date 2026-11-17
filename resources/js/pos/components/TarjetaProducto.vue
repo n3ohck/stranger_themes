@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { dinero } from '../utils/formato';
+import { etiquetaRango } from '../../shared/precio';
 import Icono from './Icono.vue';
 
 const props = defineProps({
@@ -27,6 +28,8 @@ const agotado = computed(
     () => props.producto.controla_existencia && props.producto.existencia <= 0
 );
 
+const rangos = computed(() => props.producto.rangos_precio || []);
+
 const detalleTours = computed(() => {
     if (!props.producto.tours.length) return null;
 
@@ -45,7 +48,8 @@ const detalleTours = computed(() => {
                     {{ etiquetaTipo[producto.tipo] || producto.tipo }}
                 </span>
                 <span class="tabular shrink-0 text-lg font-bold text-slate-100">
-                    {{ dinero(producto.precio) }}
+                    <span v-if="rangos.length" class="text-xs font-normal text-slate-500">desde</span>
+                    {{ dinero(rangos.length ? producto.precio_desde : producto.precio) }}
                 </span>
             </div>
 
@@ -56,6 +60,12 @@ const detalleTours = computed(() => {
             <p v-if="detalleTours" class="mt-1 line-clamp-2 text-xs text-slate-500">
                 {{ detalleTours }}
             </p>
+
+            <ul v-if="rangos.length" class="tabular mt-1 text-xs text-slate-500">
+                <li v-for="r in rangos" :key="r.desde">
+                    {{ etiquetaRango(r) }} {{ r.hasta === r.desde && r.desde === 1 ? 'persona' : 'personas' }}: {{ dinero(r.precio) }} c/u
+                </li>
+            </ul>
 
             <p v-if="producto.controla_existencia" class="mt-1 text-xs" :class="agotado ? 'text-sangre-400' : 'text-slate-500'">
                 {{ agotado ? 'Sin existencia' : `${producto.existencia} en existencia` }}

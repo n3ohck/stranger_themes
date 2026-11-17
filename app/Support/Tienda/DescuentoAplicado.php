@@ -33,7 +33,8 @@ class DescuentoAplicado
 
     public static function sinCodigo(Producto $producto, int $personas): self
     {
-        return new self((float) $producto->precio, $personas);
+        // El precio por persona depende del tamaño del grupo (rangos del producto).
+        return new self($producto->precioPara($personas), $personas);
     }
 
     /**
@@ -68,12 +69,12 @@ class DescuentoAplicado
             ]);
         }
 
-        $unitario = ReglaDescuento::unitario((float) $producto->precio, (float) $descuento->porcentaje);
+        $unitario = ReglaDescuento::unitario($aplicado->precioUnitario, (float) $descuento->porcentaje);
 
         // Un código que deja la compra en cero es de taquilla (cumpleañero, 2x1),
         // donde alguien verifica en persona que corresponde. En línea no hay quién
         // lo verifique, y además Stripe no admite cobros de cero.
-        if ($unitario >= (float) $producto->precio) {
+        if ($unitario >= $aplicado->precioUnitario) {
             throw ValidationException::withMessages([
                 'codigo_descuento' => 'Ese código solo se puede usar en taquilla. Preséntalo al llegar.',
             ]);

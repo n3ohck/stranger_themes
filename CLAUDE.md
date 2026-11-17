@@ -202,6 +202,26 @@ El contrato completo para el sitio web está en `docs/integracion-sitio-web.md`.
 respondía 16 KB con las rutas absolutas del servidor en cada error. El detalle va al
 log; la respuesta solo lleva el mensaje.
 
+### 10. Precio por rangos de personas
+
+Un producto puede tener `precios_por_personas` (JSON `[{desde, hasta, precio}]`,
+`hasta` null = "en adelante"). **El rango en el que cae el grupo fija el precio de
+todas sus personas** (1–3 a $350, 4–6 a $250: un grupo de 5 paga 5 × $250); fuera de
+todo rango se cobra `productos.precio`. Sin rangos, precio único.
+
+- `Producto::precioPara($personas)` es la autoridad: la usan `RegistrarVentaAction`
+  (POS, con `cantidad` de la línea) y `DescuentoAplicado` (tienda). El espejo en JS
+  para mostrar totales es `resources/js/shared/precio.js`. Si cambia uno, cambiar el otro.
+- El descuento se calcula sobre el precio del rango, no sobre el base.
+- El mutador del modelo limpia lo que manda el repeatable de Backpack (texto JSON,
+  filas vacías); `ProductoRequest::errorEnRangos` rechaza rangos encimados.
+- `ConfirmarCompraAction` guarda en la línea el precio que se apartó
+  (`(total + descuento) / personas`), no el de catálogo.
+- Ampliar una reserva sigue cobrando el precio por persona de la venta original,
+  aunque el grupo pase a otro rango.
+- Los flujos viejos (`VentaAction::do()` / `saleOnline()`) reciben los importes del
+  cliente y no conocen los rangos.
+
 ## Tienda en línea (`/comprar`)
 
 SPA de Vue pública, enlazada desde strangerthemes.com. Diseño alineado al del sitio
@@ -244,6 +264,10 @@ SPA de Vue pública, enlazada desde strangerthemes.com. Diseño alineado al del 
    eso dos clientes pagan el mismo horario. Son 30 (31 internos) porque la sesión
    de Stripe vence junto con el apartado y Stripe no acepta menos de 30 minutos. Lo caducado deja de bloquear solo; el
    comando `tienda:limpiar-pendientes` únicamente marca el estado.
+   Si el cliente regresa de Stripe sin pagar, `/comprar` muestra una cuenta regresiva
+   (`ApartadoActivo.vue`, con `GET tienda-api/apartado/{ref}`) para retomar el pago o
+   soltar el horario (`POST …/liberar`, estado `liberada`). **Liberar expira primero
+   la sesión de Stripe**; nunca sueltes un horario con el enlace de pago vivo.
 5. **El pago es idempotente de punta a punta.**
    - *Inicio*: la pantalla manda una `clave_idempotencia` por intento (única en
      `compras_pendientes`). Si el mismo intento llega dos veces (doble clic, corte
@@ -388,6 +412,13 @@ Requiere el symlink `public/storage` (`php artisan storage:link`).
 cuando `cargando` es false. Condicionarlo a `cargando` desmonta la vista activa
 en cada refresco de sesión y el cajero pierde lo que tenga en pantalla — por
 ejemplo el ticket de corte, que se muestra justo después de refrescar.
+
+Todo store que guarde datos de la sucursal (hoy `catalogo` y `carrito`) se
+limpia en `sesion.iniciarSesion()` y `sesion.cerrarSesion()`. En mostrador los
+cajeros cambian de usuario sin recargar la página, y el catálogo no se vuelve a
+pedir una vez cargado: el cajero de una sucursal heredaba los productos,
+descuentos y carrito del de la otra. Si agregas un store así, súmalo a
+`olvidarDatosDelUsuario()`.
 
 ## Convenciones del código
 

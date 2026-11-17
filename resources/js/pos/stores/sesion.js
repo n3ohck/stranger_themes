@@ -1,5 +1,19 @@
 import { defineStore } from 'pinia';
 import { api, guardarToken, borrarToken, leerToken } from '../api/cliente';
+import { useCatalogo } from './catalogo';
+import { useCarrito } from './carrito';
+
+/**
+ * El catálogo y el carrito son de la sucursal del usuario. Viven en memoria y el
+ * catálogo no se vuelve a pedir una vez cargado, así que al cambiar de usuario
+ * sin recargar la página el siguiente cajero heredaba los productos, descuentos
+ * y carrito del anterior: con dos sucursales, los de la otra. Al pedir horarios
+ * de esos productos el servidor respondía que no eran de su sucursal.
+ */
+function olvidarDatosDelUsuario() {
+    useCatalogo().$reset();
+    useCarrito().$reset();
+}
 
 /**
  * Sesión del cajero y estado de la caja.
@@ -32,6 +46,7 @@ export const useSesion = defineStore('sesion', {
 
             const datos = await api.post('login', { account: cuenta, password: contrasena }, { ignorar401: true });
 
+            olvidarDatosDelUsuario();
             guardarToken(datos.token);
             this.usuario = datos.usuario;
             this.sucursal = datos.usuario.sucursal;
@@ -77,6 +92,7 @@ export const useSesion = defineStore('sesion', {
 
         cerrarSesion() {
             borrarToken();
+            olvidarDatosDelUsuario();
             this.usuario = null;
             this.sucursal = null;
             this.apertura = null;

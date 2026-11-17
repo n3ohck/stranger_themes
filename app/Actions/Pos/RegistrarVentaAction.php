@@ -116,7 +116,9 @@ class RegistrarVentaAction
             }
 
             $cantidad = (float) $item['cantidad'];
-            $precio = (float) $producto->precio;
+            // El precio por persona depende del tamaño del grupo de la línea
+            // (rangos del producto); sin rangos es el precio de siempre.
+            $precio = $producto->precioPara((int) $cantidad);
             $subtotal = $precio * $cantidad;
 
             $descuento = $this->resolverDescuento($item['codigo_descuento'] ?? null, $producto);

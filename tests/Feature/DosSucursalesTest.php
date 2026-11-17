@@ -212,6 +212,107 @@ class DosSucursalesTest extends TestCase
     // Escenario
     // ─────────────────────────────────────────────────────────────────────────
 
+    /**
+     * Un producto con precio por rangos de personas: el rango del grupo fija el
+     * precio de todas sus personas, en el POS y en la tienda, con y sin código.
+     * Fuera de los rangos se cobra el precio base.
+     */
+    public function test_precio_por_rango_de_personas(): void
+    {
+        $tour = $this->producto($this->a, 'Tour con rangos', 'tour', 400, [
+            'capacidad' => 10, 'duracion_minutos' => 25, 'visible_en_tienda' => true,
+            // Como lo manda el repeatable de Backpack: texto JSON, números como texto, una fila vacía.
+            'precios_por_personas' => json_encode([
+                ['desde' => '4', 'hasta' => '6', 'precio' => '250'],
+                ['desde' => '1', 'hasta' => '3', 'precio' => '350'],
+                ['desde' => '', 'hasta' => '', 'precio' => ''],
+            ]),
+        ]);
+
+        $this->assertSame([
+            ['desde' => 1, 'hasta' => 3, 'precio' => 350.0],
+            ['desde' => 4, 'hasta' => 6, 'precio' => 250.0],
+        ], $tour->fresh()->rangosDePrecio());
+        $this->assertSame(250.0, $tour->fresh()->precioMinimo());
+
+        // Tienda: 4 personas a 250; 5 con 10 % (25 por persona) = 1125.
+        $this->comprarEnLinea($this->a, $tour, 4, '12:00', 'pi_test_rango_1');
+        $this->comprarEnLinea($this->a, $tour, 5, '13:00', 'pi_test_rango_2', 'DSCA10');
+
+        $lineaWeb = fn (string $pi) => \App\Models\VentaProducto::query()
+            ->whereHas('venta', fn ($q) => $q->withoutGlobalScope(SucursalFilterScope::class)->where('referencia_pago', $pi))
+            ->first();
+        $this->assertEquals([250, 1000], [(float) $lineaWeb('pi_test_rango_1')->precio, (float) $lineaWeb('pi_test_rango_1')->total]);
+        $this->assertEquals([250, 1125], [(float) $lineaWeb('pi_test_rango_2')->precio, (float) $lineaWeb('pi_test_rango_2')->total]);
+
+        // POS: el catálogo trae los rangos y el servidor cobra con el del grupo.
+        $this->viajarA('10:00');
+        $token = $this->login($this->cajeroA);
+        $this->pos($token, 'POST', 'caja/apertura', ['monto_apertura' => 0])->assertStatus(201);
+
+        $enCatalogo = collect($this->pos($token, 'GET', 'catalogo')->assertOk()->json('productos'))->firstWhere('id', $tour->id);
+        $this->assertCount(2, $enCatalogo['rangos_precio']);
+        $this->assertEquals(250, $enCatalogo['precio_desde']);
+
+        $lineaPos = fn (int $venta) => \App\Models\VentaProducto::where('venta_id', $venta)->first();
+
+        $v = $this->vender($token, $tour, 2, [['tipo' => 'efectivo', 'monto' => 700]], '14:00');
+        $this->assertEquals([350, 700], [(float) $lineaPos($v)->precio, (float) $lineaPos($v)->total]);
+
+        $v = $this->vender($token, $tour, 6, [['tipo' => 'efectivo', 'monto' => 1350]], '15:00', 'DSCA10'); // 250 − 25 = 225 × 6
+        $this->assertEquals([250, 1350], [(float) $lineaPos($v)->precio, (float) $lineaPos($v)->total]);
+
+        // 8 personas no cae en ningún rango: precio base.
+        $v = $this->vender($token, $tour, 8, [['tipo' => 'tarjeta', 'monto' => 3200]], '16:00');
+        $this->assertEquals([400, 3200], [(float) $lineaPos($v)->precio, (float) $lineaPos($v)->total]);
+
+        // Pagar el precio del rango menor por un grupo mayor no alcanza.
+        $this->pos($token, 'POST', 'ventas', $this->cuerpoVenta($tour, 3, [['tipo' => 'tarjeta', 'monto' => 750]], '17:00'))
+            ->assertStatus(422);
+    }
+
+    /**
+     * Cuenta regresiva del apartado: el estado lo da el servidor, liberar devuelve
+     * los lugares y al vencer deja de estar vigente.
+     */
+    public function test_apartado_con_cuenta_regresiva_se_libera_y_vence(): void
+    {
+        $apartar = fn (string $hora) => app(ApartarCompraAction::class)->ejecutar([
+            'sucursal_id' => $this->a->id, 'producto_id' => $this->tourA->id, 'personas' => 4,
+            'fecha' => self::DIA, 'hora' => $hora, 'nombre' => 'Cliente Web', 'email' => 'cliente.web@example.test',
+        ]);
+
+        $compra = $apartar('12:00');
+        $this->assertLugares($this->a, $this->tourA, '12:00', 6);
+
+        $estado = $this->getJson("/tienda-api/apartado/{$compra->referencia}")->assertOk()->json();
+        $this->assertTrue($estado['vigente']);
+        $this->assertSame(30 * 60, $estado['segundos_restantes'], 'Al cliente se le cuentan 30 minutos, sin el de margen.');
+        $this->assertSame(4, $estado['personas']);
+
+        $this->viajarA('09:10');
+        $this->assertSame(20 * 60, $this->getJson("/tienda-api/apartado/{$compra->referencia}")->json('segundos_restantes'));
+
+        // Liberar devuelve los lugares de inmediato y es idempotente.
+        $this->postJson("/tienda-api/apartado/{$compra->referencia}/liberar")->assertOk()->assertJson(['liberada' => true]);
+        $this->postJson("/tienda-api/apartado/{$compra->referencia}/liberar")->assertOk();
+        $this->assertSame('liberada', $compra->fresh()->estado);
+        $this->assertLugares($this->a, $this->tourA, '12:00', 10);
+        $this->assertFalse($this->getJson("/tienda-api/apartado/{$compra->referencia}")->json('vigente'));
+
+        // Otro apartado que vence sin pagar.
+        $otra = $apartar('13:00');
+        $this->assertLugares($this->a, $this->tourA, '13:00', 6);
+        $this->viajarA('09:42');
+        $vencida = $this->getJson("/tienda-api/apartado/{$otra->referencia}")->json();
+        $this->assertFalse($vencida['vigente']);
+        $this->assertSame('expirada', $vencida['estado']);
+        $this->assertSame(0, $vencida['segundos_restantes']);
+        $this->assertLugares($this->a, $this->tourA, '13:00', 10);
+
+        $this->getJson('/tienda-api/apartado/no-existe')->assertNotFound();
+    }
+
     private function crearEscenario(): void
     {
         $horarios = fn (int $intervalo) => collect(['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'])

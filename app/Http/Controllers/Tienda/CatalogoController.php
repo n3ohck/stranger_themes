@@ -51,6 +51,10 @@ class CatalogoController extends Controller
                     'nombre' => $p->descripcion,
                     'tipo' => $p->tipo,
                     'precio' => (float) $p->precio,
+                    // Precio por persona según el tamaño del grupo; la pantalla lo
+                    // usa para mostrar el total y el servidor lo recalcula al apartar.
+                    'rangos_precio' => $p->rangosDePrecio(),
+                    'precio_desde' => $p->precioMinimo(),
                     'capacidad' => $p->capacidad,
                     'duracion_minutos' => $p->duracion_minutos,
                     'recorridos' => $recorridos->map(fn (Producto $r) => [

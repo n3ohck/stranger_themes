@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-import { api, aIso, aFecha, fechaLarga, dinero, sinAcentos } from '../api';
+import { api, apartadoGuardado, aIso, aFecha, fechaLarga, dinero, sinAcentos } from '../api';
+import ApartadoActivo from '../components/ApartadoActivo.vue';
 import Paso from '../components/Paso.vue';
 import CampoCorreo from '../components/CampoCorreo.vue';
 import CampoTelefono from '../components/CampoTelefono.vue';
 import { correoValido, telefonoValido } from '../validacion';
+import { etiquetaRango, precioPorPersona } from '../../shared/precio';
 
 const cargando = ref(true);
 const errorCarga = ref('');
@@ -41,11 +43,16 @@ const cargadaEn = Date.now();
 
 const modoPrueba = ref(false);
 const parametros = new URLSearchParams(window.location.search);
+// Con referencia, el aviso de cancelación lo da la cuenta regresiva del apartado.
 const avisoRegreso = parametros.has('pago_invalido')
     ? 'No pudimos confirmar ese pago. Si se hizo un cargo, escríbenos con tu correo y lo revisamos.'
-    : parametros.has('cancelado')
-        ? 'Cancelaste el pago. Tu horario se liberó; puedes elegirlo de nuevo.'
+    : parametros.has('cancelado') && !parametros.has('compra')
+        ? 'Cancelaste el pago. El horario que elegiste sigue apartado hasta 30 minutos desde que pulsaste Pagar.'
         : '';
+
+// Apartado de esta pestaña que todavía puede estar corriendo: el de la URL de
+// cancelación de Stripe o el que se guardó antes de ir a pagar.
+const apartadoRef = ref(parametros.get('compra') || apartadoGuardado.leer());
 const enviando = ref(false);
 const errorPago = ref('');
 
@@ -59,7 +66,10 @@ const productosDeSucursal = computed(() =>
 const recorridos = computed(() => productosDeSucursal.value.filter((p) => p.tipo === 'tour'));
 const paquetes = computed(() => productosDeSucursal.value.filter((p) => p.tipo === 'tour_paquete'));
 
-const subtotal = computed(() => (producto.value ? producto.value.precio * personas.value : 0));
+// Con rangos por personas, el precio de cada persona depende del tamaño del grupo.
+const precioPersona = computed(() => (producto.value ? precioPorPersona(producto.value, personas.value) : 0));
+const rangos = computed(() => producto.value?.rangos_precio || []);
+const subtotal = computed(() => precioPersona.value * personas.value);
 const ahorro = computed(() => (descuento.value ? descuento.value.descuento : 0));
 const total = computed(() => (descuento.value ? descuento.value.total : subtotal.value));
 
@@ -321,9 +331,60 @@ function claveDe(compra) {
     return intento.clave;
 }
 
+/**
+ * El apartado ya no bloquea nada (venció o se liberó): se olvida y se refrescan
+ * los horarios, porque esos lugares volvieron a estar disponibles.
+ */
+function apartadoSoltado() {
+    apartadoGuardado.olvidar();
+    // El intento anterior ya no sirve: con la misma clave, el servidor devolvería
+    // la compra liberada en vez de apartar una nueva.
+    intento = null;
+
+    if (parametros.has('compra') || parametros.has('cancelado')) {
+        window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    if (fecha.value) cargarHorarios();
+}
+
+/** Además de soltarlo, quita el aviso de la pantalla. */
+function terminarApartado() {
+    apartadoRef.value = null;
+    apartadoSoltado();
+}
+
+/**
+ * Regreso con Atrás desde Stripe: el navegador puede restaurar la página tal como
+ * quedó (botón en "Llevándote al pago…"), sin volver a montarla.
+ */
+window.addEventListener('pageshow', (evento) => {
+    if (!evento.persisted) return;
+
+    enviando.value = false;
+    apartadoRef.value = apartadoGuardado.leer();
+});
+
 async function pagar() {
     errorPago.value = '';
     enviando.value = true;
+
+    // Una compra nueva suelta el apartado anterior de esta pestaña: si no, sus
+    // propios lugares le cuentan como ocupados y el horario puede salir lleno.
+    if (apartadoRef.value) {
+        try {
+            await api.liberar(apartadoRef.value);
+        } catch (e) {
+            // 409: ese apartado ya se pagó. Lo demás no impide la compra nueva.
+            if (e.estado === 409) {
+                errorPago.value = e.primero;
+                enviando.value = false;
+                return;
+            }
+        }
+
+        terminarApartado();
+    }
 
     const compra = {
         sucursal_id: sucursalId.value,
@@ -346,6 +407,7 @@ async function pagar() {
             tiempo_llenado: Date.now() - cargadaEn,
         });
 
+        apartadoGuardado.guardar(datos.compra);
         window.location.href = datos.url;
     } catch (e) {
         // Con respuesta del servidor el intento quedó resuelto: el siguiente es
@@ -374,6 +436,14 @@ async function pagar() {
         </div>
 
         <p v-if="avisoRegreso" class="mb-6 border border-terror-borde p-4 text-sm">{{ avisoRegreso }}</p>
+
+        <ApartadoActivo
+            v-if="apartadoRef"
+            :referencia="apartadoRef"
+            @liberado="terminarApartado"
+            @vencido="apartadoSoltado"
+            @terminado="terminarApartado"
+        />
 
         <p v-if="cargando" class="py-16 text-center">Cargando recorridos…</p>
         <p v-else-if="errorCarga" class="panel p-6 text-center text-terror-rojoClaro">{{ errorCarga }}</p>
@@ -406,7 +476,7 @@ async function pagar() {
                         >
                             <span class="block font-semibold text-white">{{ p.nombre }}</span>
                             <span class="mt-1 block text-xs">Hasta {{ p.capacidad }} personas · {{ p.duracion_minutos }} min</span>
-                            <span class="mt-2 block font-semibold text-terror-rojoClaro">{{ dinero(p.precio) }} <span class="text-xs font-normal text-terror-texto">por persona</span></span>
+                            <span class="mt-2 block font-semibold text-terror-rojoClaro"><span v-if="p.rangos_precio.length" class="text-xs font-normal text-terror-texto">desde </span>{{ dinero(p.rangos_precio.length ? p.precio_desde : p.precio) }} <span class="text-xs font-normal text-terror-texto">por persona</span></span>
                         </button>
                     </div>
                 </div>
@@ -423,7 +493,7 @@ async function pagar() {
                             <span class="block font-semibold text-white">{{ p.nombre }}</span>
                             <span class="mt-1 block text-xs">{{ p.recorridos.map(r => r.nombre).join(' · ') }}</span>
                             <span class="mt-1 block text-xs">Hasta {{ p.capacidad }} personas · {{ p.duracion_minutos }} min en total</span>
-                            <span class="mt-2 block font-semibold text-terror-rojoClaro">{{ dinero(p.precio) }} <span class="text-xs font-normal text-terror-texto">por persona</span></span>
+                            <span class="mt-2 block font-semibold text-terror-rojoClaro"><span v-if="p.rangos_precio.length" class="text-xs font-normal text-terror-texto">desde </span>{{ dinero(p.rangos_precio.length ? p.precio_desde : p.precio) }} <span class="text-xs font-normal text-terror-texto">por persona</span></span>
                         </button>
                     </div>
                 </div>
@@ -440,6 +510,19 @@ async function pagar() {
                             <button type="button" class="border border-terror-borde px-4 py-2 text-lg text-white"
                                     :disabled="personas >= capacidad" @click="personas++">+</button>
                             <span class="text-xs">máximo {{ capacidad }} en {{ producto.nombre }}</span>
+                        </div>
+
+                        <!-- El precio por persona baja (o sube) según el tamaño del grupo. -->
+                        <div v-if="rangos.length" class="mt-3 flex flex-wrap gap-2 text-xs">
+                            <span
+                                v-for="r in rangos" :key="r.desde"
+                                class="tabular border px-3 py-1.5"
+                                :class="personas >= r.desde && (r.hasta === null || personas <= r.hasta)
+                                    ? 'border-terror-rojo bg-terror-rojo/10 text-white'
+                                    : 'border-terror-borde'"
+                            >
+                                {{ etiquetaRango(r) }} {{ r.desde === 1 && r.hasta === 1 ? 'persona' : 'personas' }}: {{ dinero(r.precio) }} c/u
+                            </span>
                         </div>
                     </div>
 
@@ -580,6 +663,10 @@ async function pagar() {
                         <dt>Participantes</dt>
                         <dd class="text-right text-white">{{ personas }}</dd>
                     </div>
+                    <div v-if="producto" class="flex justify-between gap-3">
+                        <dt>Precio por persona</dt>
+                        <dd class="tabular text-right text-white">{{ dinero(precioPersona) }}</dd>
+                    </div>
                     <div v-if="ahorro > 0" class="flex justify-between gap-3">
                         <dt>Subtotal</dt>
                         <dd class="tabular text-right text-white">{{ dinero(subtotal) }}</dd>
@@ -604,7 +691,8 @@ async function pagar() {
 
                 <p class="mt-3 text-center text-xs">
                     Te llevamos a Stripe para completar el pago de forma segura.
-                    Tu horario queda apartado 30 minutos.
+                    Al pulsar Pagar apartamos tu horario <span class="text-white">30 minutos</span>;
+                    si regresas sin pagar, aquí verás cuánto tiempo te queda.
                 </p>
             </div>
         </div>

@@ -56,7 +56,47 @@ Si el cliente abandona el pago, el apartado caduca solo y el horario vuelve a
 ofrecerse. `tienda:limpiar-pendientes` (agendado cada 10 minutos) solo marca el
 estado; no es lo que libera el horario.
 
+#### Cuenta regresiva
+
+Stripe no deja poner un reloj en su página, así que el tiempo se muestra en tres
+lugares:
+
+- **En Stripe**, junto al botón de pagar (`custom_text.submit`): la hora a la que vence
+  el apartado, en hora de la sucursal.
+- **En `/comprar`**, si el cliente regresa sin pagar (botón Cancelar de Stripe, que
+  vuelve con `?cancelado=1&compra=<referencia>`, o Atrás del navegador, que se detecta
+  con la referencia guardada en `sessionStorage`): un aviso fijo con la cuenta
+  regresiva, el resumen y dos botones, **Continuar con el pago** (la misma sesión de
+  Stripe) y **Liberar y elegir otro horario**. Debajo de cinco minutos parpadea en rojo.
+- **Antes de pagar**, una nota bajo el botón avisa que se aparta 30 minutos.
+
+Los segundos restantes los da `GET /tienda-api/apartado/{referencia}`, calculados en
+el servidor (el reloj del cliente puede estar mal) y sin el minuto de margen interno,
+para que el cliente vea 30:00. La pantalla los descuenta con el reloj monotónico y se
+resincroniza al volver a la pestaña.
+
+`POST /tienda-api/apartado/{referencia}/liberar` deja la compra en `liberada` y los
+lugares vuelven a ofrecerse de inmediato. **Antes expira la sesión de Stripe**: si se
+liberara con el enlace de pago vivo, el cliente podría pagar un lugar que ya se vendió
+a otro. Si la sesión ya se pagó, responde 409 y no libera nada. Pulsar Pagar con un
+apartado activo en la pestaña lo libera primero: si no, los lugares del propio cliente
+le contaban como ocupados.
+
 ---
+
+## Precio por número de personas
+
+Un producto puede tener rangos de precio por persona según el tamaño del grupo
+(`productos.precios_por_personas`, se capturan en el panel). Por ejemplo, 1 a 3
+personas a $350 y 4 a 6 a $250: **el rango del grupo fija el precio de todas sus
+personas**, así que un grupo de 5 paga 5 × $250. Si el grupo no cae en ningún rango se
+cobra `productos.precio`. Sin rangos el producto tiene precio único, como siempre.
+
+`GET /tienda-api/catalogo` manda por producto `rangos_precio`
+(`[{desde, hasta, precio}]`, `hasta` null = "en adelante") y `precio_desde` (el más
+bajo posible, para mostrar "desde $X"). La pantalla calcula el total con
+`resources/js/shared/precio.js` solo para mostrarlo; al apartar lo calcula el servidor
+con `Producto::precioPara()`. El descuento se aplica sobre el precio del rango.
 
 ## Códigos de descuento
 
@@ -100,7 +140,7 @@ corresponde.
 ### Qué se guarda
 
 La venta queda con `codigo_descuento`, `descuento` y `porcentaje_descuento`, y la línea
-de `venta_productos` con el precio de lista, la cantidad, el total neto y el
+de `venta_productos` con el precio por persona que se apartó (el del rango del grupo), la cantidad, el total neto y el
 porcentaje. Con eso el reporte de descuentos del panel reconstruye correctamente a
 cuántas personas se aplicó.
 

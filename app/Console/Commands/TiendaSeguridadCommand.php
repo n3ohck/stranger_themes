@@ -86,6 +86,12 @@ class TiendaSeguridadCommand extends Command
         $respuesta = $this->http()->get('/tienda-api/comprobante/' . rawurlencode("' OR '1'='1"));
         $this->verificar('comprobante no responde a referencia inventada', $respuesta->status() === 404, $respuesta);
 
+        $respuesta = $this->http()->get('/tienda-api/apartado/' . rawurlencode("' OR '1'='1"));
+        $this->verificar('apartado no responde a referencia inventada', $respuesta->status() === 404, $respuesta);
+
+        $respuesta = $this->http()->post('/tienda-api/apartado/' . rawurlencode("' OR '1'='1") . '/liberar');
+        $this->verificar('liberar no acepta referencia inventada', $respuesta->status() === 404, $respuesta);
+
         $this->seccion('XSS e inyección de cabeceras');
         $respuesta = $this->http()->post('/tienda-api/checkout', $compra(['nombre' => '<script>alert(1)</script>']));
         $this->verificar('nombre con <script> rechazado', $this->rechazadoPor($respuesta, 'nombre'), $respuesta);

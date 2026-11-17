@@ -40,6 +40,16 @@ Route::get('comprobante/{referencia}', [CheckoutController::class, 'comprobante'
     ->middleware('throttle:tienda-comprobante')
     ->name('comprobante');
 
+// Cuenta regresiva del apartado al regresar de Stripe sin pagar, y botón para
+// soltar el horario y elegir otro.
+Route::get('apartado/{referencia}', [CheckoutController::class, 'apartado'])
+    ->middleware('throttle:tienda-apartado')
+    ->name('apartado');
+
+Route::post('apartado/{referencia}/liberar', [CheckoutController::class, 'liberar'])
+    ->middleware('throttle:tienda-liberar')
+    ->name('apartado.liberar');
+
 // Lo llama Stripe, no el navegador: sin límite de peticiones para no perder avisos
 // de pago, y la autenticidad la da la firma del propio webhook.
 Route::post('webhook/stripe', [CheckoutController::class, 'webhook'])->name('webhook');

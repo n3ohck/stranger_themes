@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { api, conParametros } from '../api/cliente';
 import { descuentoUnitario } from '../../shared/descuento';
+import { precioPorPersona } from '../../shared/precio';
 import { useCatalogo } from './catalogo';
 
 let contador = 0;
@@ -79,7 +80,8 @@ export const useCarrito = defineStore('carrito', {
 
         calculadas(state) {
             return state.lineas.map((linea) => {
-                const precio = linea.producto.precio;
+                // Con rangos por personas, el precio cambia con el tamaño del grupo.
+                const precio = precioPorPersona(linea.producto, linea.cantidad);
                 const subtotal = precio * linea.cantidad;
                 const porcentaje = linea.descuento?.porcentaje || 0;
                 const unitario = descuentoUnitario(precio, porcentaje);

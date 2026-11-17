@@ -45,10 +45,12 @@ class AmpliarReservaAction extends RegistrarVentaAction
         $linea = $this->lineaDe($reserva);
 
         // Sin línea que la respalde (reservación capturada en el panel, o a la que
-        // se le cambió el recorrido) se cobra el precio de catálogo, sin descuento.
+        // se le cambió el recorrido) se cobra el precio de catálogo, sin descuento,
+        // con el rango de precio del grupo ya ampliado. Con línea se respeta el
+        // precio por persona que se cobró, aunque el grupo pase a otro rango.
         $producto = $linea ? $linea->producto : $reserva->producto;
         $cantidadLinea = $linea ? max(1.0, (float) $linea->cantidad) : 1.0;
-        $precio = $linea ? (float) $linea->precio : (float) $producto->precio;
+        $precio = $linea ? (float) $linea->precio : $producto->precioPara($personas);
         $descuentoUnitario = $linea ? (float) $linea->descuento / $cantidadLinea : 0.0;
         $totalUnitario = $linea ? (float) $linea->total / $cantidadLinea : $precio;
 

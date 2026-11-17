@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { chocaConOtro, useCarrito } from '../stores/carrito';
 import { useCatalogo } from '../stores/catalogo';
 import { dinero, fechaCorta } from '../utils/formato';
+import { etiquetaRango } from '../../shared/precio';
 import Icono from './Icono.vue';
 import SelectorFecha from './SelectorFecha.vue';
 
@@ -24,6 +25,13 @@ const descuentosAplicables = computed(() =>
 );
 
 const capacidad = computed(() => props.linea.producto.capacidad || null);
+
+/** Rango de precio en el que cae el grupo, si el producto tiene rangos. */
+const rangoActual = computed(() =>
+    (props.linea.producto.rangos_precio || []).find(
+        (r) => props.linea.cantidad >= r.desde && (r.hasta === null || props.linea.cantidad <= r.hasta)
+    ) || null
+);
 
 function elegirDescuento(codigo) {
     errorDescuento.value = carrito.aplicarDescuento(props.linea.uid, codigo) || '';
@@ -90,6 +98,7 @@ function chocaCon(indice, inicio) {
                 <p class="truncate text-sm font-semibold text-slate-100">{{ linea.producto.nombre }}</p>
                 <p class="tabular mt-0.5 text-xs text-slate-500">
                     {{ dinero(linea.precio) }} por persona
+                    <span v-if="rangoActual" class="text-acento-400">(grupo de {{ etiquetaRango(rangoActual) }})</span>
                     <template v-if="linea.descuento">
                         · <span class="text-emerald-400">−{{ dinero(linea.descuentoUnitario) }} ({{ linea.descuento.porcentaje }}%)</span>
                     </template>

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { api, dinero, fechaLarga, SITIO } from '../api';
+import { api, apartadoGuardado, dinero, fechaLarga, SITIO } from '../api';
 
 const props = defineProps({ referencia: { type: String, required: true } });
 const route = useRoute();
@@ -29,7 +29,11 @@ async function cargar(intento = 0) {
     }
 }
 
-onMounted(() => cargar());
+onMounted(() => {
+    // Ya pagó: el apartado de esta pestaña no debe volver a mostrarse en /comprar.
+    apartadoGuardado.olvidar();
+    cargar();
+});
 
 function hora(iso) {
     const [, h] = String(iso).split(' ');

@@ -47,6 +47,27 @@ export const api = {
     descuento: (p) => peticion('GET', `descuento?${new URLSearchParams(p)}`),
     checkout: (datos) => peticion('POST', 'checkout', datos),
     comprobante: (ref) => peticion('GET', `comprobante/${ref}`),
+    apartado: (ref) => peticion('GET', `apartado/${encodeURIComponent(ref)}`),
+    liberar: (ref) => peticion('POST', `apartado/${encodeURIComponent(ref)}/liberar`, {}),
+};
+
+/**
+ * Referencia del último apartado de esta pestaña. Se guarda antes de mandar al
+ * cliente a Stripe para que, si regresa con el botón Atrás (sin pasar por la URL
+ * de cancelación), la tienda le muestre cuánto le queda.
+ */
+const LLAVE_APARTADO = 'tienda-apartado';
+
+export const apartadoGuardado = {
+    leer() {
+        try { return sessionStorage.getItem(LLAVE_APARTADO); } catch (e) { return null; }
+    },
+    guardar(ref) {
+        try { sessionStorage.setItem(LLAVE_APARTADO, ref); } catch (e) { /* sin almacenamiento */ }
+    },
+    olvidar() {
+        try { sessionStorage.removeItem(LLAVE_APARTADO); } catch (e) { /* sin almacenamiento */ }
+    },
 };
 
 const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
