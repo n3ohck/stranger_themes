@@ -48,6 +48,18 @@ function hora(iso) {
         <p v-if="cargando" class="text-center">Confirmando tu compra…</p>
         <p v-else-if="error" class="panel p-6 text-center text-terror-rojoClaro">{{ error }}</p>
 
+        <!-- Pagó después de que venció el apartado y el horario ya no tenía lugar. -->
+        <div v-else-if="compra && compra.estado === 'reembolsada'" class="panel p-6 text-center">
+            <h1 class="font-titular text-5xl leading-tight text-terror-rojo">Devolvimos tu pago</h1>
+            <p class="mt-4 text-sm">
+                Tu pago llegó después de que se acabó el tiempo de apartado y para entonces el horario
+                ya no tenía lugar. <span class="text-white">Te devolvimos el importe completo</span> a la
+                misma tarjeta; según tu banco puede tardar de 5 a 10 días hábiles en reflejarse.
+            </p>
+            <p class="mt-3 text-sm">Te enviamos los detalles a <span class="text-white">{{ compra.email }}</span>.</p>
+            <a href="/comprar" class="btn-rojo mt-6 inline-block">Elegir otro horario</a>
+        </div>
+
         <template v-else-if="compra">
             <div class="mb-8 text-center">
                 <h1 class="font-titular text-5xl leading-tight text-terror-rojo">

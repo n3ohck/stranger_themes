@@ -47,40 +47,46 @@ más: la tienda se sirve sola, con su propio diseño alineado al del sitio.
 
 ### El horario se aparta mientras se paga
 
-Al pulsar Pagar se crea una **compra pendiente** que bloquea esos horarios durante
-**30 minutos** (el mínimo que Stripe acepta para una sesión de pago, que vence junto
-con el apartado). Sin eso, dos clientes pueden elegir el mismo horario, pagar los dos y
+**En cuanto el cliente elige el horario** (la hora del tour, o la de cada recorrido
+del paquete) se crea una **compra pendiente** que bloquea esos lugares **5 minutos**,
+pago incluido. Sin eso, dos clientes pueden elegir el mismo horario, pagar los dos y
 dejar una sobreventa que solo se descubre en mostrador.
 
-Si el cliente abandona el pago, el apartado caduca solo y el horario vuelve a
-ofrecerse. `tienda:limpiar-pendientes` (agendado cada 10 minutos) solo marca el
-estado; no es lo que libera el horario.
+| Paso | Endpoint | Qué hace |
+|---|---|---|
+| Elige horario | `POST /tienda-api/apartar` | Aparta sin datos del cliente. Con `reemplaza` suelta el apartado anterior (cambió de horario, personas o fecha). Mismo anti-bot que el checkout. |
+| Consulta | `GET /tienda-api/disponibilidad?excluir=<ref>` | Su propio apartado no cuenta como ocupado: el horario no le desaparece de la lista. |
+| Paga | `POST /tienda-api/checkout` con `referencia` | Pone nombre, correo y código, recalcula el total y crea la sesión de Stripe. Dos clics devuelven la misma sesión. Sin `referencia` aparta y paga en un paso (pantalla vieja en caché). |
+| Reloj | `GET /tienda-api/apartado/<ref>` | Segundos restantes calculados en el servidor. Si ya venció, lo vence en ese momento. |
+| Suelta | `POST /tienda-api/apartado/<ref>/liberar` | Cierra la sesión de Stripe y deja la compra `liberada`. |
 
 #### Cuenta regresiva
 
-Stripe no deja poner un reloj en su página, así que el tiempo se muestra en tres
-lugares:
+Desde que se aparta, `/comprar` muestra arriba, fijo al hacer scroll, el reloj con el
+recorrido, la fecha, las personas y el total. El último minuto parpadea en rojo. Al
+llegar a cero el horario se libera y hay que elegirlo de nuevo. En la página de Stripe
+(que no admite un reloj) se muestra la hora límite junto al botón de pagar
+(`custom_text.submit`). Si el cliente regresa de Stripe sin pagar, el mismo aviso le
+ofrece **Continuar con el pago** o **Liberar y elegir otro horario**.
 
-- **En Stripe**, junto al botón de pagar (`custom_text.submit`): la hora a la que vence
-  el apartado, en hora de la sucursal.
-- **En `/comprar`**, si el cliente regresa sin pagar (botón Cancelar de Stripe, que
-  vuelve con `?cancelado=1&compra=<referencia>`, o Atrás del navegador, que se detecta
-  con la referencia guardada en `sessionStorage`): un aviso fijo con la cuenta
-  regresiva, el resumen y dos botones, **Continuar con el pago** (la misma sesión de
-  Stripe) y **Liberar y elegir otro horario**. Debajo de cinco minutos parpadea en rojo.
-- **Antes de pagar**, una nota bajo el botón avisa que se aparta 30 minutos.
+#### Por qué la sesión de Stripe dura más que el apartado
 
-Los segundos restantes los da `GET /tienda-api/apartado/{referencia}`, calculados en
-el servidor (el reloj del cliente puede estar mal) y sin el minuto de margen interno,
-para que el cliente vea 30:00. La pantalla los descuenta con el reloj monotónico y se
-resincroniza al volver a la pestaña.
+Stripe exige que una sesión de Checkout dure **al menos 30 minutos**. La sesión se
+crea por 31 y `tienda:limpiar-pendientes`, que corre **cada minuto**, la cierra en
+cuanto vence el apartado (`VencerApartadoAction`). Para eso el cron del servidor tiene
+que correr `php artisan schedule:run` cada minuto.
 
-`POST /tienda-api/apartado/{referencia}/liberar` deja la compra en `liberada` y los
-lugares vuelven a ofrecerse de inmediato. **Antes expira la sesión de Stripe**: si se
-liberara con el enlace de pago vivo, el cliente podría pagar un lugar que ya se vendió
-a otro. Si la sesión ya se pagó, responde 409 y no libera nada. Pulsar Pagar con un
-apartado activo en la pestaña lo libera primero: si no, los lugares del propio cliente
-le contaban como ocupados.
+#### Pago tardío
+
+Si alguien alcanza a pagar después de que venció su apartado (justo antes de que se
+cerrara la sesión), `ConfirmarCompraAction`:
+
+- **Si el horario sigue teniendo lugar**: confirma la venta normalmente.
+- **Si ya no**: reembolsa el pago completo en Stripe (con llave de idempotencia, para
+  que el webhook y el regreso del cliente no reembolsen dos veces), deja la compra en
+  `reembolsada` sin venta y le manda al cliente el correo `ReembolsoMail`. La pantalla
+  de gracias le explica lo mismo. Si Stripe falla al reembolsar, se registra como
+  crítico en el log y el webhook responde error para que Stripe lo reintente.
 
 ---
 

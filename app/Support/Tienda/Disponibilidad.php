@@ -47,6 +47,9 @@ class Disponibilidad
      * @param  int|null  $personas  Tamaño del grupo. Con null no se filtra por cupo
      *                              (mostrador); con un número solo se devuelven los
      *                              horarios donde el grupo cabe en todos los tramos.
+     * @param  int|null  $ignorarPendiente  Apartado que no cuenta como ocupación: el
+     *                              del propio cliente, que si no le haría desaparecer
+     *                              de la lista el horario que tiene apartado.
      * @return array<int, array{inicio: string, etiqueta: string, lugares: ?int, tramos: array}>
      */
     public static function paraProducto(
@@ -54,7 +57,8 @@ class Disponibilidad
         Sucursal $sucursal,
         CarbonInterface $fecha,
         ?int $anticipacionMinutos = null,
-        ?int $personas = 1
+        ?int $personas = 1,
+        ?int $ignorarPendiente = null
     ): array {
         $recorridos = self::recorridosDe($producto);
 
@@ -70,7 +74,7 @@ class Disponibilidad
 
         [$apertura, $cierre, $intervalo] = $jornada;
 
-        $ocupacion = self::ocupacion($sucursal, $recorridos->pluck('id')->all(), $fecha);
+        $ocupacion = self::ocupacion($sucursal, $recorridos->pluck('id')->all(), $fecha, $ignorarPendiente);
         // El sitio web exige margen para que nadie compre una salida inminente.
         // El mostrador vende la siguiente salida, así que ahí se pasa 0.
         $minimo = Carbon::now()->addMinutes($anticipacionMinutos ?? self::ANTICIPACION_MINUTOS);

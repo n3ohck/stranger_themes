@@ -61,4 +61,16 @@ class CompraPendiente extends Model
     {
         return $this->estado === 'apartada' && $this->expira_en->isPast();
     }
+
+    /** Sigue bloqueando su horario y todavía se puede pagar. */
+    public function vigente(): bool
+    {
+        return $this->estado === 'apartada' && ! $this->venta_id && $this->expira_en->isFuture();
+    }
+
+    /** Segundos que le quedan al apartado (0 si ya no está vigente). */
+    public function segundosRestantes(): int
+    {
+        return $this->vigente() ? (int) Carbon::now()->diffInSeconds($this->expira_en) : 0;
+    }
 }

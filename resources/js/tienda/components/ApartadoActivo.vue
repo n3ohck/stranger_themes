@@ -3,7 +3,9 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { api, dinero, fechaLarga } from '../api';
 
 /**
- * Cuenta regresiva del horario apartado, para quien regresa de Stripe sin pagar.
+ * Cuenta regresiva del horario apartado. Aparece desde que el cliente elige el
+ * horario (5 minutos para llenar sus datos y pagar) y también si regresa de
+ * Stripe sin pagar, con la opción de retomar el pago.
  *
  * El tiempo restante lo da el servidor y aquí solo se descuenta con el reloj
  * monotónico del navegador: si el reloj del equipo está mal, la cuenta igual es
@@ -27,7 +29,10 @@ let reloj = null;
 
 const minutos = computed(() => String(Math.floor(restante.value / 60)).padStart(2, '0'));
 const segundos = computed(() => String(restante.value % 60).padStart(2, '0'));
-const urgente = computed(() => restante.value > 0 && restante.value <= 300);
+// El último minuto parpadea en rojo.
+const urgente = computed(() => restante.value > 0 && restante.value <= 60);
+// Ya fue a Stripe al menos una vez: se ofrece volver a la misma sesión.
+const conPago = computed(() => !!apartado.value?.con_pago);
 
 const horario = computed(() => {
     const primero = apartado.value?.horarios?.[0];
@@ -133,8 +138,8 @@ watch(() => props.referencia, cargar);
         aria-live="polite"
     >
         <template v-if="vencido">
-            <p class="font-semibold text-white">Tu apartado venció</p>
-            <p class="mt-1 text-sm">El horario se liberó. Puedes elegirlo de nuevo si sigue disponible.</p>
+            <p class="font-semibold text-white">Se acabó el tiempo</p>
+            <p class="mt-1 text-sm">Tu horario se liberó y, si estabas pagando, ese pago se canceló. Puedes elegirlo de nuevo si sigue disponible.</p>
             <button type="button" class="mt-3 text-sm text-terror-rojoClaro underline" @click="emit('terminado', 'cerrado')">
                 Entendido
             </button>
@@ -158,7 +163,21 @@ watch(() => props.referencia, cargar);
                 </div>
             </div>
 
-            <div class="mt-4 flex flex-wrap gap-3">
+            <!-- Todavía en la tienda: el reloj acompaña mientras llena sus datos. -->
+            <div v-if="!conPago" class="mt-3 flex flex-wrap items-center justify-between gap-3">
+                <p class="text-xs">Completa tus datos y paga antes de que termine el tiempo.</p>
+                <button
+                    type="button"
+                    class="text-xs text-terror-texto underline transition hover:text-white disabled:opacity-50"
+                    :disabled="liberando"
+                    @click="liberar"
+                >
+                    {{ liberando ? 'Liberando…' : 'Liberar horario' }}
+                </button>
+            </div>
+
+            <!-- Regresó de Stripe sin pagar. -->
+            <div v-else class="mt-4 flex flex-wrap gap-3">
                 <a v-if="apartado.url_pago" :href="apartado.url_pago" class="btn-rojo flex-1 text-center">
                     Continuar con el pago
                 </a>
@@ -171,7 +190,7 @@ watch(() => props.referencia, cargar);
                     {{ liberando ? 'Liberando…' : 'Liberar y elegir otro horario' }}
                 </button>
             </div>
-            <p v-if="!apartado.url_pago" class="mt-3 text-xs">
+            <p v-if="conPago && !apartado.url_pago" class="mt-3 text-xs">
                 El enlace de pago ya no está disponible. Libera el horario para empezar otra compra.
             </p>
         </template>

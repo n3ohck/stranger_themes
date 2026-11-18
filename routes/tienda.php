@@ -40,6 +40,11 @@ Route::get('comprobante/{referencia}', [CheckoutController::class, 'comprobante'
     ->middleware('throttle:tienda-comprobante')
     ->name('comprobante');
 
+// Aparta el horario en cuanto el cliente lo elige: desde ahí corren los 5 minutos.
+Route::post('apartar', [CheckoutController::class, 'apartar'])
+    ->middleware('throttle:tienda-apartar')
+    ->name('apartar');
+
 // Cuenta regresiva del apartado al regresar de Stripe sin pagar, y botón para
 // soltar el horario y elegir otro.
 Route::get('apartado/{referencia}', [CheckoutController::class, 'apartado'])

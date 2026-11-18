@@ -143,15 +143,9 @@ class Producto extends Model
      */
     public function rangosDePrecio(): array
     {
-        $rangos = $this->precios_por_personas;
+        $rangos = self::comoArreglo($this->precios_por_personas);
 
-        // Backpack entrega el repeatable como texto JSON; un registro guardado
-        // antes del cast podría haber quedado así.
-        if (is_string($rangos)) {
-            $rangos = json_decode($rangos, true);
-        }
-
-        return collect(is_array($rangos) ? $rangos : [])
+        return collect($rangos)
             ->filter(fn ($r) => is_array($r) && is_numeric($r['desde'] ?? null) && is_numeric($r['precio'] ?? null))
             ->map(fn ($r) => [
                 'desde' => (int) $r['desde'],
@@ -204,15 +198,16 @@ class Producto extends Model
     |--------------------------------------------------------------------------
     */
     /**
-     * Guarda los rangos limpios: Backpack entrega el repeatable como texto JSON,
-     * con números como texto y con filas vacías si el usuario agregó una y no la
-     * llenó. Sin rangos se guarda NULL (precio único).
+     * Guarda los rangos limpios. Llegan de varias formas: texto JSON, arreglo, o
+     * —desde el formulario del panel— arreglo de OBJETOS, porque Backpack
+     * (decodeJsonCastedAttributes) hace json_decode() sin modo asociativo. Al
+     * principio solo se aceptaban arreglos y los rangos capturados en el panel
+     * se descartaban sin error. Vienen con números como texto y con filas vacías
+     * si el usuario agregó una y no la llenó. Sin rangos se guarda NULL.
      */
     public function setPreciosPorPersonasAttribute($valor)
     {
-        if (is_string($valor)) {
-            $valor = json_decode($valor, true);
-        }
+        $valor = self::comoArreglo($valor);
 
         $rangos = collect(is_array($valor) ? $valor : [])
             ->filter(fn ($r) => is_array($r) && collect($r)->contains(fn ($v) => $v !== null && $v !== ''))
@@ -225,6 +220,24 @@ class Producto extends Model
             ->values();
 
         $this->attributes['precios_por_personas'] = $rangos->isEmpty() ? null : $rangos->toJson();
+    }
+
+    /**
+     * Texto JSON, arreglo u objetos (stdClass) a arreglo de arreglos asociativos.
+     */
+    private static function comoArreglo($valor): array
+    {
+        if ($valor === null || $valor === '') {
+            return [];
+        }
+
+        if (! is_string($valor)) {
+            $valor = json_encode($valor);
+        }
+
+        $decodificado = json_decode($valor, true);
+
+        return is_array($decodificado) ? $decodificado : [];
     }
 
     public function getCategoryAttribute()

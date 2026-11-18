@@ -26,7 +26,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('remember:command')->everyFifteenMinutes();
-        $schedule->command('tienda:limpiar-pendientes')->everyTenMinutes();
+        // Cada minuto: el apartado de la tienda dura 5 y al vencer hay que cerrar
+        // su sesión de Stripe (que dura al menos 30) para que no se pueda pagar.
+        $schedule->command('tienda:limpiar-pendientes')->everyMinute()->withoutOverlapping();
 
     }
 

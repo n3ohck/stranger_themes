@@ -84,6 +84,7 @@ class RouteServiceProvider extends ServiceProvider
             'tienda-comprobante' => 60,
             'tienda-retorno' => 30,
             'tienda-apartado' => 30,
+            'tienda-apartar' => 30,
             'tienda-liberar' => 10,
         ] as $nombre => $porMinuto) {
             RateLimiter::for($nombre, fn (Request $request) => Limit::perMinute($porMinuto)->by($nombre . '|' . $request->ip()));

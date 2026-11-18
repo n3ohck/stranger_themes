@@ -235,6 +235,45 @@ class DosSucursalesTest extends TestCase
         ], $tour->fresh()->rangosDePrecio());
         $this->assertSame(250.0, $tour->fresh()->precioMinimo());
 
+        // Desde el formulario del panel: Backpack decodifica el repeatable a objetos
+        // (decodeJsonCastedAttributes hace json_decode sin modo asociativo). Así se
+        // perdían los rangos capturados en el panel.
+        $comoBackpack = app(\Backpack\CRUD\app\Library\CrudPanel\CrudPanel::class);
+        $comoBackpack->setModel(Producto::class);
+        $comoBackpack->addField(['name' => 'precios_por_personas', 'type' => 'repeatable', 'fields' => []]);
+        $datos = $comoBackpack->decodeJsonCastedAttributes([
+            'precios_por_personas' => '[{"desde":"1","hasta":"2","precio":"300"},{"desde":"3","hasta":"","precio":"200"}]',
+        ]);
+        $this->assertIsObject($datos['precios_por_personas'][0], 'Backpack entrega objetos, no arreglos.');
+        $delPanel = $this->producto($this->a, 'Tour desde el panel', 'tour', 400, $datos);
+        $this->assertSame([
+            ['desde' => 1, 'hasta' => 2, 'precio' => 300.0],
+            ['desde' => 3, 'hasta' => null, 'precio' => 200.0],
+        ], $delPanel->fresh()->rangosDePrecio());
+
+        // Guardado real por el formulario del panel, como lo manda el navegador.
+        $this->comoPanel($this->admin, $this->a)
+            ->put('/admin/producto/' . $delPanel->id, [
+                'id' => $delPanel->id,
+                'codigo' => $delPanel->codigo, 'descripcion' => $delPanel->descripcion, 'tipo' => 'tour',
+                'precio' => 400, 'existencia' => 0, 'sucursal_id' => $this->a->id,
+                'tours' => '[]',
+                'precios_por_personas' => '[{"desde":"1","hasta":"4","precio":"320"},{"desde":"5","hasta":"","precio":"220"}]',
+                '_save_action' => 'save_and_back',
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect();
+        $this->assertSame([
+            ['desde' => 1, 'hasta' => 4, 'precio' => 320.0],
+            ['desde' => 5, 'hasta' => null, 'precio' => 220.0],
+        ], $delPanel->fresh()->rangosDePrecio(), 'Lo capturado en el panel se guarda.');
+
+        // Y el formulario de edición los vuelve a mostrar.
+        $this->comoPanel($this->admin, $this->a)
+            ->get('/admin/producto/' . $delPanel->id . '/edit')
+            ->assertOk()
+            ->assertSee('&quot;precio&quot;:220', false);
+
         // Tienda: 4 personas a 250; 5 con 10 % (25 por persona) = 1125.
         $this->comprarEnLinea($this->a, $tour, 4, '12:00', 'pi_test_rango_1');
         $this->comprarEnLinea($this->a, $tour, 5, '13:00', 'pi_test_rango_2', 'DSCA10');
@@ -272,8 +311,8 @@ class DosSucursalesTest extends TestCase
     }
 
     /**
-     * Cuenta regresiva del apartado: el estado lo da el servidor, liberar devuelve
-     * los lugares y al vencer deja de estar vigente.
+     * Cuenta regresiva del apartado: 5 minutos desde que se aparta, el estado lo
+     * da el servidor, liberar devuelve los lugares y al vencer deja de estar vigente.
      */
     public function test_apartado_con_cuenta_regresiva_se_libera_y_vence(): void
     {
@@ -287,11 +326,12 @@ class DosSucursalesTest extends TestCase
 
         $estado = $this->getJson("/tienda-api/apartado/{$compra->referencia}")->assertOk()->json();
         $this->assertTrue($estado['vigente']);
-        $this->assertSame(30 * 60, $estado['segundos_restantes'], 'Al cliente se le cuentan 30 minutos, sin el de margen.');
+        $this->assertSame(5 * 60, $estado['segundos_restantes']);
         $this->assertSame(4, $estado['personas']);
+        $this->assertFalse($estado['con_pago']);
 
-        $this->viajarA('09:10');
-        $this->assertSame(20 * 60, $this->getJson("/tienda-api/apartado/{$compra->referencia}")->json('segundos_restantes'));
+        $this->viajarA('09:02');
+        $this->assertSame(3 * 60, $this->getJson("/tienda-api/apartado/{$compra->referencia}")->json('segundos_restantes'));
 
         // Liberar devuelve los lugares de inmediato y es idempotente.
         $this->postJson("/tienda-api/apartado/{$compra->referencia}/liberar")->assertOk()->assertJson(['liberada' => true]);
@@ -303,14 +343,145 @@ class DosSucursalesTest extends TestCase
         // Otro apartado que vence sin pagar.
         $otra = $apartar('13:00');
         $this->assertLugares($this->a, $this->tourA, '13:00', 6);
-        $this->viajarA('09:42');
+        $this->viajarA('09:08');
         $vencida = $this->getJson("/tienda-api/apartado/{$otra->referencia}")->json();
         $this->assertFalse($vencida['vigente']);
         $this->assertSame('expirada', $vencida['estado']);
         $this->assertSame(0, $vencida['segundos_restantes']);
+        $this->assertSame('expirada', $otra->fresh()->estado, 'La consulta lo vence sin esperar al comando.');
         $this->assertLugares($this->a, $this->tourA, '13:00', 10);
 
+        // Con datos vencidos ya no se puede completar para pagar.
+        try {
+            app(ApartarCompraAction::class)->completar($otra->fresh(), ['nombre' => 'Tarde', 'email' => 'tarde@example.test']);
+            $this->fail('Un apartado vencido no debe poder completarse.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            $this->assertStringContainsString('Se acabó el tiempo', $e->validator->errors()->first());
+        }
+
         $this->getJson('/tienda-api/apartado/no-existe')->assertNotFound();
+    }
+
+    /**
+     * El horario se aparta en cuanto se elige (sin datos del cliente), su propio
+     * apartado no le cuenta como ocupado, y cambiar de horario suelta el anterior.
+     */
+    public function test_se_aparta_al_elegir_el_horario(): void
+    {
+        $cuerpo = fn (string $hora, int $personas, ?string $reemplaza = null) => [
+            'sucursal_id' => $this->a->id, 'producto_id' => $this->tourA->id, 'personas' => $personas,
+            'fecha' => self::DIA, 'hora' => $hora, 'reemplaza' => $reemplaza,
+            'sitio_web' => '', 'tiempo_llenado' => 5000,
+        ];
+
+        // Un bot (sin tiempo de llenado) no aparta nada.
+        $this->postJson('/tienda-api/apartar', ['tiempo_llenado' => 100] + $cuerpo('12:00', 8))->assertStatus(422);
+
+        $primero = $this->postJson('/tienda-api/apartar', $cuerpo('12:00', 8))->assertStatus(201)->json();
+        $this->assertSame(5 * 60, $primero['segundos_restantes']);
+        $this->assertNull(\App\Models\CompraPendiente::where('referencia', $primero['referencia'])->value('nombre'));
+
+        // Para otros quedan 2 lugares; para el propio cliente el horario sigue ahí.
+        $this->assertLugares($this->a, $this->tourA, '12:00', 2);
+        $propia = $this->getJson('/tienda-api/disponibilidad?' . http_build_query([
+            'sucursal_id' => $this->a->id, 'producto_id' => $this->tourA->id, 'fecha' => self::DIA,
+            'personas' => 8, 'excluir' => $primero['referencia'],
+        ]))->assertOk()->json('horarios');
+        $this->assertSame(10, collect($propia)->firstWhere('inicio', '12:00')['lugares']);
+
+        // Sube a 9 personas en el mismo horario: se suelta el anterior y cabe.
+        $segundo = $this->postJson('/tienda-api/apartar', $cuerpo('12:00', 9, $primero['referencia']))->assertStatus(201)->json();
+        $this->assertSame('liberada', \App\Models\CompraPendiente::where('referencia', $primero['referencia'])->value('estado'));
+        $this->assertLugares($this->a, $this->tourA, '12:00', 1);
+
+        // Completar pone datos y código y recalcula el total (9 × 200 − 10 %).
+        $compra = app(ApartarCompraAction::class)->completar(
+            \App\Models\CompraPendiente::where('referencia', $segundo['referencia'])->first(),
+            ['nombre' => 'Cliente Web', 'email' => 'cliente.web@example.test', 'codigo_descuento' => 'DSCA10']
+        );
+        $this->assertSame('Cliente Web', $compra->nombre);
+        $this->assertEquals(1620, $compra->total);
+    }
+
+    /**
+     * Al vencer, el comando cierra la sesión de Stripe para que ya no se pueda
+     * pagar. Un pago que alcanza a llegar tarde se confirma si sigue habiendo
+     * lugar; si no, se reembolsa una sola vez y se avisa al cliente.
+     */
+    public function test_pago_tardio_se_confirma_o_se_reembolsa(): void
+    {
+        $pasarela = $this->pasarelaFalsa();
+        $apartar = fn (string $hora, int $personas, string $nombre) => app(ApartarCompraAction::class)->ejecutar([
+            'sucursal_id' => $this->a->id, 'producto_id' => $this->tourA->id, 'personas' => $personas,
+            'fecha' => self::DIA, 'hora' => $hora, 'nombre' => $nombre, 'email' => 'cliente.web@example.test',
+        ]);
+
+        // Vence con sesión de Stripe abierta: el comando la cierra.
+        $conSesion = $apartar('11:00', 2, 'Con Sesion');
+        $conSesion->forceFill(['stripe_session_id' => 'cs_test_vence'])->save();
+        $this->viajarA('09:06');
+        $this->artisan('tienda:limpiar-pendientes')->assertExitCode(0);
+        // assertContains: el comando también recorre otros vencidos de la base local.
+        $this->assertContains('cs_test_vence', $pasarela->cerradas);
+        $this->assertSame('expirada', $conSesion->fresh()->estado);
+
+        // Pagó tarde pero el horario sigue con lugar: se confirma.
+        $this->viajarA('09:10');
+        $conLugar = $apartar('12:00', 4, 'Con Lugar');
+        $this->viajarA('09:20');
+        $venta = app(ConfirmarCompraAction::class)->ejecutar($conLugar->fresh(), 'pi_test_tarde_con_lugar');
+        $this->assertNotNull($venta);
+        $this->assertSame('pagada', $conLugar->fresh()->estado);
+        $this->assertSame([], $pasarela->reembolsos);
+
+        // Pagó tarde y el horario ya se llenó con otro grupo: se reembolsa.
+        $this->viajarA('09:30');
+        $tarde = $apartar('13:00', 8, 'Pago Tarde');
+        $this->viajarA('09:36');
+        $this->comprarEnLinea($this->a, $this->tourA, 4, '13:00', 'pi_test_ocupa_lugar');
+
+        $this->assertNull(app(ConfirmarCompraAction::class)->ejecutar($tarde->fresh(), 'pi_test_tarde_sin_lugar'));
+        $this->assertSame('reembolsada', $tarde->fresh()->estado);
+        $this->assertNull($tarde->fresh()->venta_id);
+        $this->assertSame([['pi_test_tarde_sin_lugar', $tarde->referencia]], $pasarela->reembolsos);
+        Mail::assertSent(\App\Mail\ReembolsoMail::class, 1);
+
+        // El webhook reintenta: ni otro reembolso ni otro correo.
+        $this->assertNull(app(ConfirmarCompraAction::class)->ejecutar($tarde->fresh(), 'pi_test_tarde_sin_lugar'));
+        $this->assertCount(1, $pasarela->reembolsos);
+        Mail::assertSent(\App\Mail\ReembolsoMail::class, 1);
+
+        $this->getJson("/tienda-api/comprobante/{$tarde->referencia}")->assertOk()->assertJson(['estado' => 'reembolsada']);
+    }
+
+    /** Pasarela de Stripe que registra lo que se le pide, sin llamar a Stripe. */
+    private function pasarelaFalsa(): \App\Support\Tienda\PasarelaStripe
+    {
+        $falsa = new class extends \App\Support\Tienda\PasarelaStripe {
+            public array $cerradas = [];
+            public array $reembolsos = [];
+
+            public function cerrarSesion(string $sesionId): bool
+            {
+                $this->cerradas[] = $sesionId;
+
+                return true;
+            }
+
+            public function urlSesion(string $sesionId): ?string
+            {
+                return null;
+            }
+
+            public function reembolsar(string $paymentIntent, string $referencia): void
+            {
+                $this->reembolsos[] = [$paymentIntent, $referencia];
+            }
+        };
+
+        $this->app->instance(\App\Support\Tienda\PasarelaStripe::class, $falsa);
+
+        return $falsa;
     }
 
     private function crearEscenario(): void

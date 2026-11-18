@@ -89,6 +89,9 @@ class TiendaSeguridadCommand extends Command
         $respuesta = $this->http()->get('/tienda-api/apartado/' . rawurlencode("' OR '1'='1"));
         $this->verificar('apartado no responde a referencia inventada', $respuesta->status() === 404, $respuesta);
 
+        $respuesta = $this->http()->post('/tienda-api/apartar', ['sucursal_id' => 1, 'producto_id' => 1, 'personas' => 2, 'fecha' => now()->addDay()->toDateString(), 'hora' => '12:00']);
+        $this->verificar('apartar sin tiempo de llenado rechazado (bot)', $respuesta->status() === 422, $respuesta);
+
         $respuesta = $this->http()->post('/tienda-api/apartado/' . rawurlencode("' OR '1'='1") . '/liberar');
         $this->verificar('liberar no acepta referencia inventada', $respuesta->status() === 404, $respuesta);
 

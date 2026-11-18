@@ -78,9 +78,16 @@ class CatalogoController extends Controller
             'fecha' => ['required', 'date_format:Y-m-d'],
             // Solo se ofrecen horarios donde cabe el grupo completo.
             'personas' => ['nullable', 'integer', 'min:1', 'max:20'],
+            // Apartado del propio cliente: no cuenta como ocupado, para que el
+            // horario que ya tiene apartado no desaparezca de su lista.
+            'excluir' => ['nullable', 'string', 'regex:/^[0-9a-f-]{36}$/'],
         ], [
             'fecha.date_format' => 'La fecha debe tener formato AAAA-MM-DD.',
         ]);
+
+        $excluir = ! empty($datos['excluir'])
+            ? \App\Models\CompraPendiente::where('referencia', $datos['excluir'])->value('id')
+            : null;
 
         $sucursal = Sucursal::findOrFail($datos['sucursal_id']);
 
@@ -97,7 +104,7 @@ class CatalogoController extends Controller
 
         $fecha = Carbon::parse($datos['fecha']);
         $personas = (int) ($datos['personas'] ?? 1);
-        $horarios = Disponibilidad::paraProducto($producto, $sucursal, $fecha, null, $personas);
+        $horarios = Disponibilidad::paraProducto($producto, $sucursal, $fecha, null, $personas, $excluir);
 
         // Horarios de cada recorrido por separado: en un paquete el cliente elige
         // la hora de cada uno. Se calculan sobre el recorrido suelto, con su propio
@@ -105,7 +112,7 @@ class CatalogoController extends Controller
         $recorridos = Disponibilidad::recorridosDe($producto)->map(fn (Producto $r) => [
             'id' => $r->id,
             'nombre' => $r->descripcion,
-            'horarios' => collect(Disponibilidad::paraProducto($r, $sucursal, $fecha, null, $personas))
+            'horarios' => collect(Disponibilidad::paraProducto($r, $sucursal, $fecha, null, $personas, $excluir))
                 ->map(fn ($h) => [
                     'inicio' => $h['inicio'],
                     'etiqueta' => $h['etiqueta'],

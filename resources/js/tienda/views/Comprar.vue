@@ -168,7 +168,7 @@ function sugerirSiguientes(desde) {
 }
 
 const puedePagar = computed(() =>
-    producto.value && fecha.value && horarioCompleto.value &&
+    producto.value && fecha.value && horarioCompleto.value && apartadoListo.value &&
     cliente.nombre.trim().length >= 3 && correoValido(cliente.email) && telefonoValido(cliente.telefono) &&
     personas.value >= 1 && personas.value <= capacidad.value
 );
@@ -227,6 +227,9 @@ async function cargarHorarios() {
             producto_id: productoId.value,
             fecha: fecha.value,
             personas: personas.value,
+            // El horario que el cliente ya tiene apartado no cuenta como ocupado:
+            // si no, desaparecería de su propia lista.
+            ...(apartadoVigente.value && apartadoRef.value ? { excluir: apartadoRef.value } : {}),
         });
 
         // Con los botones de personas llegan varias respuestas; solo vale la última.
@@ -332,26 +335,139 @@ function claveDe(compra) {
 }
 
 /**
- * El apartado ya no bloquea nada (venció o se liberó): se olvida y se refrescan
- * los horarios, porque esos lugares volvieron a estar disponibles.
+ * Apartado del horario elegido. En cuanto el cliente completa el horario (la
+ * hora del tour, o la de cada recorrido del paquete) se aparta en el servidor y
+ * empieza a correr el reloj: 5 minutos para llenar sus datos y pagar, también
+ * mientras está en Stripe. Si cambia de horario, personas o fecha, el apartado
+ * anterior se suelta y se aparta el nuevo.
  */
-function apartadoSoltado() {
-    apartadoGuardado.olvidar();
-    // El intento anterior ya no sirve: con la misma clave, el servidor devolvería
-    // la compra liberada en vez de apartar una nueva.
-    intento = null;
+const apartadoVigente = ref(!!apartadoRef.value);
+const apartando = ref(false);
+const errorApartado = ref('');
+let seleccionApartada = null;
+let temporizadorApartar = null;
 
+/** Lo que define el apartado; null mientras falte alguna hora. */
+const seleccion = computed(() => {
+    if (!producto.value || !fecha.value || !horarioCompleto.value) return null;
+
+    return JSON.stringify({
+        sucursal_id: sucursalId.value,
+        producto_id: productoId.value,
+        personas: personas.value,
+        fecha: fecha.value,
+        ...(esPaquete.value ? { horas: [...horas.value] } : { hora: horaElegida.value }),
+    });
+});
+
+// Copia reactiva de seleccionApartada, para que la pantalla sepa si lo apartado
+// corresponde a lo que se ve.
+const seleccionApartadaVista = ref(null);
+
+/** Hay apartado vigente y corresponde a lo que se ve en pantalla. */
+const apartadoListo = computed(() =>
+    apartadoVigente.value && !apartando.value && !!seleccion.value && seleccion.value === seleccionApartadaVista.value
+);
+
+watch(seleccion, (nueva) => {
+    clearTimeout(temporizadorApartar);
+    errorApartado.value = '';
+
+    if (!nueva) {
+        // Se quitó el horario (cambió de recorrido, de fecha o tocó la hora
+        // elegida): el apartado ya no corresponde a nada.
+        if (apartadoVigente.value && seleccionApartada) soltarApartado();
+        return;
+    }
+
+    if (nueva === seleccionApartada && apartadoVigente.value) return;
+
+    // Un respiro para los clics seguidos (botones de personas, horas sugeridas
+    // del paquete) antes de apartar.
+    temporizadorApartar = setTimeout(() => apartar(nueva), 350);
+});
+
+async function apartar(firma) {
+    // El servidor rechaza como bot lo que llega a menos de 3 s de cargar la página.
+    const espera = 3100 - (Date.now() - cargadaEn);
+    if (espera > 0) await new Promise((r) => setTimeout(r, espera));
+    if (seleccion.value !== firma) return;
+
+    apartando.value = true;
+
+    try {
+        const datos = await api.apartar({
+            ...JSON.parse(firma),
+            reemplaza: apartadoRef.value || null,
+            sitio_web: trampa.value,
+            tiempo_llenado: Date.now() - cargadaEn,
+        });
+
+        // Mientras llegaba la respuesta cambió la selección: este ya no sirve.
+        if (seleccion.value !== firma) {
+            api.liberar(datos.referencia).catch(() => {});
+            return;
+        }
+
+        seleccionApartada = firma;
+        seleccionApartadaVista.value = firma;
+        apartadoVigente.value = true;
+        apartadoRef.value = datos.referencia;
+        apartadoGuardado.guardar(datos.referencia);
+        intento = null;
+        limpiarParametros();
+    } catch (e) {
+        errorApartado.value = e.primero;
+        apartadoVigente.value = false;
+        // Lo más común: alguien más apartó ese horario mientras lo elegía.
+        quitarHoras();
+        cargarHorarios();
+    } finally {
+        apartando.value = false;
+    }
+}
+
+/** Suelta el apartado actual sin esperar respuesta y quita el reloj. */
+function soltarApartado() {
+    const referencia = apartadoRef.value;
+    olvidarApartado();
+    apartadoRef.value = null;
+
+    if (referencia) api.liberar(referencia).catch(() => {});
+}
+
+function olvidarApartado() {
+    apartadoVigente.value = false;
+    seleccionApartada = null;
+    seleccionApartadaVista.value = null;
+    apartadoGuardado.olvidar();
+    intento = null;
+}
+
+function limpiarParametros() {
     if (parametros.has('compra') || parametros.has('cancelado')) {
         window.history.replaceState({}, '', window.location.pathname);
     }
+}
 
+/**
+ * Se acabó el tiempo: el horario vuelve a ofrecerse y hay que elegirlo de nuevo.
+ * El aviso de "se acabó el tiempo" se queda a la vista hasta que lo cierren.
+ */
+function apartadoVencido() {
+    olvidarApartado();
+    limpiarParametros();
+    quitarHoras();
     if (fecha.value) cargarHorarios();
 }
 
-/** Además de soltarlo, quita el aviso de la pantalla. */
+/** Liberado con el botón, o ya no hay nada que mostrar (pagado, desconocido). */
 function terminarApartado() {
+    olvidarApartado();
     apartadoRef.value = null;
-    apartadoSoltado();
+    limpiarParametros();
+    quitarHoras();
+    if (fecha.value) cargarHorarios();
 }
 
 /**
@@ -369,30 +485,8 @@ async function pagar() {
     errorPago.value = '';
     enviando.value = true;
 
-    // Una compra nueva suelta el apartado anterior de esta pestaña: si no, sus
-    // propios lugares le cuentan como ocupados y el horario puede salir lleno.
-    if (apartadoRef.value) {
-        try {
-            await api.liberar(apartadoRef.value);
-        } catch (e) {
-            // 409: ese apartado ya se pagó. Lo demás no impide la compra nueva.
-            if (e.estado === 409) {
-                errorPago.value = e.primero;
-                enviando.value = false;
-                return;
-            }
-        }
-
-        terminarApartado();
-    }
-
     const compra = {
-        sucursal_id: sucursalId.value,
-        producto_id: productoId.value,
-        personas: personas.value,
-        fecha: fecha.value,
-        // Un paquete manda la hora de cada recorrido, en el orden del paquete.
-        ...(esPaquete.value ? { horas: [...horas.value] } : { hora: horaElegida.value }),
+        referencia: apartadoRef.value,
         nombre: cliente.nombre.trim(),
         email: cliente.email.trim(),
         telefono: cliente.telefono.trim() || null,
@@ -407,7 +501,6 @@ async function pagar() {
             tiempo_llenado: Date.now() - cargadaEn,
         });
 
-        apartadoGuardado.guardar(datos.compra);
         window.location.href = datos.url;
     } catch (e) {
         // Con respuesta del servidor el intento quedó resuelto: el siguiente es
@@ -415,8 +508,10 @@ async function pagar() {
         if (e.estado) intento = null;
 
         errorPago.value = e.primero || 'Se perdió la conexión. Revisa tu internet y vuelve a pulsar Pagar.';
-        // El horario pudo haberse ocupado mientras llenaba sus datos.
-        cargarHorarios();
+
+        // Se le acabó el tiempo justo al pulsar Pagar.
+        if (e.estado === 409) apartadoVencido();
+
         enviando.value = false;
     }
 }
@@ -441,7 +536,7 @@ async function pagar() {
             v-if="apartadoRef"
             :referencia="apartadoRef"
             @liberado="terminarApartado"
-            @vencido="apartadoSoltado"
+            @vencido="apartadoVencido"
             @terminado="terminarApartado"
         />
 
@@ -589,6 +684,15 @@ async function pagar() {
                             </button>
                         </div>
                     </div>
+
+                    <!-- Desde que elige el horario corre el reloj del apartado. -->
+                    <p v-if="fecha && !horarioCompleto && !errorApartado" class="mt-4 text-xs">
+                        Al elegir tu horario lo apartamos <span class="text-white">5 minutos</span> para que completes tus datos y pagues.
+                    </p>
+                    <p v-if="apartando" class="mt-4 text-sm text-white">Apartando tu horario…</p>
+                    <p v-if="errorApartado" class="mt-4 border border-terror-rojo/50 bg-terror-rojo/10 px-4 py-3 text-sm text-terror-rojoClaro">
+                        {{ errorApartado }}
+                    </p>
                 </template>
                 <p v-else class="text-sm">Elige primero un recorrido.</p>
             </Paso>
@@ -691,8 +795,8 @@ async function pagar() {
 
                 <p class="mt-3 text-center text-xs">
                     Te llevamos a Stripe para completar el pago de forma segura.
-                    Al pulsar Pagar apartamos tu horario <span class="text-white">30 minutos</span>;
-                    si regresas sin pagar, aquí verás cuánto tiempo te queda.
+                    El reloj de tu apartado sigue corriendo mientras pagas: si se acaba antes
+                    de completar el pago, el pago se cancela y el horario se libera.
                 </p>
             </div>
         </div>

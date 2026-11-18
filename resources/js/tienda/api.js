@@ -47,6 +47,7 @@ export const api = {
     descuento: (p) => peticion('GET', `descuento?${new URLSearchParams(p)}`),
     checkout: (datos) => peticion('POST', 'checkout', datos),
     comprobante: (ref) => peticion('GET', `comprobante/${ref}`),
+    apartar: (datos) => peticion('POST', 'apartar', datos),
     apartado: (ref) => peticion('GET', `apartado/${encodeURIComponent(ref)}`),
     liberar: (ref) => peticion('POST', `apartado/${encodeURIComponent(ref)}/liberar`, {}),
 };

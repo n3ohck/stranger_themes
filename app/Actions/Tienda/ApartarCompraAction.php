@@ -16,6 +16,11 @@ use Illuminate\Validation\ValidationException;
 /**
  * Aparta los horarios elegidos y deja la compra lista para cobrar.
  *
+ * Son dos pasos: apartar() en cuanto el cliente elige el horario (todavía sin sus
+ * datos) y completar() al pulsar Pagar, con nombre, correo y código. Desde que se
+ * aparta corren MINUTOS_APARTADO, también mientras paga en Stripe: al vencer se
+ * cierra la sesión de pago (PasarelaStripe) y el horario vuelve a ofrecerse.
+ *
  * El precio se calcula aquí a partir del catálogo. El navegador solo dice qué
  * producto, para cuántas personas y a qué hora; nunca manda importes. Es la misma
  * regla que sigue el punto de venta, y la razón es la misma: lo que viaja por el
@@ -24,16 +29,34 @@ use Illuminate\Validation\ValidationException;
 class ApartarCompraAction
 {
     /**
-     * Tiempo que el cliente tiene para completar el pago antes de perder el horario.
-     *
-     * La sesión de Stripe vence junto con el apartado, y Stripe exige que una
-     * sesión de Checkout dure al menos 30 minutos: con 20 rechazaba todas. El
-     * minuto extra cubre el tiempo entre apartar y crear la sesión. Al cliente se
-     * le dicen 30.
+     * Tiempo desde que se elige el horario hasta que se pierde, pago incluido.
+     * Decisión del negocio: con 30 minutos los horarios quedaban bloqueados de más.
      */
-    public const MINUTOS_PARA_PAGAR = 31;
+    public const MINUTOS_APARTADO = 5;
 
+    /**
+     * Vida de la sesión de Stripe. Stripe exige al menos 30 minutos, así que la
+     * sesión dura más que el apartado: quien la cierra a los 5 minutos es
+     * tienda:limpiar-pendientes. Si aun así alguien paga tarde, ConfirmarCompraAction
+     * confirma si sigue habiendo lugar y si no, reembolsa.
+     */
+    public const MINUTOS_SESION_STRIPE = 31;
+
+    /**
+     * Apartar y completar en un solo paso. Lo usa la pantalla anterior que quede
+     * en caché (manda todo junto al pulsar Pagar).
+     */
     public function ejecutar(array $datos): CompraPendiente
+    {
+        return $this->completar($this->apartar($datos), $datos);
+    }
+
+    /**
+     * Aparta el horario elegido, sin datos del cliente todavía. Si el cliente
+     * cambia de horario, el controlador suelta el apartado anterior antes de
+     * llamar aquí: si no, sus propios lugares le contaban como ocupados.
+     */
+    public function apartar(array $datos): CompraPendiente
     {
         $sucursal = Sucursal::query()->find($datos['sucursal_id']);
 
@@ -62,9 +85,8 @@ class ApartarCompraAction
             ]);
         }
 
-        // El descuento se resuelve aquí, no se recibe calculado: el navegador solo
-        // manda el código. Si no aplica, revienta antes de apartar nada.
-        $descuento = DescuentoAplicado::resolver($datos['codigo_descuento'] ?? null, $producto, $personas);
+        // Sin código todavía: el total se recalcula en completar() con el que traiga.
+        $precio = DescuentoAplicado::sinCodigo($producto, $personas);
 
         $tramos = empty($datos['horas'])
             ? $this->tramosDelHorario($producto, $sucursal, $datos['fecha'], $datos['hora'], $personas)
@@ -72,7 +94,7 @@ class ApartarCompraAction
 
         // El apartado y la comprobación van en la misma transacción para que dos
         // clientes que eligen el mismo horario a la vez no se aparten los dos.
-        return DB::transaction(function () use ($producto, $sucursal, $personas, $tramos, $datos, $descuento) {
+        return DB::transaction(function () use ($producto, $sucursal, $personas, $tramos, $precio) {
             if (! Disponibilidad::tramosConCupo($sucursal, $tramos, $personas)) {
                 throw ValidationException::withMessages([
                     'hora' => 'Ese horario se acaba de llenar. Elige otro, por favor.',
@@ -85,6 +107,36 @@ class ApartarCompraAction
                 'producto_id' => $producto->id,
                 'personas' => $personas,
                 'horarios' => $tramos,
+                'total' => $precio->total(),
+                'descuento' => 0,
+                'estado' => 'apartada',
+                'expira_en' => Carbon::now()->addMinutes(self::MINUTOS_APARTADO),
+            ]);
+        });
+    }
+
+    /**
+     * Pone los datos del cliente y el código sobre un apartado vigente, justo
+     * antes de mandarlo a pagar. El precio se vuelve a calcular aquí: el código
+     * se resuelve contra el catálogo, nunca se recibe calculado.
+     *
+     * @throws ValidationException si el apartado ya venció o el código no aplica.
+     */
+    public function completar(CompraPendiente $compra, array $datos): CompraPendiente
+    {
+        return DB::transaction(function () use ($compra, $datos) {
+            $compra = CompraPendiente::query()->lockForUpdate()->findOrFail($compra->id);
+
+            if (! $compra->vigente()) {
+                throw ValidationException::withMessages([
+                    'referencia' => 'Se acabó el tiempo para pagar y el horario se liberó. Elige uno de nuevo, por favor.',
+                ]);
+            }
+
+            $producto = $compra->producto()->withoutGlobalScope(SucursalFilterScope::class)->firstOrFail();
+            $descuento = DescuentoAplicado::resolver($datos['codigo_descuento'] ?? null, $producto, (int) $compra->personas);
+
+            $compra->forceFill([
                 'nombre' => $datos['nombre'],
                 'email' => $datos['email'],
                 'telefono' => $datos['telefono'] ?? null,
@@ -93,10 +145,10 @@ class ApartarCompraAction
                 'codigo_descuento' => $descuento->codigo,
                 'descuento_id' => $descuento->id,
                 'porcentaje_descuento' => $descuento->porcentaje,
-                'estado' => 'apartada',
-                'clave_idempotencia' => $datos['clave_idempotencia'] ?? null,
-                'expira_en' => Carbon::now()->addMinutes(self::MINUTOS_PARA_PAGAR),
-            ]);
+                'clave_idempotencia' => $compra->clave_idempotencia ?? ($datos['clave_idempotencia'] ?? null),
+            ])->save();
+
+            return $compra;
         });
     }
 

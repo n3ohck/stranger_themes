@@ -260,14 +260,23 @@ SPA de Vue pública, enlazada desde strangerthemes.com. Diseño alineado al del 
    se mide con su **duración real**, no con el intervalo: con salidas cada hora y
    recorridos de 25 minutos, la salida de las 21:30 termina 21:55 y sí es vendible.
    Apartar un paquete también bloquea esos recorridos por separado.
-4. **El horario se aparta 30 minutos mientras se paga** (`compras_pendientes`). Sin
-   eso dos clientes pagan el mismo horario. Son 30 (31 internos) porque la sesión
-   de Stripe vence junto con el apartado y Stripe no acepta menos de 30 minutos. Lo caducado deja de bloquear solo; el
-   comando `tienda:limpiar-pendientes` únicamente marca el estado.
-   Si el cliente regresa de Stripe sin pagar, `/comprar` muestra una cuenta regresiva
-   (`ApartadoActivo.vue`, con `GET tienda-api/apartado/{ref}`) para retomar el pago o
-   soltar el horario (`POST …/liberar`, estado `liberada`). **Liberar expira primero
-   la sesión de Stripe**; nunca sueltes un horario con el enlace de pago vivo.
+4. **El horario se aparta 5 minutos desde que se elige, pago incluido**
+   (`compras_pendientes`, `ApartarCompraAction::MINUTOS_APARTADO`). Sin apartado dos
+   clientes pagan el mismo horario. Son dos pasos: `POST tienda-api/apartar` al
+   completar el horario (sin datos del cliente; `reemplaza` suelta el anterior al
+   cambiar de horario) y `POST tienda-api/checkout` con la `referencia` al pagar
+   (`completar()` pone datos y código). La pantalla muestra la cuenta regresiva
+   (`ApartadoActivo.vue`, segundos calculados en el servidor) y la disponibilidad
+   recibe `excluir` para que el horario propio no desaparezca de la lista.
+   **Stripe no acepta sesiones de menos de 30 minutos**: la sesión dura 31 y
+   `tienda:limpiar-pendientes` (cada minuto) la cierra cuando vence el apartado
+   (`VencerApartadoAction`, vía `PasarelaStripe`). **Liberar o vencer cierra
+   primero la sesión de Stripe**; nunca sueltes un horario con el enlace de pago vivo.
+   Si aun así alguien paga tarde, `ConfirmarCompraAction` confirma si el horario
+   sigue con lugar; si no, reembolsa completo (llave de idempotencia), deja la
+   compra `reembolsada` sin venta y manda `ReembolsoMail`. **El cron del servidor
+   tiene que correr `schedule:run` cada minuto**, o las sesiones vencidas siguen
+   pagables hasta 31 minutos (solo las protege el reembolso).
 5. **El pago es idempotente de punta a punta.**
    - *Inicio*: la pantalla manda una `clave_idempotencia` por intento (única en
      `compras_pendientes`). Si el mismo intento llega dos veces (doble clic, corte
