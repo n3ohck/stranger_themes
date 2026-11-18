@@ -10,7 +10,7 @@ import { SITIO } from './api';
                     <img src="/images/logo-stranger-themes.webp" alt="Stranger Themes"
                          class="h-12 w-auto sm:h-16" width="800" height="314">
                 </a>
-                <a :href="SITIO" class="text-xs font-semibold uppercase tracking-[0.14em] text-terror-texto hover:text-white">
+                <a :href="SITIO" class="-mr-2 inline-flex min-h-[44px] items-center px-2 text-xs font-semibold uppercase tracking-[0.14em] text-terror-texto hover:text-white">
                     Volver al sitio
                 </a>
             </div>

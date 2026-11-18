@@ -41,6 +41,18 @@ const horario = computed(() => {
     return `${fechaLarga(primero.inicio)} · ${apartado.value.horarios.map((h) => hora(h.inicio)).join(', ')}`;
 });
 
+const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+
+/** Para la franja del celular: "19 nov · 6:00 p.m., 6:30 p.m." */
+const horarioCorto = computed(() => {
+    const primero = apartado.value?.horarios?.[0];
+    if (!primero) return '';
+
+    const [, mes, dia] = String(primero.inicio).split(/[- ]/).map(Number);
+
+    return `${dia} ${MESES[mes - 1]} · ${apartado.value.horarios.map((h) => hora(h.inicio)).join(', ')}`;
+});
+
 function hora(iso) {
     const [, h] = String(iso).split(' ');
     const [hh, mm] = h.split(':').map(Number);
@@ -132,7 +144,7 @@ watch(() => props.referencia, cargar);
 <template>
     <div
         v-if="apartado || vencido || error"
-        class="sticky top-0 z-20 mb-6 border bg-terror-fondo/95 p-4 backdrop-blur sm:p-5"
+        class="sticky top-0 z-20 mb-6 border bg-terror-fondo/95 px-3 py-2.5 backdrop-blur sm:p-5"
         :class="vencido ? 'border-terror-borde' : urgente ? 'border-terror-rojo' : 'border-terror-rojo/60'"
         role="status"
         aria-live="polite"
@@ -140,35 +152,42 @@ watch(() => props.referencia, cargar);
         <template v-if="vencido">
             <p class="font-semibold text-white">Se acabó el tiempo</p>
             <p class="mt-1 text-sm">Tu horario se liberó y, si estabas pagando, ese pago se canceló. Puedes elegirlo de nuevo si sigue disponible.</p>
-            <button type="button" class="mt-3 text-sm text-terror-rojoClaro underline" @click="emit('terminado', 'cerrado')">
+            <button type="button" class="mt-1 inline-flex min-h-[44px] items-center text-sm text-terror-rojoClaro underline" @click="emit('terminado', 'cerrado')">
                 Entendido
             </button>
         </template>
 
         <template v-else-if="apartado">
-            <div class="flex flex-wrap items-center justify-between gap-4">
+            <!-- En celular es una franja de tres líneas: se queda fija arriba y no
+                 debe tapar el formulario. Los detalles largos se recortan. -->
+            <div class="flex items-center justify-between gap-3 sm:gap-4">
                 <div class="min-w-0">
-                    <p class="etiqueta-terror mb-1">Tu horario está apartado</p>
-                    <p class="font-semibold text-white">{{ apartado.producto }}</p>
-                    <p class="text-sm">{{ horario }} · {{ apartado.personas }} {{ apartado.personas === 1 ? 'persona' : 'personas' }} · {{ dinero(apartado.total) }}</p>
+                    <p class="etiqueta-terror mb-0.5 text-[10px] sm:mb-1 sm:text-xs">
+                        <span class="sm:hidden">Apartado</span>
+                        <span class="hidden sm:inline">Tu horario está apartado</span>
+                    </p>
+                    <p class="truncate text-sm font-semibold text-white sm:text-base">{{ apartado.producto }}</p>
+                    <p class="truncate text-xs sm:hidden">{{ horarioCorto }} · {{ apartado.personas }} pers.</p>
+                    <p class="hidden text-sm sm:block">{{ horario }} · {{ apartado.personas }} {{ apartado.personas === 1 ? 'persona' : 'personas' }} · {{ dinero(apartado.total) }}</p>
                 </div>
 
-                <div class="text-right">
+                <div class="shrink-0 text-right">
                     <p
-                        class="tabular font-marca text-4xl font-bold leading-none"
+                        class="tabular font-marca text-3xl font-bold leading-none sm:text-4xl"
                         :class="urgente ? 'animate-pulse text-terror-rojo' : 'text-terror-rojoClaro'"
                         :aria-label="`Quedan ${minutos} minutos y ${segundos} segundos`"
                     >{{ minutos }}:{{ segundos }}</p>
-                    <p class="mt-1 text-xs">para completar el pago</p>
+                    <p class="mt-1 hidden text-xs sm:block">para completar el pago</p>
                 </div>
             </div>
 
             <!-- Todavía en la tienda: el reloj acompaña mientras llena sus datos. -->
-            <div v-if="!conPago" class="mt-3 flex flex-wrap items-center justify-between gap-3">
-                <p class="text-xs">Completa tus datos y paga antes de que termine el tiempo.</p>
+            <div v-if="!conPago" class="flex items-center justify-between gap-3 sm:mt-3">
+                <p class="hidden text-xs sm:block">Completa tus datos y paga antes de que termine el tiempo.</p>
+                <!-- 44 px de alto para el dedo; el margen negativo evita que la franja crezca. -->
                 <button
                     type="button"
-                    class="text-xs text-terror-texto underline transition hover:text-white disabled:opacity-50"
+                    class="-mb-2.5 -ml-1 inline-flex min-h-[44px] items-center px-1 text-xs text-terror-texto underline transition hover:text-white disabled:opacity-50 sm:-mb-2 sm:ml-0"
                     :disabled="liberando"
                     @click="liberar"
                 >
@@ -177,7 +196,7 @@ watch(() => props.referencia, cargar);
             </div>
 
             <!-- Regresó de Stripe sin pagar. -->
-            <div v-else class="mt-4 flex flex-wrap gap-3">
+            <div v-else class="mt-3 flex flex-wrap gap-2 sm:mt-4 sm:gap-3">
                 <a v-if="apartado.url_pago" :href="apartado.url_pago" class="btn-rojo flex-1 text-center">
                     Continuar con el pago
                 </a>

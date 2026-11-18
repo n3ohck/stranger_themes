@@ -389,8 +389,11 @@ class DosSucursalesTest extends TestCase
         ]))->assertOk()->json('horarios');
         $this->assertSame(10, collect($propia)->firstWhere('inicio', '12:00')['lugares']);
 
-        // Sube a 9 personas en el mismo horario: se suelta el anterior y cabe.
+        // Dos minutos después sube a 9 personas: se suelta el anterior, cabe y el
+        // reloj sigue donde iba (cambiar no reinicia los 5 minutos).
+        $this->viajarA('09:02');
         $segundo = $this->postJson('/tienda-api/apartar', $cuerpo('12:00', 9, $primero['referencia']))->assertStatus(201)->json();
+        $this->assertSame(3 * 60, $segundo['segundos_restantes']);
         $this->assertSame('liberada', \App\Models\CompraPendiente::where('referencia', $primero['referencia'])->value('estado'));
         $this->assertLugares($this->a, $this->tourA, '12:00', 1);
 
@@ -401,6 +404,17 @@ class DosSucursalesTest extends TestCase
         );
         $this->assertSame('Cliente Web', $compra->nombre);
         $this->assertEquals(1620, $compra->total);
+
+        // Desmarcar la hora (se libera) y elegir otra tampoco reinicia el reloj.
+        $this->postJson("/tienda-api/apartado/{$segundo['referencia']}/liberar")->assertOk();
+        $this->viajarA('09:03');
+        $tercero = $this->postJson('/tienda-api/apartar', $cuerpo('13:00', 9, $segundo['referencia']))->assertStatus(201)->json();
+        $this->assertSame(2 * 60, $tercero['segundos_restantes']);
+
+        // Ya vencido el anterior, el siguiente apartado sí tiene sus 5 minutos.
+        $this->viajarA('09:06');
+        $cuarto = $this->postJson('/tienda-api/apartar', $cuerpo('14:00', 2, $tercero['referencia']))->assertStatus(201)->json();
+        $this->assertSame(5 * 60, $cuarto['segundos_restantes']);
     }
 
     /**

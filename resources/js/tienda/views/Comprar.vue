@@ -345,6 +345,10 @@ const apartadoVigente = ref(!!apartadoRef.value);
 const apartando = ref(false);
 const errorApartado = ref('');
 let seleccionApartada = null;
+// Último apartado de esta pestaña, aunque ya se haya soltado: se manda como
+// `reemplaza` para que el nuevo herede su vencimiento y cambiar de horario
+// (o desmarcarlo y elegir otro) no reinicie los 5 minutos.
+let ultimaReferencia = apartadoRef.value;
 let temporizadorApartar = null;
 
 /** Lo que define el apartado; null mientras falte alguna hora. */
@@ -398,7 +402,7 @@ async function apartar(firma) {
     try {
         const datos = await api.apartar({
             ...JSON.parse(firma),
-            reemplaza: apartadoRef.value || null,
+            reemplaza: apartadoRef.value || ultimaReferencia || null,
             sitio_web: trampa.value,
             tiempo_llenado: Date.now() - cargadaEn,
         });
@@ -413,6 +417,7 @@ async function apartar(firma) {
         seleccionApartadaVista.value = firma;
         apartadoVigente.value = true;
         apartadoRef.value = datos.referencia;
+        ultimaReferencia = datos.referencia;
         apartadoGuardado.guardar(datos.referencia);
         intento = null;
         limpiarParametros();
@@ -705,7 +710,7 @@ async function pagar() {
                     </div>
                     <div class="sm:col-span-2">
                         <label class="etiqueta-terror">Nombre completo</label>
-                        <input v-model="cliente.nombre" type="text" class="campo-terror" placeholder="A nombre de quién va la reservación">
+                        <input v-model="cliente.nombre" type="text" class="campo-terror" placeholder="¿A nombre de quién?">
                     </div>
                     <CampoCorreo v-model="cliente.email" />
                     <CampoTelefono v-model="cliente.telefono" />
@@ -725,7 +730,7 @@ async function pagar() {
                         <div v-else class="flex gap-2">
                             <input
                                 v-model="codigo" type="text" class="campo-terror uppercase"
-                                placeholder="Si tienes uno, escríbelo aquí"
+                                placeholder="Si tienes uno"
                                 @keyup.enter="aplicarCodigo"
                             >
                             <button type="button" class="btn-linea shrink-0 px-5"

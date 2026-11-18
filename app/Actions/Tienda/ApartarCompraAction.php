@@ -55,8 +55,12 @@ class ApartarCompraAction
      * Aparta el horario elegido, sin datos del cliente todavía. Si el cliente
      * cambia de horario, el controlador suelta el apartado anterior antes de
      * llamar aquí: si no, sus propios lugares le contaban como ocupados.
+     *
+     * @param  Carbon|null  $vence  Vencimiento heredado del apartado anterior: cambiar
+     *                              de horario no reinicia los minutos. Nunca más tarde
+     *                              que un apartado nuevo.
      */
-    public function apartar(array $datos): CompraPendiente
+    public function apartar(array $datos, ?Carbon $vence = null): CompraPendiente
     {
         $sucursal = Sucursal::query()->find($datos['sucursal_id']);
 
@@ -94,7 +98,10 @@ class ApartarCompraAction
 
         // El apartado y la comprobación van en la misma transacción para que dos
         // clientes que eligen el mismo horario a la vez no se aparten los dos.
-        return DB::transaction(function () use ($producto, $sucursal, $personas, $tramos, $precio) {
+        $limite = Carbon::now()->addMinutes(self::MINUTOS_APARTADO);
+        $vence = $vence && $vence->isFuture() && $vence->lt($limite) ? $vence : $limite;
+
+        return DB::transaction(function () use ($producto, $sucursal, $personas, $tramos, $precio, $vence) {
             if (! Disponibilidad::tramosConCupo($sucursal, $tramos, $personas)) {
                 throw ValidationException::withMessages([
                     'hora' => 'Ese horario se acaba de llenar. Elige otro, por favor.',
@@ -110,7 +117,7 @@ class ApartarCompraAction
                 'total' => $precio->total(),
                 'descuento' => 0,
                 'estado' => 'apartada',
-                'expira_en' => Carbon::now()->addMinutes(self::MINUTOS_APARTADO),
+                'expira_en' => $vence,
             ]);
         });
     }

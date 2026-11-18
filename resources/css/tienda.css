@@ -54,8 +54,10 @@
 
     /* Botón de horario: la pieza que más se toca en toda la compra. */
     .slot {
-        @apply border border-terror-borde px-3 py-3 text-sm font-semibold text-white
-               transition hover:border-terror-rojo;
+        /* Sin partir "12:30 pm": en teléfonos de 320 px la letra baja un punto
+           para que quepa en tres columnas. */
+        @apply whitespace-nowrap border border-terror-borde px-1.5 py-3 text-[13px] font-semibold text-white
+               transition hover:border-terror-rojo min-[360px]:px-2 min-[360px]:text-sm sm:px-3;
     }
 
     .slot-activo {

@@ -63,7 +63,8 @@ class CheckoutController extends Controller
     /**
      * Aparta el horario en cuanto el cliente lo elige. Desde aquí corren los
      * minutos del apartado, también mientras paga. `reemplaza` es su apartado
-     * anterior (cambió de horario, personas o fecha): se suelta primero.
+     * anterior (cambió de horario, personas o fecha): se suelta primero y el
+     * nuevo hereda su vencimiento, para que cambiar de horario no reinicie el reloj.
      */
     public function apartar(Request $request, ApartarCompraAction $apartar)
     {
@@ -73,11 +74,19 @@ class CheckoutController extends Controller
             'reemplaza' => self::REGLA_REFERENCIA,
         ], ['personas.min' => 'Indica al menos un participante.']);
 
+        $vence = null;
+
         if (! empty($datos['reemplaza'])) {
             $anterior = CompraPendiente::where('referencia', $datos['reemplaza'])->first();
 
             if ($anterior) {
                 $this->soltar($anterior);
+
+                // También si ya estaba liberada (desmarcó la hora antes de elegir
+                // otra). Si ya venció, el siguiente apartado tiene sus 5 minutos.
+                if (! $anterior->venta_id && in_array($anterior->estado, ['apartada', 'liberada'], true)) {
+                    $vence = $anterior->expira_en->copy();
+                }
             }
         }
 
@@ -85,7 +94,7 @@ class CheckoutController extends Controller
             return $respuesta;
         }
 
-        $compra = $apartar->apartar($datos);
+        $compra = $apartar->apartar($datos, $vence);
 
         return response()->json($this->datosDelApartado($compra), 201);
     }
